@@ -1,4 +1,4 @@
-import type { Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 import { expect, test } from '../../../../tests/setup/playwright-fixtures';
 
 /**
@@ -383,6 +383,23 @@ test.describe('tarih takvimi dar ekrana sığar (AJA-476)', () => {
   // küçük çıkar. Bu yüzden panelde açılış sınıfı kalmayana kadar beklenir.
   const MOTION_CLASS = /(^|\s)ant-[\w-]+-(appear|enter)(\s|$)/;
 
+  // Takvimin dört kenarı da ekranın içindedir (AJA-514). Yatay telefonda ekran
+  // yüksekliği 390 px'tir. Üst ve alt kenar da bu yüzden ölçülür.
+  async function expectPanelInsideViewport(page: Page, container: Locator): Promise<void> {
+    const vp = page.viewportSize();
+    expect(vp).not.toBeNull();
+    const box = await container.boundingBox();
+    expect(box).not.toBeNull();
+    const left = box?.x ?? Number.NEGATIVE_INFINITY;
+    const top = box?.y ?? Number.NEGATIVE_INFINITY;
+    const right = left + (box?.width ?? Number.POSITIVE_INFINITY);
+    const bottom = top + (box?.height ?? Number.POSITIVE_INFINITY);
+    expect(left, 'sol kenar').toBeGreaterThanOrEqual(0);
+    expect(top, 'üst kenar').toBeGreaterThanOrEqual(0);
+    expect(right, 'sağ kenar').toBeLessThanOrEqual(vp?.width ?? 0);
+    expect(bottom, 'alt kenar').toBeLessThanOrEqual(vp?.height ?? 0);
+  }
+
   test('takvim ekrana sığar; oklar ve gün hücreleri en az 44 px; takvim Türkçe ve pazartesi başlar', async ({
     page,
   }) => {
@@ -393,11 +410,7 @@ test.describe('tarih takvimi dar ekrana sığar (AJA-476)', () => {
     await expect(panel).toBeVisible();
     await expect(panel).not.toHaveClass(MOTION_CLASS);
 
-    const vw = page.viewportSize()?.width ?? 0;
-    const box = await panel.locator('.ant-picker-panel-container').boundingBox();
-    expect(box).not.toBeNull();
-    expect(box?.x ?? -1).toBeGreaterThanOrEqual(0);
-    expect((box?.x ?? 0) + (box?.width ?? Number.POSITIVE_INFINITY)).toBeLessThanOrEqual(vw);
+    await expectPanelInsideViewport(page, panel.locator('.ant-picker-panel-container'));
 
     // Ay adı, yıl ve iki ay oku görünür. Ay adı Türkçedir.
     await expect(panel.locator('.ant-picker-month-btn')).toHaveText('Kas');
@@ -447,10 +460,7 @@ test.describe('tarih takvimi dar ekrana sığar (AJA-476)', () => {
     await expect(panel).toBeVisible();
     await expect(panel).not.toHaveClass(MOTION_CLASS);
 
-    const vw = page.viewportSize()?.width ?? 0;
-    const box = await panel.locator('.ant-picker-panel-container').boundingBox();
-    expect(box?.x ?? -1).toBeGreaterThanOrEqual(0);
-    expect((box?.x ?? 0) + (box?.width ?? Number.POSITIVE_INFINITY)).toBeLessThanOrEqual(vw);
+    await expectPanelInsideViewport(page, panel.locator('.ant-picker-panel-container'));
 
     if (isPhoneWidth(page)) {
       const dateBox = await panel.locator('.ant-picker-date-panel').boundingBox();
