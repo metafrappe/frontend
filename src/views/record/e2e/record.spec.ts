@@ -378,6 +378,10 @@ test.describe('tarih takvimi dar ekrana sığar (AJA-476)', () => {
   const OPEN_PANEL = '.ant-picker-dropdown:not(.ant-picker-dropdown-hidden)';
   // WCAG 2.5.5 dokunma hedefi. Takvim hücresi ve oklar en az bu kadar olur.
   const MIN_TOUCH = 44;
+  // antd takvimi açarken kısa bir animasyon oynatır. Animasyonda panelin dikey
+  // ölçeği 0'dan 0,8'e, sonra 1'e çıkar. Ölçüm bu sırada yapılırsa yükseklik
+  // küçük çıkar. Bu yüzden panelde açılış sınıfı kalmayana kadar beklenir.
+  const MOTION_CLASS = /(^|\s)ant-[\w-]+-(appear|enter)(\s|$)/;
 
   test('takvim ekrana sığar; oklar ve gün hücreleri en az 44 px; takvim Türkçe ve pazartesi başlar', async ({
     page,
@@ -387,6 +391,7 @@ test.describe('tarih takvimi dar ekrana sığar (AJA-476)', () => {
     await page.getByRole('textbox', { name: 'Belge Tarihi' }).click();
     const panel = page.locator(OPEN_PANEL);
     await expect(panel).toBeVisible();
+    await expect(panel).not.toHaveClass(MOTION_CLASS);
 
     const vw = page.viewportSize()?.width ?? 0;
     const box = await panel.locator('.ant-picker-panel-container').boundingBox();
@@ -440,6 +445,7 @@ test.describe('tarih takvimi dar ekrana sığar (AJA-476)', () => {
     await input.click();
     const panel = page.locator(OPEN_PANEL);
     await expect(panel).toBeVisible();
+    await expect(panel).not.toHaveClass(MOTION_CLASS);
 
     const vw = page.viewportSize()?.width ?? 0;
     const box = await panel.locator('.ant-picker-panel-container').boundingBox();
