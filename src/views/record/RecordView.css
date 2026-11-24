@@ -83,6 +83,7 @@
 .rv-root[data-rv-kbd='true'] .ant-input-textarea-affix-wrapper.ant-input-outlined:focus-within,
 .rv-root[data-rv-kbd='true'] .ant-input-number-affix-wrapper.ant-input-number-outlined:focus-within,
 .rv-root[data-rv-kbd='true'] .ant-input-number.ant-input-number-outlined.ant-input-number-focused,
+.rv-root[data-rv-kbd='true'] .ant-picker.ant-picker-outlined.ant-picker-focused,
 .rv-root[data-rv-kbd='true']
   .ant-select.ant-select-focused.ant-select-outlined:not(.ant-select-disabled):not(
     .ant-select-customize-input
@@ -101,6 +102,7 @@
 .rv-root[data-rv-kbd='true'] .ant-input-number-affix-wrapper :focus-visible,
 .rv-root[data-rv-kbd='true'] .ant-input-number :focus-visible,
 .rv-root[data-rv-kbd='true'] .ant-select :focus-visible,
+.rv-root[data-rv-kbd='true'] .ant-picker :focus-visible,
 .rv-root[data-rv-kbd='true'] .ant-checkbox-wrapper :focus-visible,
 .rv-root[data-rv-kbd='true'] .ant-segmented-item :focus-visible {
   box-shadow: none;
@@ -732,4 +734,9 @@
   .rv-root :is(.ant-btn, .ant-input, .ant-select, .ant-select-selector) {
     min-height: var(--rv-hit-target);
   }
+}
+
+/* Tarih alanı (panel sorunu 3): kutu, satırdaki metin kutusu gibi tüm genişliği kullanır. */
+.rv-root .rv-date-picker {
+  inline-size: 100%;
 }

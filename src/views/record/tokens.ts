@@ -122,6 +122,25 @@ export function buildRecordAntdTheme(mode: RecordThemeMode): ThemeConfig {
             }
           : {}),
       },
+      // Tarih alanı (panel sorunu 3). Ölçü ve renkler metin kutusuyla aynıdır.
+      DatePicker: {
+        controlHeight: sizes.md.input.height,
+        controlHeightSM: sizes.sm.input.height,
+        controlHeightLG: sizes.lg.input.height,
+        inputFontSize: sizes.md.input.fontSize,
+        inputFontSizeSM: sizes.sm.input.fontSize,
+        inputFontSizeLG: sizes.lg.input.fontSize,
+        activeShadow: 'none',
+        ...(isDark
+          ? {
+              colorBgContainer: darkPalette.input,
+              colorBgElevated: darkPalette.elevated,
+              activeBg: darkPalette.input,
+              hoverBg: darkPalette.input,
+              activeBorderColor: darkPalette.border,
+            }
+          : {}),
+      },
       InputNumber: {
         activeBorderColor: isDark ? darkPalette.border : BASE_ANTD_TOKENS.colorBorder,
         controlHeight: sizes.md.input.height,

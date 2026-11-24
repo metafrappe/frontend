@@ -334,3 +334,42 @@ test.describe('odak kuralları', () => {
     }
   });
 });
+
+test.describe('tarih alanı (panel sorunu 3)', () => {
+  test('tarih Türkçe biçimde görünür; takvim markalıdır; klavyeyle yazılabilir', async ({
+    page,
+  }) => {
+    await page.goto(HARNESS);
+    await expect(page.getByRole('heading', { level: 1, name: 'Örnek Kişi' })).toBeVisible();
+
+    // Tarayıcının kendi tarih kutusu yoktur.
+    await expect(page.locator('.rv-root input[type="date"]')).toHaveCount(0);
+    await expect(page.locator('.rv-root input[type="datetime-local"]')).toHaveCount(0);
+
+    const input = page.getByRole('textbox', { name: 'Belge Tarihi' });
+    await expect(input).toHaveValue('23.11.2026');
+
+    // Takvim açılır. Yazılar en az 14 px'tir.
+    await input.click();
+    const panel = page.locator('.ant-picker-dropdown:not(.ant-picker-dropdown-hidden)');
+    await expect(panel).toBeVisible();
+    const minFont = await panel.evaluate((root) => {
+      let min = Number.POSITIVE_INFINITY;
+      for (const el of root.querySelectorAll<HTMLElement>('*')) {
+        if (!el.textContent?.trim() || el.children.length > 0) continue;
+        min = Math.min(min, Number.parseFloat(getComputedStyle(el).fontSize));
+      }
+      return min;
+    });
+    expect(minFont).toBeGreaterThanOrEqual(14);
+    await page.keyboard.press('Escape');
+    await expect(panel).toBeHidden();
+
+    // Klavyeyle yazılan tarih Türkçe biçimde kalır.
+    await input.click();
+    await input.fill('24.11.2026');
+    await page.keyboard.press('Enter');
+    await expect(input).toHaveValue('24.11.2026');
+    expect(await overflowX(page)).toBeLessThanOrEqual(0);
+  });
+});

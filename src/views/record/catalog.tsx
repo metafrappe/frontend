@@ -1,10 +1,12 @@
-import { CalendarBlank, Clock, Sparkle, WarningCircle } from '@phosphor-icons/react';
+import { Clock, Sparkle, WarningCircle } from '@phosphor-icons/react';
 import { Button, Checkbox, Input, InputNumber, Select } from 'antd';
 import type { ReactNode } from 'react';
 
 import { CATALOG_VERSION, resolveCatalogEntry } from './catalogRegistry';
+import { resolveDateFormats } from './dateFormat';
 import { evaluateFieldState, isFrappeTruthy } from './conditions';
 import { ChildTableField, TableMultiSelectField } from './fields/ChildTableField';
+import { DateField } from './fields/DateFields';
 import { type FieldControlA11yProps, FieldShell } from './fields/FieldShell';
 import { LinkField } from './fields/LinkField';
 import { LinkValue } from './fields/LinkValue';
@@ -37,23 +39,6 @@ function parsePrecision(
   }
   const parsed = Number.parseInt(precision, 10);
   return Number.isInteger(parsed) && parsed >= 0 && parsed <= 9 ? parsed : fallback;
-}
-
-function toDatetimeLocalInput(frappeValue: unknown): string {
-  if (typeof frappeValue !== 'string' || frappeValue.trim().length === 0) {
-    return '';
-  }
-  const withoutMicros = frappeValue.trim().split('.')[0] ?? '';
-  return withoutMicros.replace(' ', 'T');
-}
-
-function fromDatetimeLocalInput(localValue: string): string {
-  const trimmed = localValue.trim();
-  if (!trimmed) {
-    return '';
-  }
-  const withSpace = trimmed.replace('T', ' ');
-  return withSpace.length === 16 ? `${withSpace}:00` : withSpace;
 }
 
 function deriveSelectChoices(field: DocField): { value: string; label: string }[] {
@@ -472,35 +457,16 @@ export function CatalogField(props: CatalogFieldProps): ReactNode {
       }
 
       case 'Date':
-        return (
-          <Input
-            id={a11y.controlId}
-            aria-labelledby={a11y.labelId}
-            aria-describedby={a11y.ariaDescribedBy}
-            aria-invalid={a11y.ariaInvalid}
-            size={compactCell ? 'small' : 'middle'}
-            type="date"
-            suffix={<CalendarBlank weight="regular" />}
-            readOnly={state.readOnly}
-            value={strVal}
-            onChange={(e) => onChange(field.fieldname, e.target.value)}
-          />
-        );
-
       case 'Datetime':
         return (
-          <Input
-            id={a11y.controlId}
-            aria-labelledby={a11y.labelId}
-            aria-describedby={a11y.ariaDescribedBy}
-            aria-invalid={a11y.ariaInvalid}
-            size={compactCell ? 'small' : 'middle'}
-            type="datetime-local"
-            step={1}
-            suffix={<CalendarBlank weight="regular" />}
+          <DateField
+            kind={entry.canonicalType === 'Datetime' ? 'datetime' : 'date'}
+            value={value}
+            formats={resolveDateFormats(formatting, locale)}
             readOnly={state.readOnly}
-            value={toDatetimeLocalInput(value)}
-            onChange={(e) => onChange(field.fieldname, fromDatetimeLocalInput(e.target.value))}
+            compact={compactCell}
+            a11y={a11y}
+            onChange={(next) => onChange(field.fieldname, next)}
           />
         );
 
