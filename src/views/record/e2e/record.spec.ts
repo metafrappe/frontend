@@ -373,3 +373,101 @@ test.describe('tarih alanı (panel sorunu 3)', () => {
     expect(await overflowX(page)).toBeLessThanOrEqual(0);
   });
 });
+
+test.describe('tarih takvimi dar ekrana sığar (AJA-476)', () => {
+  const OPEN_PANEL = '.ant-picker-dropdown:not(.ant-picker-dropdown-hidden)';
+  // WCAG 2.5.5 dokunma hedefi. Takvim hücresi ve oklar en az bu kadar olur.
+  const MIN_TOUCH = 44;
+
+  test('takvim ekrana sığar; oklar ve gün hücreleri en az 44 px; takvim Türkçe ve pazartesi başlar', async ({
+    page,
+  }) => {
+    await page.goto(HARNESS);
+    await expect(page.getByRole('heading', { level: 1, name: 'Örnek Kişi' })).toBeVisible();
+    await page.getByRole('textbox', { name: 'Belge Tarihi' }).click();
+    const panel = page.locator(OPEN_PANEL);
+    await expect(panel).toBeVisible();
+
+    const vw = page.viewportSize()?.width ?? 0;
+    const box = await panel.locator('.ant-picker-panel-container').boundingBox();
+    expect(box).not.toBeNull();
+    expect(box?.x ?? -1).toBeGreaterThanOrEqual(0);
+    expect((box?.x ?? 0) + (box?.width ?? Number.POSITIVE_INFINITY)).toBeLessThanOrEqual(vw);
+
+    // Ay adı, yıl ve iki ay oku görünür. Ay adı Türkçedir.
+    await expect(panel.locator('.ant-picker-month-btn')).toHaveText('Kas');
+    await expect(panel.locator('.ant-picker-year-btn')).toHaveText('2026');
+    for (const cls of [
+      '.ant-picker-header-prev-btn',
+      '.ant-picker-header-next-btn',
+      '.ant-picker-header-super-prev-btn',
+      '.ant-picker-header-super-next-btn',
+    ]) {
+      const btn = panel.locator(cls);
+      await expect(btn).toBeInViewport({ ratio: 1 });
+      const b = await btn.boundingBox();
+      expect(b?.width ?? 0, cls).toBeGreaterThanOrEqual(MIN_TOUCH);
+      expect(b?.height ?? 0, cls).toBeGreaterThanOrEqual(MIN_TOUCH);
+    }
+
+    // Hafta pazartesi başlar.
+    await expect(panel.locator('.ant-picker-content thead th').first()).toHaveText('Pzt');
+
+    // Gün hücrelerinin hepsi en az 44 × 44 px'tir.
+    const cells = await panel
+      .locator('.ant-picker-date-panel .ant-picker-content tbody td')
+      .evaluateAll((tds) =>
+        tds.map((td) => {
+          const r = td.getBoundingClientRect();
+          return { w: r.width, h: r.height };
+        }),
+      );
+    expect(cells.length).toBe(42);
+    for (const c of cells) {
+      expect(c.w).toBeGreaterThanOrEqual(MIN_TOUCH);
+      expect(c.h).toBeGreaterThanOrEqual(MIN_TOUCH);
+    }
+    expect(await overflowX(page)).toBeLessThanOrEqual(0);
+  });
+
+  test('tarih-saat takvimi ekrana sığar; dar ekranda saat sütunu tarih tablosunun altındadır', async ({
+    page,
+  }) => {
+    await page.goto(HARNESS);
+    await expect(page.getByRole('heading', { level: 1, name: 'Örnek Kişi' })).toBeVisible();
+    const input = page.getByRole('textbox', { name: 'Takip Zamanı' });
+    await expect(input).toHaveValue('23.11.2026 14:05:00');
+    await input.click();
+    const panel = page.locator(OPEN_PANEL);
+    await expect(panel).toBeVisible();
+
+    const vw = page.viewportSize()?.width ?? 0;
+    const box = await panel.locator('.ant-picker-panel-container').boundingBox();
+    expect(box?.x ?? -1).toBeGreaterThanOrEqual(0);
+    expect((box?.x ?? 0) + (box?.width ?? Number.POSITIVE_INFINITY)).toBeLessThanOrEqual(vw);
+
+    if (isPhoneWidth(page)) {
+      const dateBox = await panel.locator('.ant-picker-date-panel').boundingBox();
+      const timeBox = await panel.locator('.ant-picker-time-panel').boundingBox();
+      expect(timeBox?.y ?? 0).toBeGreaterThanOrEqual(
+        (dateBox?.y ?? 0) + (dateBox?.height ?? 0) - 1,
+      );
+    }
+    expect(await overflowX(page)).toBeLessThanOrEqual(0);
+  });
+
+  test('@touch ay okuna dokununca ay değişir', async ({ page }, testInfo) => {
+    test.skip(!testInfo.project.use.hasTouch, 'Dokunma testi yalnız dokunmatik profilde koşar.');
+    await page.goto(HARNESS);
+    await expect(page.getByRole('heading', { level: 1, name: 'Örnek Kişi' })).toBeVisible();
+    await page.getByRole('textbox', { name: 'Belge Tarihi' }).tap();
+    const panel = page.locator(OPEN_PANEL);
+    await expect(panel).toBeVisible();
+    await expect(panel.locator('.ant-picker-month-btn')).toHaveText('Kas');
+    await panel.locator('.ant-picker-header-next-btn').tap();
+    await expect(panel.locator('.ant-picker-month-btn')).toHaveText('Ara');
+    await panel.locator('.ant-picker-header-prev-btn').tap();
+    await panel.locator('.ant-picker-header-prev-btn').tap();
+    await expect(panel.locator('.ant-picker-month-btn')).toHaveText('Eki');
+  });
+});
