@@ -8,6 +8,8 @@ import {
   WarningCircle,
 } from '@phosphor-icons/react';
 import { Button, ConfigProvider, Tabs } from 'antd';
+import enUS from 'antd/es/locale/en_US';
+import trTR from 'antd/es/locale/tr_TR';
 import {
   type CSSProperties,
   type RefObject,
@@ -1122,7 +1124,8 @@ export function RecordView(props: RecordViewProps) {
   const recordIdentityKey = `${props.doctype}::${props.createMode ? '__new__' : (props.name ?? '__empty__')}::${locale}::${boundaryResetCount}`;
 
   return (
-    <ConfigProvider theme={antdThemeConfig}>
+    // antd dili kaydın dilinden gelir (AJA-476). Takvimde ay ve gün adları bu dilde yazılır.
+    <ConfigProvider theme={antdThemeConfig} locale={locale === 'tr' ? trTR : enUS}>
       <div
         ref={rootRef}
         className="rv-root"

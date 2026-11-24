@@ -27,6 +27,11 @@ function parseServerValue(value: unknown, withTime: boolean): Dayjs | null {
   return null;
 }
 
+/** Takvim ekran kenarından taşarsa ekranın içine kaydırılır (AJA-476). */
+const PICKER_POPUP_ALIGN = {
+  overflow: { adjustX: 1, adjustY: 1, shiftX: true, shiftY: true },
+} as const;
+
 export interface DateFieldProps {
   /** Alan türü: yalnız tarih ya da tarih ve saat. */
   kind: 'date' | 'datetime';
@@ -64,6 +69,12 @@ export function DateField({
       aria-describedby={a11y.ariaDescribedBy}
       aria-invalid={a11y.ariaInvalid}
       className="rv-date-picker"
+      // Takvim kayıt kökünün içinde açılır (AJA-476). Böylece kayıt tokenları ve
+      // klavye odak kuralları takvime de uygulanır.
+      getPopupContainer={(trigger) => trigger.closest<HTMLElement>('.rv-root') ?? document.body}
+      // antd takvimi yalnız sağa ya da sola hizalar. Dar ekranda iki yön de taşabilir.
+      // `shiftX` ve `shiftY` takvimi ekranın içine kaydırır.
+      popupAlign={PICKER_POPUP_ALIGN}
       size={compact ? 'small' : 'middle'}
       format={displayFormat}
       placeholder={displayFormat}
