@@ -6,18 +6,24 @@ import { LanguageProvider } from '@/app/locale';
 import type * as RecordModule from '@/views/record';
 import type { RecordDataAdapter, RecordViewProps } from '@/views/record';
 
-const seen: { adapter?: RecordDataAdapter; renderLink?: RecordViewProps['renderRecordLink'] } = {};
+const seen: {
+  adapter?: RecordDataAdapter;
+  renderLink?: RecordViewProps['renderRecordLink'];
+  formatting?: RecordViewProps['formatting'];
+} = {};
 
 vi.mock('@/views/record', async (importOriginal) => ({
   ...(await importOriginal<typeof RecordModule>()),
   RecordView: (props: RecordViewProps) => {
     seen.adapter = props.adapter;
     seen.renderLink = props.renderRecordLink;
+    seen.formatting = props.formatting;
     return <p>{`${props.doctype}|${props.name ?? ''}|${props.locale ?? ''}`}</p>;
   },
 }));
 
 const { default: RecordRoute } = await import('./RecordRoute');
+const { sampleBootstrap } = await import('@/mocks/fixtures');
 
 const META_PATH = '/api/method/platform_core.api.meta.get_doctype';
 
@@ -70,7 +76,12 @@ function fakeApi(modules: Record<string, string> = MODULES) {
       body: { data: { name: 'ORNEK-0001', modified: '2026-11-23 10:00:00' } },
     };
   });
-  return { api: { frappeDocument } as Pick<ApiClient, 'frappeDocument'>, frappeDocument };
+  const getBootstrap = vi.fn<ApiClient['getBootstrap']>().mockResolvedValue(sampleBootstrap);
+  return {
+    api: { frappeDocument, getBootstrap } as Pick<ApiClient, 'frappeDocument' | 'getBootstrap'>,
+    frappeDocument,
+    getBootstrap,
+  };
 }
 
 describe('RecordRoute', () => {
@@ -112,6 +123,25 @@ describe('RecordRoute', () => {
       <RecordRoute api={api} module="ornek" doctype="örnek-kayıt" name="ORNEK-0001" />,
     );
     expect(container.querySelector('[class*="shell-"]')).toBeNull();
+  });
+});
+
+describe('RecordRoute: tarih biçimi (panel sorunu 3)', () => {
+  it('açılış verisindeki biçim ayarını kayıt görünümüne verir', async () => {
+    const { api, getBootstrap } = fakeApi();
+    render(<RecordRoute api={api} module="hr" doctype="leave-application" name="HR-LAP-1" />);
+    await waitFor(() => expect(seen.formatting?.date_format).toBe('dd.mm.yyyy'));
+    expect(getBootstrap).toHaveBeenCalledTimes(1);
+  });
+
+  it('açılış verisi alınamazsa kayıt yine açılır', async () => {
+    const { api, getBootstrap } = fakeApi();
+    getBootstrap.mockRejectedValueOnce(new Error('ağ hatası'));
+    seen.formatting = undefined;
+    render(<RecordRoute api={api} module="hr" doctype="leave-application" name="HR-LAP-2" />);
+    await waitFor(() => expect(getBootstrap).toHaveBeenCalled());
+    expect(screen.getByText('Leave Application|HR-LAP-2|tr')).toBeInTheDocument();
+    expect(seen.formatting).toBeUndefined();
   });
 });
 
