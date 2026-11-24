@@ -462,6 +462,10 @@ test.describe('tarih takvimi dar ekrana sığar (AJA-476)', () => {
 
     await expectPanelInsideViewport(page, panel.locator('.ant-picker-panel-container'));
 
+    // Takvim ekrandan uzunsa kendi içinde kayar (AJA-514). Ay oku ve alt satır görünür kalır.
+    await expect(panel.locator('.ant-picker-header-prev-btn')).toBeInViewport({ ratio: 1 });
+    await expect(panel.locator('.ant-picker-footer')).toBeInViewport({ ratio: 1 });
+
     if (isPhoneWidth(page)) {
       const dateBox = await panel.locator('.ant-picker-date-panel').boundingBox();
       const timeBox = await panel.locator('.ant-picker-time-panel').boundingBox();

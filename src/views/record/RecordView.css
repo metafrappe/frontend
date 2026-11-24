@@ -782,10 +782,32 @@
 }
 
 /*
- * Dar ekranda takvim ekranın içine kaydırılır (`shiftY`). Kitaplık kaydırırken takvim ile kutu
- * arasındaki 4 px aralığı da ekler. Takvim bu yüzden ekran kenarından 4 px taşar.
- * Üstteki ve alttaki boş alan bu taşmayı karşılar. Oklar ekranın içinde kalır.
+ * Takvim kısa ekranda da sığar (AJA-514). Yatay telefonda ekran 390 px yüksekliğindedir.
+ * Takvim katmanı üstten ve alttan 4 px boşluk alır. Bu boşluk takvim ile kutu arasındaki aralıktır.
+ * Kitaplık takvimi kaydırınca bu boşluk ekran kenarında kalır. Takvimin kenarı ekranın içindedir.
+ * Takvim ekrandan uzunsa kendi içinde kayar. Ay okları üstte, alt satır altta sabit kalır.
+ * Seçim gerekçesi: gün hücresi 44 px dokunma hedefinin altına inmez. Panel küçültülmez.
  */
-.rv-root[data-rv-viewport='phone'] .ant-picker-dropdown .ant-picker-panel-container {
-  padding-block: var(--rv-space-2xs);
+.rv-root .ant-picker-dropdown {
+  padding-block: var(--rv-picker-panel-pad);
+}
+
+.rv-root .ant-picker-dropdown .ant-picker-panel-container {
+  max-block-size: calc(100dvh - var(--rv-picker-panel-pad) * 2);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.rv-root .ant-picker-dropdown .ant-picker-header {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 1;
+  background: var(--rv-color-elevated);
+}
+
+.rv-root .ant-picker-dropdown .ant-picker-footer {
+  position: sticky;
+  inset-block-end: 0;
+  z-index: 1;
+  background: var(--rv-color-elevated);
 }

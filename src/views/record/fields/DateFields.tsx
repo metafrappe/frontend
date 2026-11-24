@@ -1,5 +1,5 @@
 import { CalendarBlank } from '@phosphor-icons/react';
-import { DatePicker } from 'antd';
+import { DatePicker, type DatePickerProps } from 'antd';
 import dayjs, { type Dayjs } from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import 'dayjs/locale/tr';
@@ -27,10 +27,16 @@ function parseServerValue(value: unknown, withTime: boolean): Dayjs | null {
   return null;
 }
 
-/** Takvim ekran kenarından taşarsa ekranın içine kaydırılır (AJA-476). */
-const PICKER_POPUP_ALIGN = {
+/**
+ * Takvim ekran kenarından taşarsa ekranın içine kaydırılır (AJA-476).
+ * Kitaplık takvimi kutudan 4 px uzağa koyar. Kaydırırken bu 4 px'i yeniden ekler.
+ * Takvim bu yüzden ekran kenarından 4 px taşardı (AJA-514). Kitaplığın aralığı 0 yapılır.
+ * Aralığı takvim katmanının iç boşluğu verir: `RecordView.css`.
+ */
+const PICKER_POPUP_ALIGN: NonNullable<DatePickerProps['popupAlign']> = {
+  offset: [0, 0],
   overflow: { adjustX: 1, adjustY: 1, shiftX: true, shiftY: true },
-} as const;
+};
 
 export interface DateFieldProps {
   /** Alan türü: yalnız tarih ya da tarih ve saat. */
