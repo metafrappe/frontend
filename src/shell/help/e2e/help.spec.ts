@@ -64,7 +64,8 @@ test.describe('yardım kulakçığı', () => {
 
   test('kulakçık sağ kenara yapışıktır ve kaydırmada yerinde kalır', async ({ page }) => {
     await openRecord(page);
-    const vw = page.viewportSize()?.width ?? 0;
+    // Kaydırma çubuğu varsa sağ kenar onun solundadır.
+    const vw = await page.evaluate(() => document.documentElement.clientWidth);
     const before = await tab(page).boundingBox();
     expect(before).not.toBeNull();
     expect(Math.round((before?.x ?? 0) + (before?.width ?? 0))).toBeGreaterThanOrEqual(vw - 1);
@@ -195,6 +196,7 @@ test.describe('sağ yuva ve çekmece', () => {
   test('yön değişince açık panel, anahtar ve girdi korunur', async ({ page }) => {
     const vp = page.viewportSize();
     test.skip(!vp || vp.width > 430, 'yalnız dikey telefon');
+    if (!vp) return;
     await openRecord(page);
     await page.getByRole('textbox', { name: new RegExp(FIELD) }).fill('Yön değişti');
     await tab(page).click();

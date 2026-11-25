@@ -1,9 +1,7 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
-import { afterEach, describe, expect, it, vi } from 'vitest';
-
-vi.mock('@ant-design/x', () => import('../testing/antdXMock'));
+import { afterEach, describe, expect, it } from 'vitest';
 
 import { AppShell } from '../layout/AppShell';
 import { HelpMarker, SELF_HELP_KEY } from './index';

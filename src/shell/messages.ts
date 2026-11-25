@@ -88,6 +88,21 @@ export const t = {
       save: 'Kaydet',
     },
   },
+  help: {
+    tab: 'Yardım',
+    title: 'Yardım',
+    close: 'Yardımı kapat',
+    pageHelp: 'Sayfa yardımı',
+    pageEmpty:
+      'Bu sayfa için yazılı yardım henüz yok. Alanların yardımını görmek için destek modunu açın.',
+    pageMarker: 'Bu sayfanın yardımı',
+    fieldMarker: (label: string) => `${label} alanının yardımı`,
+    fieldEmpty: 'Bu alan için yardım metni yok.',
+    tasks: 'Sık görevler',
+    tasksEmpty: 'Bu sayfada sık görev yok.',
+    mode: 'Kendi kendine destek modu',
+    modeText: 'Mod açıkken alanların ve sayfanın yanında yardım işaretleri görünür.',
+  },
   demo: {
     title: 'Kabuk denemesi',
     linkBefore: 'Sorunuz varsa',

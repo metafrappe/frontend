@@ -63,6 +63,8 @@
   --shell-zero: 0px;
   /* Ana sayfa: özet sayı kutusunun en dar hâli (taslak: 10rem). */
   --shell-home-kpi-min: 160px;
+  /* G-137 yardım kulakçığının genişliği. Dikey yazı ve ikon bu genişliğe sığar. */
+  --shell-help-tab-w: 32px;
 
   /* Hareket. Süre ve eğriler merkezi tokenlardır (src/design/motion.ts). Değerler kaynak örnek
      sayfanın `.glide`, iskelet ve dönme kurallarından gelir. Solma eğrisi genel S eğrisidir;
@@ -126,7 +128,9 @@
     .shell-iconbtn,
     .shell-fly-ai,
     .shell-kb-card,
-    .shell-bar-item
+    .shell-bar-item,
+    .shell-help-tab,
+    .shell-help-page
   ) {
   outline: none;
 }
@@ -137,7 +141,9 @@
 .shell-iconbtn::after,
 .shell-fly-ai::after,
 .shell-kb-card::after,
-.shell-bar-item::after {
+.shell-bar-item::after,
+.shell-help-tab::after,
+.shell-help-page::after {
   content: '';
   position: absolute;
   left: var(--shell-item-px);
@@ -155,7 +161,9 @@ html[data-focus-mode='keyboard'] .shell-tg:focus-visible::after,
 html[data-focus-mode='keyboard'] .shell-iconbtn:focus-visible::after,
 html[data-focus-mode='keyboard'] .shell-fly-ai:focus-visible::after,
 html[data-focus-mode='keyboard'] .shell-kb-card:focus-visible::after,
-html[data-focus-mode='keyboard'] .shell-bar-item:focus-visible::after {
+html[data-focus-mode='keyboard'] .shell-bar-item:focus-visible::after,
+html[data-focus-mode='keyboard'] .shell-help-tab:focus-visible::after,
+html[data-focus-mode='keyboard'] .shell-help-page:focus-visible::after {
   opacity: 1;
 }
 
@@ -178,7 +186,9 @@ html[data-focus-mode='keyboard']
   html[data-focus-mode='keyboard'] .shell-iconbtn:focus-visible,
   html[data-focus-mode='keyboard'] .shell-fly-ai:focus-visible,
   html[data-focus-mode='keyboard'] .shell-kb-card:focus-visible,
-  html[data-focus-mode='keyboard'] .shell-bar-item:focus-visible {
+  html[data-focus-mode='keyboard'] .shell-bar-item:focus-visible,
+  html[data-focus-mode='keyboard'] .shell-help-tab:focus-visible,
+  html[data-focus-mode='keyboard'] .shell-help-page:focus-visible {
     outline: var(--shell-focus-line) solid CanvasText;
   }
   .shell-item::after,
@@ -187,7 +197,9 @@ html[data-focus-mode='keyboard']
   .shell-iconbtn::after,
   .shell-fly-ai::after,
   .shell-kb-card::after,
-  .shell-bar-item::after {
+  .shell-bar-item::after,
+  .shell-help-tab::after,
+  .shell-help-page::after {
     display: none;
   }
 }
@@ -1958,6 +1970,202 @@ html:has(.shell[data-layout='compact']) {
     min-width: var(--hit-target);
     min-height: var(--hit-target);
   }
+}
+
+/* ---------- G-137 yardım kulakçığı ve paneli ---------- */
+/* Kulakçık içeriği örtmesin diye içerik sütunu sağda kulakçık kadar yer bırakır. */
+.shell-main {
+  padding-inline-end: var(--shell-help-tab-w);
+}
+
+/* Panel AI panelinin sağ yuvasını kullanır. Yan yana sığınca üçüncü sütun olur. */
+.shell[data-layout='wide'][data-help='dock'] {
+  grid-template-columns: auto minmax(0, 1fr) var(--shell-help-w);
+}
+
+.shell-help-tab {
+  all: unset;
+  position: fixed;
+  top: 50%;
+  right: 0;
+  z-index: var(--shell-z-dim);
+  box-sizing: border-box;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--shell-space-xs);
+  width: var(--shell-help-tab-w);
+  padding: var(--shell-space-md) 0;
+  /* Kulakçık sağ kenara yapışır. Yalnız iç kenarın köşeleri yuvarlaktır; vurgu çizgisi yoktur. */
+  border-start-start-radius: var(--shell-radius);
+  border-end-start-radius: var(--shell-radius);
+  background: var(--shell-bg-el);
+  box-shadow: var(--shell-shadow);
+  color: var(--shell-tx);
+  font-size: var(--shell-fs);
+  font-weight: 600;
+  cursor: pointer;
+  translate: 0 -50%;
+}
+
+.shell-help-tab:hover {
+  background: var(--shell-bg-c);
+}
+
+.shell-help-tab::after {
+  left: var(--shell-space-sm);
+  right: var(--shell-space-sm);
+}
+
+.shell-help-tab svg {
+  flex: none;
+  font-size: var(--shell-item-icon);
+}
+
+.shell-help-tab-t {
+  writing-mode: vertical-rl;
+  line-height: calc(var(--shell-fs) + var(--shell-lh-add));
+}
+
+.shell[data-help='dock'] .shell-help-tab {
+  right: var(--shell-help-w);
+}
+
+.shell-help {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: var(--shell-bg-c);
+  color: var(--shell-tx);
+  opacity: 1;
+  transition:
+    opacity var(--shell-rail-dur) var(--shell-ease),
+    display var(--shell-rail-dur) allow-discrete;
+}
+
+.shell-help[hidden] {
+  display: none;
+  opacity: 0;
+}
+
+@starting-style {
+  .shell-help:not([hidden]) {
+    opacity: 0;
+  }
+}
+
+.shell-help[data-mode='dock'] {
+  height: 100%;
+  min-height: 0;
+  overflow: auto;
+  box-shadow: inset var(--shell-hairline) 0 0 var(--shell-bd);
+}
+
+/* Yer yetmezse panel tam ekran modal çekmecedir. */
+.shell-help[data-mode='drawer'] {
+  position: fixed;
+  inset: 0;
+  z-index: var(--shell-z-raised);
+  width: 100%;
+  height: 100dvh;
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding-inline: env(safe-area-inset-left) env(safe-area-inset-right);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.shell-help-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--shell-space-md);
+  padding: var(--shell-pad) var(--shell-gutter);
+  box-shadow: inset 0 calc(-1 * var(--shell-hairline)) 0 var(--shell-bd);
+}
+
+.shell-help-title {
+  margin: 0;
+  font-size: var(--shell-fs-lg);
+  font-weight: 600;
+  line-height: calc(var(--shell-fs-lg) + var(--shell-lh-add));
+}
+
+.shell-help-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--shell-space-2xl);
+  padding: var(--shell-gutter);
+}
+
+.shell-help-sec {
+  display: flex;
+  flex-direction: column;
+  gap: var(--shell-space-md);
+}
+
+.shell-help-h {
+  margin: 0;
+  font-size: var(--shell-fs-md);
+  font-weight: 600;
+  line-height: calc(var(--shell-fs-md) + var(--shell-lh-add));
+}
+
+.shell-help-tasks {
+  display: flex;
+  flex-direction: column;
+  gap: var(--shell-space-2xs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.shell-help-switch {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--shell-space-lg);
+}
+
+/* Destek modu açıkken görünen işaretler. */
+.shell-help-bar {
+  display: flex;
+  justify-content: flex-end;
+  padding: var(--shell-space-xs) var(--shell-gutter) 0;
+}
+
+.shell-help-page {
+  all: unset;
+  position: relative;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--shell-space-sm);
+  min-height: var(--shell-hd-btn-h);
+  padding: 0 var(--shell-space-ml);
+  border-radius: var(--shell-radius);
+  color: var(--shell-tx);
+  font-size: var(--shell-fs);
+  cursor: pointer;
+}
+
+.shell-help-page:hover {
+  background: var(--shell-ghost);
+}
+
+.shell-help-page::after {
+  left: var(--shell-space-ml);
+  right: var(--shell-space-ml);
+}
+
+.shell-help-mark {
+  width: var(--shell-avatar);
+  height: var(--shell-avatar);
+  color: var(--shell-tx2);
+}
+
+.shell-help-mark::after {
+  left: var(--shell-space-sm);
+  right: var(--shell-space-sm);
 }
 
 /* ---------- Hareket azaltma ---------- */

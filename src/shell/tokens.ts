@@ -134,6 +134,15 @@ export const shellTokens = {
     /** Kredi halkası dolumu (kaynak: aiMotion, 1.2 s). */
     ring: secondsToMs(aiItem(/halkası:[^\d]*([\d.]+)\s*s/i), 'aiMotion halka'),
   },
+  help: {
+    /** Yardım paneli AI panelinin sağ yuvasını paylaşır (kaynak: aiStudio.layout.right). */
+    width: num(config.aiStudio.layout.right, /(\d+)\s*px/, 'aiStudio.layout.right'),
+    /**
+     * Panelin yanında kalan içerik sütununun en dar okunur genişliği. AI Studio da sağ sütunu
+     * ancak orta alana bu kadar yer kalınca açar (`src/ai/studio/AiStudio.tsx`).
+     */
+    contentMin: 600,
+  },
   /** Approved workspace model, section 6: minimum 14 px, body 16 px. */
   typography: { ...config.typography, min: 14, default: 16 },
   primary: config.primary.color,
@@ -184,6 +193,7 @@ export function shellCssVars(): Record<`--${string}`, string> {
     '--shell-dd-row': `${t.ddRow}px`,
     '--shell-pulse-dur': `${t.motion.pulse}ms`,
     '--shell-ring-dur': `${t.motion.ring}ms`,
+    '--shell-help-w': `${t.help.width}px`,
   };
 }
 
@@ -193,4 +203,13 @@ export function hexToRgba(hex: string, alpha: number): string {
   const g = parseInt(h.slice(2, 4), 16);
   const b = parseInt(h.slice(4, 6), 16);
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+/**
+ * Yardım paneli içerikle yan yana sığıyor mu? Eşik içerikten gelir: sidebar, panel ve
+ * okunur içerik sütunu. Sığmazsa panel tam ekran çekmece olur.
+ */
+export function helpDockQuery(rail: boolean): string {
+  const sb = rail ? shellTokens.sidebar.widthCollapsed : shellTokens.sidebar.widthExpanded;
+  return `(min-width: ${sb + shellTokens.help.width + shellTokens.help.contentMin}px)`;
 }

@@ -356,3 +356,18 @@ Kimlik denemesi `identity/harness/` klasöründedir.
 Bu deneme gerçek sunucuya bağlanmaz.
 Üretim derlemesi bu deneme girişini içermez.
 Görsel referans dosyaları bu işte değiştirilmez.
+
+## Yardım kulakçığı (G-137)
+
+Sayfanın sağ kenarında "Yardım" kulakçığı durur. Kulakçık bir düğmedir ve `aria-expanded` taşır.
+
+- Panel sayfa yardımını, sık görevleri ve "Kendi kendine destek modu" anahtarını gösterir.
+- Anahtar `role=switch` taşır. Tercih tarayıcıda `atonota.shell.selfHelp` anahtarıyla saklanır.
+- Mod açıkken alan ve sayfa yardım işaretleri görünür. Mod kapalıyken işaret çizilmez.
+- Alan işareti ekran okuyucuya alan adıyla duyurulur. Örnek: "Başlık alanının yardımı".
+- Panel AI panelinin sağ yuvasını kullanır. Genişlik kaynaktaki `aiStudio.layout.right` değeridir.
+- Panel yan yana sığmazsa tam ekran çekmece olur. Eşik sidebar, panel ve 600 px okunur içerik toplamıdır.
+- Escape paneli kapatır. Odak paneli açan öğeye döner: kulakçık ya da alan işareti.
+- Panel kapalıyken de DOM'da kalır. Böylece yön değişince açık panel, anahtar ve odak korunur.
+
+Sunucu yardım içeriği henüz bağlı değildir. Alan yardımı şimdilik Frappe alan açıklamasından gelir. Sunucu sözleşmesi `platform_core-help.openapi.yaml` dosyasıdır (G-138). Sözleşme bu depoya `contracts:sync` ile alınınca panel `getFieldHelp` ucunu kullanır.
