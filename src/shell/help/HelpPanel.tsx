@@ -2,11 +2,13 @@ import { X } from '@phosphor-icons/react';
 import { forwardRef, useId } from 'react';
 import { Link } from 'react-router-dom';
 
-import { Switch } from '@/components/controls';
+import { Switch } from '@/components/controls/Switch';
 
 import { t } from '../messages';
 import type { QuickAction } from '../nav';
 import type { HelpTarget } from './context';
+
+import './help-panel.css';
 
 export type HelpPanelMode = 'dock' | 'drawer';
 
@@ -23,7 +25,8 @@ interface HelpPanelProps {
 }
 
 /**
- * Yardım paneli. Kapalıyken de DOM'da kalır. Böylece yön değişince açık panel, anahtar ve
+ * Yardım paneli. Kabuk paneli ilk açılışta yükler (`React.lazy`). Böylece panel ilk yüke girmez.
+ * Panel bir kez yüklenince kapalıyken de DOM'da kalır. Böylece yön değişince açık panel, anahtar ve
  * odak korunur. Yalnız yerleşim öznitelikleri değişir; öğe yeniden kurulmaz.
  */
 export const HelpPanel = forwardRef<HTMLElement, HelpPanelProps>(function HelpPanel(

@@ -1,9 +1,7 @@
 import {
   Checkbox as AntCheckbox,
-  ConfigProvider,
   Radio as AntRadio,
   Segmented as AntSegmented,
-  Switch as AntSwitch,
   Tag as AntTag,
 } from 'antd';
 import type {
@@ -13,73 +11,15 @@ import type {
   RadioGroupProps,
   RadioProps,
   SegmentedProps,
-  SwitchProps,
   TagProps,
-  ThemeConfig,
 } from 'antd';
 import { forwardRef } from 'react';
-import type { CSSProperties, ForwardedRef, ReactElement, ReactNode, RefAttributes } from 'react';
+import type { ForwardedRef, ReactElement, RefAttributes } from 'react';
 
-import { designSource, primary } from '@/design';
+import { choice, classes, rowStyle } from './choice-shared';
+import { Themed } from './ChoiceThemed';
 
-import './controls.css';
-
-const choice = designSource.choice;
-type ChoiceKey = 'checkbox' | 'radio' | 'switch' | 'tabs' | 'tag';
-
-/**
- * Source `choice.<control>.antdTheme` blocks carry size and color tokens. Colors stay with the
- * Foundation theme (light and dark contrast decisions), so only size and type tokens are layered.
- */
-function sizeOnly(record: Record<string, unknown>): Record<string, unknown> {
-  return Object.fromEntries(Object.entries(record).filter(([key]) => !/color/i.test(key)));
-}
-
-function choiceTheme(key: ChoiceKey): ThemeConfig {
-  const { token, components } = choice[key].antdTheme;
-  return {
-    token: sizeOnly(token),
-    components: Object.fromEntries(
-      Object.entries(components as Record<string, Record<string, unknown>>).map(([name, value]) => [
-        name,
-        sizeOnly(value),
-      ]),
-    ),
-  };
-}
-
-const themes: Record<ChoiceKey, ThemeConfig> = {
-  checkbox: choiceTheme('checkbox'),
-  radio: choiceTheme('radio'),
-  switch: choiceTheme('switch'),
-  tabs: choiceTheme('tabs'),
-  tag: choiceTheme('tag'),
-};
-
-/** Row heights from C3: the visible control is centred inside the locked row. */
-const rowStyle = (height: number, style?: CSSProperties): CSSProperties => ({
-  minBlockSize: height,
-  alignItems: 'center',
-  ...style,
-});
-
-function classes(...names: (string | undefined | false)[]) {
-  return names.filter(Boolean).join(' ');
-}
-
-/**
- * antd's click wave runs a fixed 0.4 s box-shadow and 2 s fade outside the shared motion tokens.
- * The source has no wave, so choice controls turn it off.
- */
-const noWave = { disabled: true };
-
-function Themed({ name, children }: { name: ChoiceKey; children: ReactNode }) {
-  return (
-    <ConfigProvider theme={themes[name]} wave={noWave}>
-      {children}
-    </ConfigProvider>
-  );
-}
+export { Switch } from './Switch';
 
 const CheckboxControl = forwardRef<CheckboxRef, CheckboxProps>(function Checkbox(
   { className, style, ...props },
@@ -162,43 +102,6 @@ const RadioGroup = forwardRef<HTMLDivElement, RadioGroupProps>(function RadioGro
 });
 
 export const Radio = Object.assign(RadioControl, { Button: RadioButton, Group: RadioGroup });
-
-type SwitchRef = HTMLButtonElement;
-
-/** Source `choice.switch.showText`: the track shows its state. Callers may pass their own text. */
-const switchText = choice.switch.showText
-  ? { checkedChildren: 'Açık', unCheckedChildren: 'Kapalı' }
-  : {};
-
-/**
- * The checked track is the solid primary color in both themes, so its text uses the light
- * primary text (black 85 %, source `primary.light`). The unchecked text is set in controls.css.
- */
-const switchTheme: ThemeConfig = {
-  // Squared handle radius: the source example draws 3 px, equal to the source track padding.
-  token: { borderRadiusXS: choice.switch.padding },
-  components: { Switch: { colorTextLightSolid: primary.light.text } },
-};
-
-/**
- * The 24 px track sits in the locked 28 px row (`choice.switch.height` / `trackHeight`).
- * `choice.switch.squared`: the track uses the control radius (`.atonota-switch-squared`).
- */
-export const Switch = forwardRef<SwitchRef, SwitchProps>(function Switch(props, ref) {
-  return (
-    <Themed name="switch">
-      <ConfigProvider theme={switchTheme}>
-        <span
-          className={classes('atonota-switch', choice.switch.squared && 'atonota-switch-squared')}
-          // The label keeps the source size (14 px); it must not inherit the 16 px body text.
-          style={rowStyle(choice.switch.height, { fontSize: choice.switch.labelSize })}
-        >
-          <AntSwitch {...switchText} {...props} ref={ref} />
-        </span>
-      </ConfigProvider>
-    </Themed>
-  );
-});
 
 /** Tabs are the segmented style (C3). */
 export const Tabs = forwardRef(function Tabs<Value>(

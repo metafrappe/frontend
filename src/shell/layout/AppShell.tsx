@@ -1,7 +1,16 @@
 import { List, Question, Sparkle, WarningCircle, X } from '@phosphor-icons/react';
 import { theme } from 'antd';
 import type { CSSProperties, ReactNode } from 'react';
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { useLocation } from 'react-router-dom';
 
 import { isDemoEnabled, isDemoPath } from '@/app/demo-mode';
@@ -13,7 +22,6 @@ import { FocusDimProvider } from '../focus-dim';
 import type { HelpApi, HelpTarget } from '../help/context';
 import { HelpContext, readSelfHelp, writeSelfHelp } from '../help/context';
 import { HelpMarker } from '../help/HelpMarker';
-import { HelpPanel } from '../help/HelpPanel';
 import { isDarkColor } from '../focus-dim/isDarkColor';
 import { WorkspaceIdentity } from '../header/WorkspaceIdentity';
 import { t } from '../messages';
@@ -45,6 +53,20 @@ import { BottomBar } from './BottomBar';
 import { useCompactLayout, useMedia } from './useMedia';
 
 const STORAGE_KEY = 'atonota.shell.sidebar';
+
+// G-137: yardım paneli ilk yüke girmez. Kod kulakçık ilk kez açılınca iner.
+// Kulakçığa fare gelince ya da odak gelince indirme önceden başlar.
+const loadHelpPanel = () => import('../help/HelpPanel');
+const HelpPanel = lazy(() => loadHelpPanel().then((m) => ({ default: m.HelpPanel })));
+const preloadHelpPanel = () => {
+  void loadHelpPanel();
+};
+
+/**
+ * Panel kodu inmeden önce boş ve gizli yer tutucu durur.
+ * Böylece kulakçığın `aria-controls` başvurusu her zaman var olan bir öğeyi gösterir.
+ */
+const helpPlaceholder = <aside id="shell-help" className="shell-help" hidden />;
 
 function readVariant(): SidebarVariant {
   try {
@@ -313,13 +335,16 @@ export function AppShell({ children, assistant }: AppShellProps) {
   const [helpTarget, setHelpTarget] = useState<HelpTarget>({ kind: 'page' });
   const [selfHelp, setSelfHelp] = useState(readSelfHelp);
   const helpTab = useRef<HTMLButtonElement>(null);
-  const helpPanel = useRef<HTMLElement>(null);
+  // Panel tembel yüklenir. Öğe DOM'a girince odak etkisi yeniden çalışsın diye durumda tutulur.
+  const [helpPanel, setHelpPanel] = useState<HTMLElement | null>(null);
+  const [helpLoaded, setHelpLoaded] = useState(false);
   const helpTrigger = useRef<HTMLElement | null>(null);
   const helpReturn = useRef(false);
   const helpModal = helpOpen && helpMode === 'drawer';
 
   const openHelp = useCallback((target: HelpTarget, trigger: HTMLElement | null) => {
     helpTrigger.current = trigger;
+    setHelpLoaded(true);
     setHelpTarget(target);
     setAssistOpen(false);
     setHelpOpen(true);
@@ -419,10 +444,10 @@ export function AppShell({ children, assistant }: AppShellProps) {
   // Panel açılınca odak panele taşınır. Yerleşim değişince odak yerinde kalır.
   useEffect(() => {
     if (!helpOpen) return;
-    const p = helpPanel.current;
+    const p = helpPanel;
     if (!p || p.contains(document.activeElement)) return;
     p.querySelector<HTMLElement>('[data-help-close]')?.focus();
-  }, [helpOpen, helpTarget]);
+  }, [helpOpen, helpTarget, helpPanel]);
 
   useEffect(() => {
     if (!helpOpen) return undefined;
@@ -567,22 +592,30 @@ export function AppShell({ children, assistant }: AppShellProps) {
             >
               {assistant}
             </AssistPanel>
-            <HelpPanel
-              ref={helpPanel}
-              open={helpOpen}
-              mode={helpMode}
-              target={helpTarget}
-              selfHelp={selfHelp}
-              onSelfHelpChange={changeSelfHelp}
-              onClose={closeHelp}
-              tasks={quickActions}
-            />
+            {helpLoaded ? (
+              <Suspense fallback={helpPlaceholder}>
+                <HelpPanel
+                  ref={setHelpPanel}
+                  open={helpOpen}
+                  mode={helpMode}
+                  target={helpTarget}
+                  selfHelp={selfHelp}
+                  onSelfHelpChange={changeSelfHelp}
+                  onClose={closeHelp}
+                  tasks={quickActions}
+                />
+              </Suspense>
+            ) : (
+              helpPlaceholder
+            )}
             <button
               ref={helpTab}
               type="button"
               className="shell-help-tab"
               aria-expanded={helpOpen}
               aria-controls="shell-help"
+              onPointerEnter={preloadHelpPanel}
+              onFocus={preloadHelpPanel}
               onClick={() => (helpOpen ? closeHelp() : openHelp({ kind: 'page' }, helpTab.current))}
             >
               <Question aria-hidden="true" />

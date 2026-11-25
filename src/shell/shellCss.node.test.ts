@@ -111,3 +111,16 @@ describe('ana sayfa simgeleri', () => {
     expect(rule(".shell-home-ic[data-tone='warn']")).toMatch(/color:\s*var\(--shell-warn\);/);
   });
 });
+
+/** G-137: yardım panelinin stilleri panel parçasıyla gelir. Aynı token kuralı orada da geçerlidir. */
+describe('help-panel.css', () => {
+  const panelCss = readFileSync(`${process.cwd()}/src/shell/help/help-panel.css`, 'utf8')
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/@(media|container)[^{]*\{/g, '{');
+
+  it('sabit px, süre ya da renk yoktur', () => {
+    expect(panelCss.match(/(?<![\w-])-?\d*\.?\d+px\b/g) ?? []).toEqual([]);
+    expect(panelCss.match(/(?<![\w-])\d*\.?\d+m?s\b/g) ?? []).toEqual([]);
+    expect(panelCss.match(/#[0-9a-f]{3,8}\b|rgba?\(/gi) ?? []).toEqual([]);
+  });
+});
