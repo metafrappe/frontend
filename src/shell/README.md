@@ -368,6 +368,13 @@ Sayfanın sağ kenarında "Yardım" kulakçığı durur. Kulakçık bir düğmed
 - Panel AI panelinin sağ yuvasını kullanır. Genişlik kaynaktaki `aiStudio.layout.right` değeridir.
 - Panel yan yana sığmazsa tam ekran çekmece olur. Eşik sidebar, panel ve 600 px okunur içerik toplamıdır.
 - Escape paneli kapatır. Odak paneli açan öğeye döner: kulakçık ya da alan işareti.
-- Panel kapalıyken de DOM'da kalır. Böylece yön değişince açık panel, anahtar ve odak korunur.
+- Panel kodu ilk yüke girmez. Kulakçık ilk kez açılınca panel parçası iner.
+- Fare ya da odak kulakçığa gelince indirme önceden başlar.
+- Panel inene kadar boş ve gizli bir yer tutucu durur. Böylece `aria-controls` her zaman var olan bir öğeyi gösterir.
+- Panel bir kez inince kapalıyken de DOM'da kalır. Böylece yön değişince açık panel, anahtar ve odak korunur.
+- Panel `Switch` bileşenini `@/components/controls/Switch` dosyasından alır. Toplu dosya `InputNumber` ve `Radio` parçalarını da pakete sokar.
+- Giriş ekranının indirdiği antd modülleri `antd-initial` parçasında toplanır (`vite.config.ts`). Böylece tembel panel giriş parçalarını bölmez.
+
+Bir bölüm henüz yapılmadı. G-137 bileşen düzeyinde yardım işareti ister. Panelde tur, belge ve destek talebi bağlantısı da ister. Bu bölüm henüz yoktur. Ürün sahibinin kararını bekler.
 
 Sunucu yardım içeriği henüz bağlı değildir. Alan yardımı şimdilik Frappe alan açıklamasından gelir. Sunucu sözleşmesi `platform_core-help.openapi.yaml` dosyasıdır (G-138). Sözleşme bu depoya `contracts:sync` ile alınınca panel `getFieldHelp` ucunu kullanır.
