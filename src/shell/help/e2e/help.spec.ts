@@ -1,5 +1,5 @@
 import AxeBuilder from '@axe-core/playwright';
-import type { Page } from '@playwright/test';
+import type { Page, TestInfo } from '@playwright/test';
 
 import { expect, test } from '../../../../tests/setup/playwright-fixtures';
 import { isRingShadow, splitShadows } from '../../../../tests/setup/odak-gostergesi';
@@ -28,6 +28,47 @@ const docked = (page: Page) => {
 async function openRecord(page: Page) {
   await page.goto(RECORD);
   await expect(page.getByRole('textbox', { name: new RegExp(FIELD) })).toHaveValue('Örnek veri 3');
+}
+
+/**
+ * Klavyeyle sonraki ya da önceki öğeye geçer.
+ * WebKit Tab tuşuyla düğmelere gitmez. Safari'de bu iş için Option+Tab kullanılır.
+ * Bu yüzden WebKit'te tuşa Alt eklenir. Olay yine Tab tuşudur.
+ */
+function tabKey(info: TestInfo, back = false) {
+  const alt = info.project.use.browserName === 'webkit' ? 'Alt+' : '';
+  return `${alt}${back ? 'Shift+' : ''}Tab`;
+}
+
+/** Açılış ve solma hareketleri bitene kadar bekler. */
+async function motionDone(page: Page) {
+  await page.evaluate(() =>
+    Promise.all(document.getAnimations().map((a) => a.finished.catch(() => undefined))),
+  );
+}
+
+/**
+ * Sayfayı aşağı kaydırır.
+ * Dokunmatik Chromium profilinde gerçek parmak kaydırması kullanılır.
+ * Playwright WebKit'te parmak kaydırması üretemez. iPhone 13 profilinde sayfa betikle kayar.
+ * Masaüstünde fare tekerleği kullanılır.
+ */
+async function scrollDown(page: Page, info: TestInfo, by: number) {
+  const { browserName, hasTouch } = info.project.use;
+  if (hasTouch && browserName === 'chromium') {
+    const cdp = await page.context().newCDPSession(page);
+    const v = page.viewportSize();
+    await cdp.send('Input.synthesizeScrollGesture', {
+      x: Math.round((v?.width ?? 0) / 2),
+      y: Math.round((v?.height ?? 0) / 2),
+      yDistance: -by,
+      gestureSourceType: 'touch',
+    });
+  } else if (hasTouch) {
+    await page.evaluate((y) => window.scrollBy(0, y), by);
+  } else {
+    await page.mouse.wheel(0, by);
+  }
 }
 
 async function overflowX(page: Page) {
@@ -62,15 +103,23 @@ test.describe('yardım kulakçığı', () => {
     expect(await overflowX(page)).toBeLessThanOrEqual(0);
   });
 
-  test('kulakçık sağ kenara yapışıktır ve kaydırmada yerinde kalır', async ({ page }) => {
+  // Beklenen: kulakçık sağ kenara değer. Sayfa kayınca ekrandaki yeri değişmez.
+  // Profil dokunmatikse kaydırma parmakla yapılır. Fare tekerleği kullanılmaz.
+  test('kulakçık sağ kenara yapışıktır ve kaydırmada yerinde kalır', async ({ page }, info) => {
     await openRecord(page);
+    // Kaydırma denemesi anlamlı olsun diye sayfa ekrandan uzun yapılır.
+    await page.locator('#main').evaluate((el) => {
+      const pad = document.createElement('div');
+      pad.style.blockSize = '200vh';
+      el.append(pad);
+    });
     // Kaydırma çubuğu varsa sağ kenar onun solundadır.
     const vw = await page.evaluate(() => document.documentElement.clientWidth);
     const before = await tab(page).boundingBox();
     expect(before).not.toBeNull();
     expect(Math.round((before?.x ?? 0) + (before?.width ?? 0))).toBeGreaterThanOrEqual(vw - 1);
-    await page.mouse.wheel(0, 400);
-    await page.evaluate(() => window.scrollBy(0, 400));
+    await scrollDown(page, info, 400);
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
     const after = await tab(page).boundingBox();
     expect(Math.abs((after?.y ?? 0) - (before?.y ?? 0))).toBeLessThanOrEqual(1);
   });
@@ -99,11 +148,14 @@ test.describe('yardım kulakçığı', () => {
     await expect(modeSwitch(page)).toHaveAttribute('aria-checked', 'true');
   });
 
-  test('odak göstergesi çevreleyen halka değildir', async ({ page }) => {
+  // Beklenen: klavyeyle kulakçığa gelinir. Odak göstergesi kutuyu çevreleyen halka değildir.
+  // WebKit'te klavye geçişi Alt ile yapılır. Bkz. `tabKey`.
+  test('odak göstergesi çevreleyen halka değildir', async ({ page }, info) => {
     await openRecord(page);
     await tab(page).focus();
-    await page.keyboard.press('Shift+Tab');
-    await page.keyboard.press('Tab');
+    await page.keyboard.press(tabKey(info, true));
+    await expect(tab(page)).not.toBeFocused();
+    await page.keyboard.press(tabKey(info));
     await expect(tab(page)).toBeFocused();
     const style = await tab(page).evaluate((el) => {
       const s = getComputedStyle(el);
@@ -120,6 +172,24 @@ test.describe('yardım kulakçığı', () => {
     await expect(panel(page)).toBeVisible();
     await panel(page).getByRole('button', { name: 'Yardımı kapat' }).tap();
     await expect(panel(page)).toBeHidden();
+  });
+});
+
+test.describe('ilk yük', () => {
+  // Beklenen: panel kodu sayfayla birlikte inmez. Kulakçık ilk kez açılınca iner.
+  // Parça adı `HelpPanel-` ile başlar.
+  test('panel kodu kulakçık açılınca iner', async ({ page }) => {
+    const scripts: string[] = [];
+    page.on('request', (r) => {
+      if (r.resourceType() === 'script') scripts.push(r.url());
+    });
+    await openRecord(page);
+    await page.waitForLoadState('networkidle');
+    const isPanel = (u: string) => /\/HelpPanel-[\w-]+\.js$/.test(new URL(u).pathname);
+    expect(scripts.filter(isPanel)).toEqual([]);
+    await tab(page).click();
+    await expect(modeSwitch(page)).toBeVisible();
+    expect(scripts.filter(isPanel)).toHaveLength(1);
   });
 });
 
@@ -211,11 +281,15 @@ test.describe('sağ yuva ve çekmece', () => {
   });
 });
 
+// Beklenen: açık panelde axe ihlali yoktur. Ölçüm solma bittikten sonra yapılır.
+// Solma sürerken renkler yarı saydamdır. O anki karşıtlık gerçek görünümü göstermez.
 test('açık panel axe denetiminden geçer', async ({ page }) => {
   await openRecord(page);
   await tab(page).click();
   await modeSwitch(page).click();
   await expect(panel(page)).toBeVisible();
+  await motionDone(page);
+  await expect(panel(page)).toHaveCSS('opacity', '1');
   const result = await new AxeBuilder({ page })
     .include('#shell-help')
     .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
