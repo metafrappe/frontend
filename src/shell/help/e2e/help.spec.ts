@@ -233,6 +233,70 @@ test.describe('kendi kendine destek modu', () => {
   });
 });
 
+// G-138 sunucu verisi sahte sunucudan gelir (src/mocks/handlers.ts).
+// Bileşen "record-form" üç bağlantı verir. "Örnek başlık" alanı destek bağlantısı vermez.
+test.describe('bileşen yardımı ve bağlantılar', () => {
+  const component = (page: Page) =>
+    page.getByRole('button', { name: 'Kayıt formu bileşeninin yardımı' });
+
+  async function modeOn(page: Page) {
+    await openRecord(page);
+    await tab(page).click();
+    await modeSwitch(page).click();
+    await page.keyboard.press('Escape');
+  }
+
+  test('mod kapalıyken bileşen işareti yoktur; açılınca bileşen adıyla görünür', async ({
+    page,
+  }) => {
+    await openRecord(page);
+    await expect(component(page)).toHaveCount(0);
+    await tab(page).click();
+    await modeSwitch(page).click();
+    await page.keyboard.press('Escape');
+    await expect(component(page)).toBeVisible();
+  });
+
+  test('bileşen işareti tur, belge ve destek bağlantısını sunucudan gösterir', async ({ page }) => {
+    await modeOn(page);
+    await component(page).click();
+    const p = panel(page);
+    await expect(p).toBeVisible();
+    await expect(p.getByRole('heading', { name: 'Kayıt formu' })).toBeVisible();
+    await expect(p.getByRole('link', { name: 'Tur' })).toHaveAttribute(
+      'href',
+      '/tours/record-form',
+    );
+    await expect(p.getByRole('link', { name: 'Belge' })).toHaveAttribute(
+      'href',
+      'https://docs.example.test/kayit-formu',
+    );
+    await expect(p.getByRole('link', { name: 'Destek talebi' })).toHaveAttribute(
+      'href',
+      '/helpdesk/new',
+    );
+    for (const name of ['Tur', 'Belge', 'Destek talebi']) {
+      const size = await p
+        .getByRole('link', { name })
+        .evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
+      expect(size).toBeGreaterThanOrEqual(14);
+    }
+    expect(await overflowX(page)).toBeLessThanOrEqual(0);
+    await page.keyboard.press('Escape');
+    await expect(p).toBeHidden();
+    await expect(component(page)).toBeFocused();
+  });
+
+  test('sunucu vermeyen bağlantı çizilmez', async ({ page }) => {
+    await modeOn(page);
+    await marker(page).click();
+    const p = panel(page);
+    await expect(p.getByRole('link', { name: 'Belge' })).toBeVisible();
+    await expect(p.getByRole('link', { name: 'Tur' })).toBeVisible();
+    await expect(p.getByRole('link', { name: 'Destek talebi' })).toHaveCount(0);
+  });
+});
+
 test.describe('sağ yuva ve çekmece', () => {
   test('geniş ekranda panel içerikle yan yana durur', async ({ page }) => {
     test.skip(!docked(page), 'yalnız yan yana sığan genişlik');
