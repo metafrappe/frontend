@@ -308,3 +308,65 @@ describe('workspaceFromSite', () => {
     expect(workspaceFromSite('bozuk adres')).toBeUndefined();
   });
 });
+
+describe('createShellViewData yardım bağlantısı (G-138)', () => {
+  const links = { tour_url: '/tur', doc_url: null, support_url: 'https://d.example.test/' };
+  const fieldAnswer = (source: string) => ({
+    doctype: 'Örnek Kayıt',
+    fieldname: 'title',
+    source,
+    topic: null,
+    title: null,
+    content: source === 'none' || source === 'unavailable' ? null : 'Metin.',
+    message: null,
+    actions: [],
+    ...links,
+  });
+
+  it('alan yardımını istemciye iletir ve metni ile bağlantıları döner', async () => {
+    const getFieldHelp = vi.fn(async () => fieldAnswer('tenant'));
+    const data = createShellViewData({ getFieldHelp } as never);
+    const signal = new AbortController().signal;
+    await expect(
+      data.help?.loadField({ doctype: 'Örnek Kayıt', fieldname: 'title' }, signal),
+    ).resolves.toEqual({ title: null, content: 'Metin.', ...links });
+    expect(getFieldHelp).toHaveBeenCalledWith(
+      { doctype: 'Örnek Kayıt', fieldname: 'title' },
+      { signal },
+    );
+  });
+
+  it.each(['none', 'unavailable'])('alan yardımı %s ise null döner', async (source) => {
+    const data = createShellViewData({
+      getFieldHelp: vi.fn(async () => fieldAnswer(source)),
+    } as never);
+    await expect(
+      data.help?.loadField({ doctype: 'X', fieldname: 'y' }, new AbortController().signal),
+    ).resolves.toBeNull();
+  });
+
+  it('bileşen yardımını component_id ile okur; yoksa null döner', async () => {
+    const getComponentHelp = vi
+      .fn()
+      .mockResolvedValueOnce({
+        component_id: 'record-form',
+        source: 'app',
+        topic: 'HT-1',
+        title: 'Kayıt formu',
+        content: 'Metin.',
+        message: null,
+        actions: [],
+        ...links,
+      })
+      .mockResolvedValueOnce(null);
+    const data = createShellViewData({ getComponentHelp } as never);
+    const signal = new AbortController().signal;
+    await expect(data.help?.loadComponent('record-form', signal)).resolves.toEqual({
+      title: 'Kayıt formu',
+      content: 'Metin.',
+      ...links,
+    });
+    expect(getComponentHelp).toHaveBeenCalledWith('record-form', { signal });
+    await expect(data.help?.loadComponent('yok', signal)).resolves.toBeNull();
+  });
+});
