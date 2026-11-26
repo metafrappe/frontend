@@ -6,6 +6,9 @@ export const CHECKBOX_META: DocTypeMeta = {
     name: 'Checkbox Example',
     module: 'Example',
     sensitivity: 'standard',
+    title_field: 'title',
+    search_fields: 'title',
+    sort_field: 'modified',
     fields: [
       {
         fieldname: 'confirmed',
