@@ -74,7 +74,7 @@ describe('bulk action bar', () => {
     const confirm = within(preview).getByRole('button', { name: 'Onayla' });
     expect(confirm).toBeDisabled();
     fireEvent.click(confirm);
-    expect(within(preview).queryByRole('status')).not.toBeInTheDocument();
+    expect(within(preview).getByRole('status')).toBeEmptyDOMElement();
     fireEvent.click(ack);
     expect(confirm).toBeEnabled();
     const calls = list.mock.calls.length;

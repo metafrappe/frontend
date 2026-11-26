@@ -86,7 +86,7 @@ test('table preserves readability, keyboard focus, selection and URL history', a
         .map((element) => parseFloat(getComputedStyle(element).fontSize)),
     );
   expect(Math.min(...fontSizes)).toBeGreaterThanOrEqual(14);
-  // Görünüm satırı önce gelir: kayıtlı görünüm ve görünüm türü, sonra arama.
+  // Görünüm satırı önce gelir: kayıtlı görünüm, görünüm türü ve "Seç", sonra arama.
   // WebKit varsayılan ayarda Tab ile radyo düğmesine gitmez. Safari de böyle davranır.
   await page.keyboard.press('Tab');
   if (browserName !== 'webkit') {
@@ -94,6 +94,11 @@ test('table preserves readability, keyboard focus, selection and URL history', a
     await page.keyboard.press('Tab');
   }
   await expect(page.getByRole('combobox', { name: 'Görünüm', exact: true })).toBeFocused();
+  // WebKit varsayılan ayarda Tab ile "Seç" düğmesine de gitmez.
+  if (browserName !== 'webkit') {
+    await page.keyboard.press('Tab');
+    await expect(page.getByRole('button', { name: 'Seç', exact: true })).toBeFocused();
+  }
   await page.keyboard.press('Tab');
   await expect(page.getByRole('textbox', { name: 'Kayıt ara' })).toBeFocused();
   const wrapper = page.locator('.collection-input');

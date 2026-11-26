@@ -156,6 +156,35 @@
   background: var(--collection-selected);
   padding-inline: var(--collection-gap);
 }
+.collection-bulk strong {
+  margin-inline-end: auto;
+}
+.collection-preview {
+  display: grid;
+  gap: var(--collection-gap);
+  margin-top: var(--collection-gap);
+  padding: var(--collection-gap);
+  background: var(--collection-surface);
+}
+.collection-preview p {
+  margin: 0;
+}
+/* Toplu işlem düğmeleri ve önizleme kutusu dokunma alanı tokenını karşılar. */
+.collection-bulk .collection-button,
+.collection-preview .collection-button,
+.collection-viewbar > .collection-button {
+  min-height: var(--collection-hit);
+}
+.collection-preview .collection-checkbox {
+  min-height: var(--collection-hit);
+  display: inline-flex;
+  align-items: center;
+}
+.collection-preview-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--collection-gap);
+}
 .collection-applied p {
   margin: 0;
 }
@@ -189,8 +218,7 @@
   font-weight: 600;
   background: var(--collection-surface);
 }
-.collection-table .collection-selection,
-.collection-table[data-view='table'] td:first-child {
+.collection-table .collection-selection {
   min-width: var(--collection-control);
 }
 .collection-table .collection-number {

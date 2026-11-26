@@ -4,7 +4,10 @@ import AxeBuilder from '@axe-core/playwright';
 const preview = '/src/views/collection/preview/';
 const screenshotDir = process.env['AJA_SCREENSHOT_DIR'];
 
-test('keyboard opens selection mode, preview and returns focus to the opener', async ({ page }) => {
+test('keyboard opens selection mode, preview and returns focus to the opener', async ({
+  page,
+  browserName,
+}) => {
   await page.goto(preview);
   await expect(page.getByText('ORNEK-0001', { exact: true })).toBeVisible();
   await expect(page.getByRole('region', { name: 'Toplu işlem', exact: true })).toHaveCount(0);
@@ -28,7 +31,9 @@ test('keyboard opens selection mode, preview and returns focus to the opener', a
   await expect(ack).toBeFocused();
   await page.keyboard.press('Space');
   await expect(confirm).toBeEnabled();
-  await page.keyboard.press('Tab');
+  // WebKit varsayılan ayarda Tab ile düğmeye gitmez. Safari de böyle davranır.
+  if (browserName === 'webkit') await confirm.focus();
+  else await page.keyboard.press('Tab');
   await expect(confirm).toBeFocused();
   await page.keyboard.press('Enter');
   await expect(box.getByRole('status')).toHaveText(
@@ -57,10 +62,16 @@ test('pointer and touch select rows; "Vazgeç" keeps records unchanged', async (
   const bar = page.getByRole('region', { name: 'Toplu işlem', exact: true });
   await expect(bar).toContainText('2 kayıt seçildi');
   // Toplu işlem düğmeleri dokunma alanı tokenını karşılar.
-  const sizes = await bar
-    .getByRole('button')
-    .evaluateAll((buttons) => buttons.map((button) => button.getBoundingClientRect().height));
-  for (const height of sizes) expect(height).toBeGreaterThanOrEqual(touch ? 48 : 44);
+  const sizes = await bar.getByRole('button').evaluateAll((buttons) =>
+    buttons.map((button) => ({
+      height: button.getBoundingClientRect().height,
+      target: parseFloat(getComputedStyle(button).minHeight),
+    })),
+  );
+  for (const size of sizes) {
+    expect(size.height).toBeGreaterThanOrEqual(size.target);
+    expect(size.target).toBeGreaterThanOrEqual(touch ? 48 : 44);
+  }
   const opener = bar.getByRole('button', { name: 'Seçilenleri onayla' });
   await press(opener);
   const box = page.getByRole('region', { name: 'Toplu işlem önizlemesi' });

@@ -16,6 +16,7 @@ import {
 } from 'react';
 import type { ErrorInfo, ReactNode } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { BulkActions } from './BulkActions';
 import { CollectionState } from './CollectionState';
 import { TableView } from './TableView';
 import { collectionVariables, collectionViewOptions } from './collection-tokens';
@@ -146,10 +147,12 @@ export function CollectionView({
     source,
     definition,
   });
-  const [inspect, setInspect] = useState(false);
+  // "Seç" düğmesi seçim kipini açar. Kip kapalıyken satırlarda seçim kutusu yoktur.
+  const [selecting, setSelecting] = useState(false);
   const { token } = theme.useToken();
   const titleId = useId();
   const contentId = useId();
+  const selectId = useId();
   const page = current?.status === 'ready' ? current.page : undefined;
   const scope = key + query.view;
   const selected =
@@ -162,7 +165,6 @@ export function CollectionView({
   function navigate(next: CollectionQuery) {
     setDraft({ base: next.search, search: next.search });
     setParams(writeQuery(params, next));
-    setInspect(false);
   }
   function update(patch: Partial<CollectionQuery>) {
     // Kullanıcı süzgeci, aramayı ya da sıralamayı elle değiştirirse kayıtlı görünüm seçimi kalkar.
@@ -243,6 +245,19 @@ export function CollectionView({
               }}
             />
           </label>
+          {query.view === 'table' && (
+            <Button
+              id={selectId}
+              aria-pressed={selecting}
+              onClick={() => {
+                // Kip kapanınca seçim de kalkar.
+                if (selecting) setSelection({ key: scope, names: [], source, definition });
+                setSelecting(!selecting);
+              }}
+            >
+              Seç
+            </Button>
+          )}
           {!enableExperimentalCollectionViews && requestedQuery.view !== 'table' && (
             <p role="status">İstenen görünüm şu anda kapalı. Tablo gösteriliyor.</p>
           )}
@@ -345,34 +360,14 @@ export function CollectionView({
           </div>
         </div>
         <div className="collection-bulk-slot" data-collection-part="bulk">
-          {selected.length > 0 && query.view === 'table' && (
-            <div role="toolbar" aria-label="Seçilen kayıtlar" className="collection-bulk">
-              <strong>{selected.length} kayıt seçildi.</strong>
-              <Button
-                aria-expanded={inspect}
-                aria-controls={contentId + '-selection'}
-                onClick={() => {
-                  setInspect(!inspect);
-                }}
-              >
-                Seçilenleri göster
-              </Button>
-              <Button
-                onClick={() => {
-                  setSelection({ key: scope, names: [], source, definition });
-                  setInspect(false);
-                }}
-              >
-                Seçimi kaldır
-              </Button>
-            </div>
-          )}
-          {inspect && selected.length > 0 && (
-            <ul id={contentId + '-selection'}>
-              {selected.map((name) => (
-                <li key={name}>{name}</li>
-              ))}
-            </ul>
+          {selecting && query.view === 'table' && (
+            <BulkActions
+              selected={selected}
+              onClear={() => {
+                setSelection({ key: scope, names: [], source, definition });
+                document.getElementById(selectId)?.focus();
+              }}
+            />
           )}
         </div>
         <div
@@ -403,6 +398,7 @@ export function CollectionView({
                     definition={definition}
                     rows={page.data}
                     recordHref={recordHref}
+                    selecting={selecting}
                     selected={selected}
                     onSelect={(names) => {
                       setSelection({ key: scope, names, source, definition });
