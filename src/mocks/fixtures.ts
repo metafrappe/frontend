@@ -3,6 +3,7 @@
 import type { components as HrmsComponents } from '@/api/generated/hrms_tr';
 import type { components as AccessComponents } from '@/api/generated/platform_core-access';
 import type { components as AiComponents } from '@/api/generated/platform_core-ai';
+import type { components as HelpComponents } from '@/api/generated/platform_core-help';
 import type { components as IdentityComponents } from '@/api/generated/platform_core-identity';
 import type { components as GatewayComponents } from '@/api/generated/platform_core-model-gateway';
 import type { components as ShellComponents } from '@/api/generated/platform_core-shell';
@@ -630,3 +631,32 @@ export const SAMPLE_SECRET_RESULTS: Record<string, ConnectionStatus> = {
 };
 /** Bu adres onaylı adres listesinde değildir. */
 export const SAMPLE_UNAPPROVED_URL = 'https://onaysiz.example.test';
+
+// Yardım içeriği (platform_core-help sözleşmesi 0.2.0, G-138). Adresler örnektir.
+// Kayıt formu üç bağlantı verir. "Örnek başlık" alanı destek bağlantısı vermez.
+export const sampleComponentHelp: HelpComponents['schemas']['ComponentHelp'] = {
+  component_id: 'record-form',
+  source: 'tenant',
+  topic: 'HT-ORNEK-2',
+  title: 'Kayıt formu',
+  content: 'Kaydı bu formda düzenlersiniz. Değişikliği "Kaydet" düğmesiyle saklarsınız.',
+  message: null,
+  actions: [],
+  tour_url: '/tours/record-form',
+  doc_url: 'https://docs.example.test/kayit-formu',
+  support_url: '/helpdesk/new',
+};
+
+export const sampleFieldHelp: HelpComponents['schemas']['FieldHelp'] = {
+  doctype: 'Örnek Kayıt',
+  fieldname: 'title',
+  source: 'app',
+  topic: 'HT-ORNEK-1',
+  title: 'Örnek başlık',
+  content: 'Kaydın kısa adını yazın. Ad listede görünür.',
+  message: null,
+  actions: [],
+  tour_url: '/tours/ornek-baslik',
+  doc_url: 'https://docs.example.test/ornek-baslik',
+  support_url: null,
+};

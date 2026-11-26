@@ -8,8 +8,17 @@ export type HelpTarget =
       /** Ekranda görünen alan adı. Ekran okuyucu işareti bu adla duyurur. */
       label: string;
       fieldname: string;
-      /** Frappe alan açıklaması. Yoksa panel "yardım metni yok" yazar. */
+      /** Frappe alan açıklaması. Sunucu yardımı yoksa panel bunu gösterir. */
       description?: string | null | undefined;
+      /** Alanın belge türü. Varsa panel sunucudan alan yardımını okur (G-138). */
+      doctype?: string | undefined;
+    }
+  | {
+      kind: 'component';
+      /** Ekranda görünen bileşen adı. Ekran okuyucu işareti bu adla duyurur. */
+      label: string;
+      /** Yardım kaydındaki bileşen kimliği. Örnek: `record-form`. */
+      componentId: string;
     };
 
 export interface HelpApi {
@@ -20,6 +29,14 @@ export interface HelpApi {
 }
 
 export const HelpContext = createContext<HelpApi | null>(null);
+
+/**
+ * Alan işaretlerinin belge türü. Kayıt görünümü bunu verir.
+ * Alan işareti bu değerle sunucudan alan yardımını ister.
+ */
+export const HelpDoctype = createContext<string | undefined>(undefined);
+
+export const useHelpDoctype = () => useContext(HelpDoctype);
 
 /** Kabuk dışında (örneğin bileşen deneme sayfası) bağlam yoktur ve işaret çizilmez. */
 export const useHelp = () => useContext(HelpContext);

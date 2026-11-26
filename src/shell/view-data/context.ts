@@ -121,6 +121,29 @@ export interface ShellCreditData {
   load: (signal: AbortSignal) => Promise<ShellCredit | null>;
 }
 
+/**
+ * Sunucudan gelen yardım (G-138). Alanlar sözleşmedeki adlarla aynıdır.
+ * Bağlantı yoksa değer `null` olur. Panel güvensiz adresi ayrıca atar.
+ */
+export interface ShellHelpAnswer {
+  title: string | null;
+  content: string | null;
+  tour_url: string | null;
+  doc_url: string | null;
+  support_url: string | null;
+}
+
+/** Yardım panelinin sunucu bağlantısı. Yoksa panel yalnız alan açıklamasını gösterir. */
+export interface ShellHelpData {
+  /** Alan yardımını okur. Alan okunamıyorsa ya da yardım yoksa `null` döner. */
+  loadField: (
+    query: { doctype: string; fieldname: string },
+    signal: AbortSignal,
+  ) => Promise<ShellHelpAnswer | null>;
+  /** Bileşen yardımını okur. Bileşen için yardım yoksa `null` döner. */
+  loadComponent: (componentId: string, signal: AbortSignal) => Promise<ShellHelpAnswer | null>;
+}
+
 export interface ShellViewData {
   /** Çalışma alanı seçici. Yoksa yalnız logo görünür. */
   workspaces?: ShellWorkspaceData;
@@ -148,6 +171,8 @@ export interface ShellViewData {
    * İkisi de yoksa ana sayfa bağlantının kurulmadığını yazar.
    */
   home?: ShellHomeData;
+  /** Yardım içeriği (G-138). Yoksa panel bağlantı çizmez. */
+  help?: ShellHelpData;
 }
 
 /** AI Studio taşıyıcısı ve ekranda yazan kaynak adı (AX-7). */

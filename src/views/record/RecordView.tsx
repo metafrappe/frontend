@@ -19,6 +19,8 @@ import {
   useState,
 } from 'react';
 
+import { HelpDoctype, HelpMarker } from '@/shell/help';
+
 import { RecordApiError } from './adapter';
 import { CatalogField } from './catalog';
 import { CATALOG_VERSION } from './catalogRegistry';
@@ -173,6 +175,9 @@ function buildInitialNewRecord(meta: DocTypeMeta): RecordDocument {
   }
   return initial;
 }
+
+/** Kayıt formunun yardım kaydındaki bileşen kimliği (G-138 `component_id`). */
+export const RECORD_FORM_HELP_ID = 'record-form';
 
 export interface RecordNavigatorConfig {
   currentIndex: number;
@@ -952,6 +957,13 @@ function RecordViewBody(props: RecordViewBodyProps) {
         <div className="rv-header-top">
           <div className="rv-header-title-group">
             <h1 className="rv-header-title">{displayTitle}</h1>
+            <HelpMarker
+              target={{
+                kind: 'component',
+                componentId: RECORD_FORM_HELP_ID,
+                label: formatRecordMessage(locale, 'helpComponentLabel'),
+              }}
+            />
             <span className={docstatusBadge.className}>{docstatusBadge.text}</span>
             {isDirty ? (
               <span className="rv-sync-badge rv-sync-badge--dirty" role="status">
@@ -1004,52 +1016,38 @@ function RecordViewBody(props: RecordViewBodyProps) {
         ) : null}
       </header>
 
-      <div className="rv-body">
-        {meta.catalog_version > CATALOG_VERSION ? (
-          <div className="rv-banner rv-banner--warning" role="status">
-            <span>
-              {formatRecordMessage(locale, 'catalogVersionWarning', {
-                serverVersion: meta.catalog_version,
-                clientVersion: CATALOG_VERSION,
-              })}
-            </span>
-          </div>
-        ) : null}
-
-        {conflict ? (
-          <div className="rv-banner rv-banner--conflict" role="alert">
-            <div className="rv-field-header">
-              <WarningCircle weight="regular" />
-              <strong>{formatRecordMessage(locale, 'conflictTitle')}</strong>
-            </div>
-            <span>{formatRecordMessage(locale, 'conflictDescription')}</span>
-            {conflict.latestRecord?.modified ? (
-              <span className="rv-field-help">
-                {formatRecordMessage(locale, 'conflictServerVersion', {
-                  version: conflict.latestRecord.modified,
+      {/* Alan yardım işaretleri sunucudan bu belge türüyle yardım ister (G-138). */}
+      <HelpDoctype.Provider value={doctype}>
+        <div className="rv-body">
+          {meta.catalog_version > CATALOG_VERSION ? (
+            <div className="rv-banner rv-banner--warning" role="status">
+              <span>
+                {formatRecordMessage(locale, 'catalogVersionWarning', {
+                  serverVersion: meta.catalog_version,
+                  clientVersion: CATALOG_VERSION,
                 })}
               </span>
-            ) : null}
-            <div className="rv-banner-actions">
-              <Button
-                size="small"
-                type="primary"
-                onClick={() => {
-                  if (conflict.latestRecord) {
-                    setScreenState({
-                      status: 'ready',
-                      meta,
-                      record: conflict.latestRecord,
-                    });
-                  }
-                  setConflict(null);
-                }}
-              >
-                {formatRecordMessage(locale, 'conflictKeepDraft')}
-              </Button>
-              {conflict.latestRecord ? (
+            </div>
+          ) : null}
+
+          {conflict ? (
+            <div className="rv-banner rv-banner--conflict" role="alert">
+              <div className="rv-field-header">
+                <WarningCircle weight="regular" />
+                <strong>{formatRecordMessage(locale, 'conflictTitle')}</strong>
+              </div>
+              <span>{formatRecordMessage(locale, 'conflictDescription')}</span>
+              {conflict.latestRecord?.modified ? (
+                <span className="rv-field-help">
+                  {formatRecordMessage(locale, 'conflictServerVersion', {
+                    version: conflict.latestRecord.modified,
+                  })}
+                </span>
+              ) : null}
+              <div className="rv-banner-actions">
                 <Button
                   size="small"
+                  type="primary"
                   onClick={() => {
                     if (conflict.latestRecord) {
                       setScreenState({
@@ -1058,52 +1056,69 @@ function RecordViewBody(props: RecordViewBodyProps) {
                         record: conflict.latestRecord,
                       });
                     }
-                    setDraftEdits({});
-                    setFieldErrors({});
                     setConflict(null);
                   }}
                 >
-                  {formatRecordMessage(locale, 'conflictReloadServer')}
+                  {formatRecordMessage(locale, 'conflictKeepDraft')}
                 </Button>
-              ) : null}
+                {conflict.latestRecord ? (
+                  <Button
+                    size="small"
+                    onClick={() => {
+                      if (conflict.latestRecord) {
+                        setScreenState({
+                          status: 'ready',
+                          meta,
+                          record: conflict.latestRecord,
+                        });
+                      }
+                      setDraftEdits({});
+                      setFieldErrors({});
+                      setConflict(null);
+                    }}
+                  >
+                    {formatRecordMessage(locale, 'conflictReloadServer')}
+                  </Button>
+                ) : null}
+              </div>
             </div>
-          </div>
-        ) : null}
-
-        <div role="status" aria-live="polite" aria-atomic="true">
-          {Object.keys(fieldErrors).length > 0 ? (
-            <p key={validationAttempt.sequence} className="rv-banner rv-banner--error">
-              {formatRecordMessage(locale, 'validationErrorCount', {
-                count: Object.keys(fieldErrors).length,
-              })}
-            </p>
           ) : null}
-        </div>
 
-        {actionError ? (
-          <div className="rv-banner rv-banner--error" role="alert">
-            <span>{actionError}</span>
+          <div role="status" aria-live="polite" aria-atomic="true">
+            {Object.keys(fieldErrors).length > 0 ? (
+              <p key={validationAttempt.sequence} className="rv-banner rv-banner--error">
+                {formatRecordMessage(locale, 'validationErrorCount', {
+                  count: Object.keys(fieldErrors).length,
+                })}
+              </p>
+            ) : null}
           </div>
-        ) : null}
 
-        {layout.hasExplicitTabs ? (
-          <Tabs
-            {...(activeTabKey !== undefined ? { activeKey: activeTabKey } : {})}
-            onChange={(nextKey) => setActiveTabKey(nextKey)}
-            items={layout.tabs.map((tab) => ({
-              key: tab.key,
-              label: tab.label,
-              children: <div className="rv-column">{renderSections(tab.sections)}</div>,
-            }))}
-          />
-        ) : (
-          layout.tabs.map((tab) => (
-            <div key={tab.key} className="rv-column">
-              {renderSections(tab.sections)}
+          {actionError ? (
+            <div className="rv-banner rv-banner--error" role="alert">
+              <span>{actionError}</span>
             </div>
-          ))
-        )}
-      </div>
+          ) : null}
+
+          {layout.hasExplicitTabs ? (
+            <Tabs
+              {...(activeTabKey !== undefined ? { activeKey: activeTabKey } : {})}
+              onChange={(nextKey) => setActiveTabKey(nextKey)}
+              items={layout.tabs.map((tab) => ({
+                key: tab.key,
+                label: tab.label,
+                children: <div className="rv-column">{renderSections(tab.sections)}</div>,
+              }))}
+            />
+          ) : (
+            layout.tabs.map((tab) => (
+              <div key={tab.key} className="rv-column">
+                {renderSections(tab.sections)}
+              </div>
+            ))
+          )}
+        </div>
+      </HelpDoctype.Provider>
     </form>
   );
 }

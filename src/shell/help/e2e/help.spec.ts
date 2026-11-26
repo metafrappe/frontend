@@ -365,3 +365,19 @@ test('açık panel axe denetiminden geçer', async ({ page }) => {
     .analyze();
   expect(result.violations).toEqual([]);
 });
+
+test('bağlantılı bileşen paneli axe denetiminden geçer', async ({ page }) => {
+  await openRecord(page);
+  await tab(page).click();
+  await modeSwitch(page).click();
+  await page.keyboard.press('Escape');
+  await page.getByRole('button', { name: 'Kayıt formu bileşeninin yardımı' }).click();
+  await expect(panel(page).getByRole('link', { name: 'Destek talebi' })).toBeVisible();
+  await motionDone(page);
+  await expect(panel(page)).toHaveCSS('opacity', '1');
+  const result = await new AxeBuilder({ page })
+    .include('#shell-help')
+    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+    .analyze();
+  expect(result.violations).toEqual([]);
+});

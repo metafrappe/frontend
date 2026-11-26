@@ -375,6 +375,19 @@ Sayfanın sağ kenarında "Yardım" kulakçığı durur. Kulakçık bir düğmed
 - Panel `Switch` bileşenini `@/components/controls/Switch` dosyasından alır. Toplu dosya `InputNumber` ve `Radio` parçalarını da pakete sokar.
 - Giriş ekranının indirdiği antd modülleri `antd-initial` parçasında toplanır (`vite.config.ts`). Böylece tembel panel giriş parçalarını bölmez.
 
-Bir bölüm henüz yapılmadı. G-137 bileşen düzeyinde yardım işareti ister. Panelde tur, belge ve destek talebi bağlantısı da ister. Bu bölüm henüz yoktur. Ürün sahibinin kararını bekler.
+Bileşen yardımı ve bağlantılar da yapıldı (G-137, G-138).
 
-Sunucu yardım içeriği henüz bağlı değildir. Alan yardımı şimdilik Frappe alan açıklamasından gelir. Sunucu sözleşmesi `platform_core-help.openapi.yaml` dosyasıdır (G-138). Sözleşme bu depoya `contracts:sync` ile alınınca panel `getFieldHelp` ucunu kullanır.
+- Mod açıkken bileşen yardım işareti görünür. Örnek: kayıt formunun başlığındaki işaret.
+- Bileşen işareti ekran okuyucuya bileşen adıyla duyurulur. Örnek: "Kayıt formu bileşeninin yardımı".
+- Bileşen kimliği yardım kaydındaki `component_id` değeridir. Kayıt formu için değer `record-form` olur.
+- Panel bileşen yardımını `getComponentHelp` ucundan okur.
+- Alan işareti belge türünü `HelpDoctype` bağlamından alır. Kayıt görünümü bu bağlamı verir.
+- Belge türü varsa panel alan yardımını `getFieldHelp` ucundan okur.
+- Sunucu yardımı yoksa alan yardımı Frappe alan açıklamasından gelir.
+- Panel "Tur", "Belge" ve "Destek talebi" bağlantılarını gösterir.
+- Adresler sunucudaki yardım kaydından gelir. Kodda adres yoktur.
+- Sunucu bir bağlantıyı vermezse o bağlantı çizilmez. İstek başarısız olursa da bağlantı çizilmez.
+- Panel adresi ayrıca denetler (`links.ts`). Yalnız `https` adresi ya da site içi yol kabul edilir.
+- Örneğin `javascript:` ile başlayan adres çizilmez.
+- Sunucu sözleşmesi `contracts/openapi/platform_core-help.openapi.yaml` dosyasıdır. Sürüm `0.2.0` olur.
+- Uygulama girişi bağlantıyı `src/app/view-data.ts` içinde kurar. Kabuk API istemcisi kurmaz.

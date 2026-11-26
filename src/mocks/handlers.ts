@@ -38,8 +38,10 @@ import {
   SAMPLE_USER,
   sampleBootstrap,
   sampleCompletion,
+  sampleComponentHelp,
   sampleDocTypeMeta,
   sampleDocuments,
+  sampleFieldHelp,
   sampleLoginUrl,
   sampleLoginProviders,
   sampleLinkedProviders,
@@ -1243,6 +1245,39 @@ export const handlers = [
     return doctype === sampleAccessSummary.doctype
       ? message(sampleAccessSummary)
       : frappeError(403, 'PermissionError');
+  }),
+
+  // Yardım içeriği (platform_core-help sözleşmesi, G-138).
+  // Eşleşmeyen bileşen `null`, eşleşmeyen alan genel "yardım yok" yanıtı alır.
+  http.get('*/api/method/platform_core.api.help.get_component_help', ({ request }) => {
+    const denied = guard(request, { write: false });
+    if (denied) return denied;
+    const id = new URL(request.url).searchParams.get('component_id');
+    return message(id === sampleComponentHelp.component_id ? sampleComponentHelp : null);
+  }),
+
+  http.get('*/api/method/platform_core.api.help.get_field_help', ({ request }) => {
+    const denied = guard(request, { write: false });
+    if (denied) return denied;
+    const params = new URL(request.url).searchParams;
+    const doctype = params.get('doctype') ?? '';
+    const fieldname = params.get('fieldname') ?? '';
+    if (doctype === sampleFieldHelp.doctype && fieldname === sampleFieldHelp.fieldname) {
+      return message(sampleFieldHelp);
+    }
+    return message({
+      doctype,
+      fieldname,
+      source: 'none',
+      topic: null,
+      title: null,
+      content: null,
+      message: 'No help is available for this field.',
+      actions: ['request_help'],
+      tour_url: null,
+      doc_url: null,
+      support_url: null,
+    });
   }),
 
   // Telefon ve PWA kurulumları (platform_core-mobile sözleşmesi, PWA oturumu).
