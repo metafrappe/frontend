@@ -14,6 +14,7 @@ import { sampleBootstrap } from '@/mocks/fixtures';
 
 import { createRoot } from 'react-dom/client';
 import { EMPTY_LEAVE_CONTEXT, LEAVE_CONTEXT, LEAVE_META } from './leaveFixture';
+import { CHECKBOX_META } from './checkboxFixture';
 import { createFrappeRecordAdapter } from '../adapter';
 
 import {
@@ -295,7 +296,8 @@ export function HarnessApp() {
   const [assistCalls, setAssistCalls] = useState(0);
 
   const adapter: RecordDataAdapter = {
-    getDocTypeMeta: async () => (isLeave ? LEAVE_META : HARNESS_META),
+    getDocTypeMeta: async () =>
+      scenario === 'checkbox' ? CHECKBOX_META : isLeave ? LEAVE_META : HARNESS_META,
     getNewRecordContext:
       scenario === 'leave-prefill' ? contextAdapter.getNewRecordContext : undefined,
     getRecord: async () => {
@@ -337,7 +339,16 @@ export function HarnessApp() {
 
   return (
     <main data-assist-calls={assistCalls}>
-      {isLeave ? (
+      {scenario === 'checkbox' ? (
+        <RecordView
+          doctype={CHECKBOX_META.schema.name}
+          createMode
+          adapter={adapter}
+          themeMode={themeMode}
+          locale="tr"
+          breadcrumbs={[]}
+        />
+      ) : isLeave ? (
         <RecordView
           doctype="Leave Application"
           title="Yeni izin talebi"

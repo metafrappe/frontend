@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { RecordView } from '../RecordView';
 import { LEAVE_META } from '../harness/leaveFixture';
+import { CHECKBOX_META } from '../harness/checkboxFixture';
 import type { DocTypeMeta, RecordDataAdapter } from '../types';
 
 function renderForm(meta: DocTypeMeta = LEAVE_META) {
@@ -17,6 +18,45 @@ function renderForm(meta: DocTypeMeta = LEAVE_META) {
 }
 
 describe('record sections and field validation', () => {
+  it('marks an unchecked required checkbox invalid and clears only its error when checked', async () => {
+    const user = userEvent.setup();
+    const { adapter } = renderForm(CHECKBOX_META);
+    const checkbox = await screen.findByRole('checkbox', { name: 'Bilgileri kontrol ettim' });
+    expect(checkbox).not.toHaveAttribute('aria-invalid');
+    expect(checkbox).not.toBeChecked();
+
+    await user.click(screen.getByRole('button', { name: 'Kaydet' }));
+    expect(checkbox).toHaveAttribute('aria-invalid', 'true');
+    const error = checkbox.closest('.rv-field')!.querySelector('.rv-field-error')!;
+    expect(error).toBeVisible();
+    expect(checkbox.getAttribute('aria-describedby')?.split(' ')).toContain(error.id);
+    expect(adapter.saveRecord).not.toHaveBeenCalled();
+
+    await user.click(checkbox);
+    expect(checkbox).toBeChecked();
+    expect(checkbox).not.toHaveAttribute('aria-invalid');
+    expect(error).not.toBeInTheDocument();
+    expect(checkbox).toHaveAccessibleDescription('Göndermeden önce bilgileri kontrol edin.');
+    expect(screen.getByRole('textbox', { name: /Başlık/ })).toHaveAttribute('aria-invalid', 'true');
+  });
+
+  it('focuses the first invalid checkbox, then the next invalid field after correction', async () => {
+    const user = userEvent.setup();
+    const { adapter } = renderForm(CHECKBOX_META);
+    const checkbox = await screen.findByRole('checkbox', { name: 'Bilgileri kontrol ettim' });
+    const save = screen.getByRole('button', { name: 'Kaydet' });
+    await user.click(save);
+    expect(checkbox).toHaveFocus();
+    await user.click(save);
+    expect(checkbox).toHaveFocus();
+
+    await user.keyboard(' ');
+    expect(checkbox).toBeChecked();
+    await user.click(save);
+    expect(screen.getByRole('textbox', { name: /Başlık/ })).toHaveFocus();
+    expect(adapter.saveRecord).not.toHaveBeenCalled();
+  });
+
   it('does not submit a read-only form through native form submission', async () => {
     const meta: DocTypeMeta = {
       ...LEAVE_META,
