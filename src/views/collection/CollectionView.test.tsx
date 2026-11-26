@@ -8,7 +8,7 @@ import { sampleDefinition as exampleDefinition } from './sample';
 import { LAZY_VIEW, sampleSource } from './test-support/api';
 import { CollectionError } from './types';
 import { RESTRICTED_SAMPLE_DOCTYPE } from '@/mocks/fixtures';
-import type { CollectionSource, CollectionSummarySource, ListRequest } from './types';
+import type { CollectionSource, CollectionSummarySource, ListRequest, SavedView } from './types';
 function LocationProbe() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -61,8 +61,9 @@ describe('collection UI', () => {
         <CollectionView definition={definition} source={sampleSource()} />
       </MemoryRouter>,
     );
-    await screen.findByText('Başlık alanında "Example" değeri aranıyor.');
-    expect(screen.queryByText('Etkin süzgeç yok.')).not.toBeInTheDocument();
+    const chips = await screen.findByRole('list', { name: 'Etkin süzgeçler' });
+    expect(chips).toHaveTextContent('Başlık: Example');
+    expect(screen.getByText('1 süzgeç etkin')).toBeInTheDocument();
   });
   it('kayıt adresi verilince ad hücresi kayda giden bağlantı olur', async () => {
     render(
@@ -361,5 +362,113 @@ describe('group summary views', () => {
     });
     mounted.unmount();
     expect(signal?.aborted).toBe(true);
+  });
+});
+
+const savedViews: readonly SavedView[] = [
+  { id: 'bekleyen', label: 'Bekleyenler', query: { filter: 'status', value: 'Açık' } },
+  { id: 'tutar', label: 'Tutara göre', query: { sort: 'amount', direction: 'desc' } },
+  { id: 'tumu', label: 'Tümü', query: {} },
+];
+function mountList(search = '', list = vi.fn(sampleSource().list), views = savedViews) {
+  render(
+    <MemoryRouter initialEntries={['/' + search]}>
+      <CollectionView definition={exampleDefinition} source={{ list }} savedViews={views} />
+      <LocationProbe />
+    </MemoryRouter>,
+  );
+  return list;
+}
+function lastRequest(list: ReturnType<typeof vi.fn>) {
+  return list.mock.calls.at(-1)?.[0] as ListRequest;
+}
+describe('four-part list and URL state', () => {
+  it('draws views, filters, bulk slot and table in this order', async () => {
+    const { container } = render(
+      <MemoryRouter>
+        <CollectionView definition={exampleDefinition} source={sampleSource()} />
+      </MemoryRouter>,
+    );
+    await screen.findByText('ORNEK-0001');
+    const parts = [...container.querySelectorAll('[data-collection-part]')].map((element) =>
+      element.getAttribute('data-collection-part'),
+    );
+    expect(parts).toEqual(['views', 'filters', 'bulk', 'table']);
+    expect(screen.getByRole('radio', { name: 'Tümü' })).toBeChecked();
+  });
+
+  it('opens a filtered and sorted link as the same list', async () => {
+    const list = mountList('?filter=status&value=A%C3%A7%C4%B1k&sort=amount&direction=desc');
+    await screen.findByText('ORNEK-0001');
+    expect(lastRequest(list)).toMatchObject({
+      filters: [['status', '=', 'Açık']],
+      order_by: 'amount desc, name asc',
+    });
+    expect(screen.getByRole('list', { name: 'Etkin süzgeçler' })).toHaveTextContent('Durum: Açık');
+    expect(screen.getByText('1 süzgeç etkin')).toBeInTheDocument();
+  });
+
+  it('keeps search text from the address after a reload', async () => {
+    const list = mountList('?search=%C3%96rnek');
+    await waitFor(() => {
+      expect(lastRequest(list).filters).toEqual([['title', 'like', '%Örnek%']]);
+    });
+    expect(screen.getByRole('textbox', { name: 'Kayıt ara' })).toHaveValue('Örnek');
+    expect(screen.getByRole('list', { name: 'Etkin süzgeçler' })).toHaveTextContent('Arama: Örnek');
+  });
+
+  it('writes the saved view to the address and goes back to the previous view', async () => {
+    const list = mountList();
+    await screen.findByText('ORNEK-0001');
+    fireEvent.click(screen.getByRole('radio', { name: 'Bekleyenler' }));
+    await waitFor(() => {
+      expect(screen.getByLabelText('Adres')).toHaveTextContent('saved=bekleyen');
+    });
+    expect(screen.getByLabelText('Adres')).toHaveTextContent('filter=status');
+    expect(lastRequest(list).filters).toEqual([['status', '=', 'Açık']]);
+    fireEvent.click(screen.getByRole('radio', { name: 'Tutara göre' }));
+    await waitFor(() => {
+      expect(screen.getByLabelText('Adres')).toHaveTextContent('saved=tutar');
+    });
+    expect(screen.getByLabelText('Adres')).not.toHaveTextContent('filter=');
+    fireEvent.click(screen.getByRole('button', { name: 'Geri dön' }));
+    await waitFor(() => {
+      expect(screen.getByRole('radio', { name: 'Bekleyenler' })).toBeChecked();
+    });
+    expect(screen.getByText('1 süzgeç etkin')).toBeInTheDocument();
+  });
+
+  it('ignores unknown fields in the address and still shows the list', async () => {
+    const list = mountList('?saved=yok&filter=gizli&value=x&sort=bilinmeyen&direction=yan');
+    await screen.findByText('ORNEK-0001');
+    expect(lastRequest(list)).toMatchObject({ filters: [], order_by: 'name asc' });
+    expect(screen.getByText('Etkin süzgeç yok.')).toBeInTheDocument();
+    for (const view of savedViews)
+      expect(screen.getByRole('radio', { name: view.label })).not.toBeChecked();
+  });
+
+  it('removes one filter tag and leaves the saved view', async () => {
+    mountList('?saved=bekleyen&filter=status&value=A%C3%A7%C4%B1k&search=x');
+    await screen.findByRole('list', { name: 'Etkin süzgeçler' });
+    expect(screen.getByText('2 süzgeç etkin')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Durum süzgecini kaldır' }));
+    await waitFor(() => {
+      expect(screen.getByLabelText('Adres')).not.toHaveTextContent('filter=');
+    });
+    expect(screen.getByLabelText('Adres')).not.toHaveTextContent('saved=');
+    expect(screen.getByText('1 süzgeç etkin')).toBeInTheDocument();
+  });
+
+  it('keeps an empty bulk slot until a row is selected', async () => {
+    const { container } = render(
+      <MemoryRouter>
+        <CollectionView definition={exampleDefinition} source={sampleSource()} />
+      </MemoryRouter>,
+    );
+    await screen.findByText('ORNEK-0001');
+    const slot = container.querySelector('[data-collection-part="bulk"]');
+    expect(slot).toBeEmptyDOMElement();
+    fireEvent.click(screen.getByRole('checkbox', { name: 'ORNEK-0001 seç' }));
+    expect(slot).toContainElement(screen.getByRole('toolbar', { name: 'Seçilen kayıtlar' }));
   });
 });
