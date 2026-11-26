@@ -86,8 +86,9 @@ describe('collection UI', () => {
   it('clears selection when the data source identity changes', async () => {
     const mounted = mount();
     await screen.findByText('ORNEK-0001');
+    fireEvent.click(screen.getByRole('button', { name: 'Seç' }));
     fireEvent.click(screen.getByRole('checkbox', { name: 'ORNEK-0001 seç' }));
-    expect(screen.getByRole('toolbar', { name: 'Seçilen kayıtlar' })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Toplu işlem' })).toBeInTheDocument();
     mounted.rerender(
       <MemoryRouter>
         <CollectionView definition={exampleDefinition} source={sampleSource()} />
@@ -95,7 +96,7 @@ describe('collection UI', () => {
       </MemoryRouter>,
     );
     await screen.findByText('ORNEK-0001');
-    expect(screen.queryByRole('toolbar', { name: 'Seçilen kayıtlar' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Toplu işlem' })).not.toBeInTheDocument();
   });
   it('restores search text with browser history after two searches', async () => {
     const list = vi.fn((request: ListRequest) => {
@@ -122,13 +123,14 @@ describe('collection UI', () => {
     mount();
     expect(screen.getByText('Kayıtlar yükleniyor.')).toBeInTheDocument();
     await screen.findByText('ORNEK-0001');
+    fireEvent.click(screen.getByRole('button', { name: 'Seç' }));
     fireEvent.click(screen.getByRole('checkbox', { name: 'ORNEK-0001 seç' }));
-    expect(screen.getByRole('toolbar', { name: 'Seçilen kayıtlar' })).toHaveTextContent(
+    expect(screen.getByRole('region', { name: 'Toplu işlem' })).toHaveTextContent(
       '1 kayıt seçildi',
     );
     fireEvent.click(screen.getByRole('button', { name: 'Sonraki sayfa' }));
     await screen.findByText('ORNEK-0021');
-    expect(screen.queryByRole('toolbar', { name: 'Seçilen kayıtlar' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Toplu işlem' })).not.toBeInTheDocument();
     expect(screen.getByLabelText('Adres')).toHaveTextContent('page=2');
     fireEvent.click(screen.getByRole('button', { name: 'Geri dön' }));
     await screen.findByText('ORNEK-0001');
@@ -470,7 +472,8 @@ describe('four-part list and URL state', () => {
     await screen.findByText('ORNEK-0001');
     const slot = container.querySelector('[data-collection-part="bulk"]');
     expect(slot).toBeEmptyDOMElement();
+    fireEvent.click(screen.getByRole('button', { name: 'Seç' }));
     fireEvent.click(screen.getByRole('checkbox', { name: 'ORNEK-0001 seç' }));
-    expect(slot).toContainElement(screen.getByRole('toolbar', { name: 'Seçilen kayıtlar' }));
+    expect(slot).toContainElement(screen.getByRole('region', { name: 'Toplu işlem' }));
   });
 });

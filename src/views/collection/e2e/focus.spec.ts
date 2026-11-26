@@ -6,6 +6,8 @@ test('shared keyboard mode shows one underline without an internal checkbox ring
   await page.goto('/src/views/collection/preview/');
   await expect(page.getByText('ORNEK-0001', { exact: true })).toBeVisible();
   await page.keyboard.press('Tab');
+  await page.getByRole('button', { name: 'Seç', exact: true }).click();
+  await page.keyboard.press('Tab');
   const checkbox = page.getByRole('checkbox', { name: 'ORNEK-0001 seç', exact: true });
   await checkbox.focus();
   const control = page.locator('.collection-checkbox').filter({ has: checkbox });

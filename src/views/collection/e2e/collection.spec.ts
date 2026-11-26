@@ -105,8 +105,9 @@ test('table preserves readability, keyboard focus, selection and URL history', a
   ).toBe('none');
   await page.keyboard.press('Shift+Tab');
   await page.keyboard.press('Tab');
+  await page.getByRole('button', { name: 'Seç', exact: true }).click();
   await page.getByRole('checkbox', { name: 'ORNEK-0001 seç', exact: true }).check();
-  await expect(page.getByRole('toolbar', { name: 'Seçilen kayıtlar' })).toContainText(
+  await expect(page.getByRole('region', { name: 'Toplu işlem', exact: true })).toContainText(
     '1 kayıt seçildi',
   );
   await page.getByRole('button', { name: 'Sonraki sayfa' }).click();
