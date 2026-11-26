@@ -3,6 +3,7 @@ import { expect, test } from '../../../../tests/setup/playwright-fixtures';
 for (const theme of ['light', 'dark']) {
   test(`required checkbox exposes errors and keeps keyboard focus without a ring (${theme})`, async ({
     page,
+    browserName,
   }, testInfo) => {
     await page.goto(`/src/views/record/harness/?scenario=checkbox&theme=${theme}`);
     const checkbox = page.getByRole('checkbox', { name: 'Bilgileri kontrol ettim' });
@@ -55,9 +56,10 @@ for (const theme of ['light', 'dark']) {
       fullPage: true,
     });
 
-    await page.keyboard.press('Tab');
+    // Match the controls suite: WebKit uses Option+Tab to include non-text controls.
+    await page.keyboard.press(browserName === 'webkit' ? 'Alt+Tab' : 'Tab');
     await expect(title).toBeFocused();
-    await page.keyboard.press('Shift+Tab');
+    await page.keyboard.press(browserName === 'webkit' ? 'Alt+Shift+Tab' : 'Shift+Tab');
     await expect(checkbox).toBeFocused();
     await page.keyboard.press('Space');
     await expect(checkbox).toBeChecked();
