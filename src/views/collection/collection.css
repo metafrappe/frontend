@@ -10,6 +10,25 @@
   font-size: var(--collection-font);
   line-height: var(--collection-line);
 }
+.collection {
+  /* Satır yüksekliği düzeyi `data-row` ile seçilir. Dokunmatik ekranda en az lg olur. */
+  --collection-row: var(--collection-row-md);
+}
+.collection[data-row='sm'] {
+  --collection-row: var(--collection-row-sm);
+}
+.collection[data-row='lg'] {
+  --collection-row: var(--collection-row-lg);
+}
+@media (any-pointer: coarse) {
+  .collection[data-row] {
+    --collection-row: var(--collection-row-lg);
+  }
+}
+/* Gizli parçalar düzen kurallarından önce gelir. */
+.collection [hidden] {
+  display: none;
+}
 .collection *,
 .collection *::before,
 .collection *::after {
@@ -93,6 +112,36 @@
   background: var(--collection-selected);
   font-weight: 600;
 }
+.collection-listbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--collection-gap);
+  align-items: end;
+}
+/* Telefonda dört düğme tek satıra sığar. Her düğmenin dokunma alanı en az 48 px'tir. */
+.collection[data-layout='phone'] .collection-listbar {
+  flex: 1 1 100%;
+  gap: var(--collection-chip-gap);
+}
+.collection[data-layout='phone'] .collection-listbar > .collection-button {
+  min-height: var(--collection-chip-hit);
+  min-width: var(--collection-chip-hit);
+  height: auto;
+  padding-inline: var(--collection-chip-pad);
+  font-size: var(--collection-chip-font);
+  gap: var(--collection-chip-gap);
+}
+/* Basılı düğme seçili zeminle ayrılır (taslaktaki aria-pressed görünümü). */
+.collection .collection-listbar > .collection-button[aria-pressed='true'] {
+  background: var(--collection-selected);
+}
+.collection-listbar .collection-button svg {
+  width: var(--collection-icon);
+  height: var(--collection-icon);
+}
+.collection-tool-group {
+  display: contents;
+}
 .collection-view-type {
   flex: 0 1 var(--collection-column);
 }
@@ -172,7 +221,7 @@
 /* Toplu işlem düğmeleri ve önizleme kutusu dokunma alanı tokenını karşılar. */
 .collection-bulk .collection-button,
 .collection-preview .collection-button,
-.collection-viewbar > .collection-button {
+.collection-listbar > .collection-button {
   min-height: var(--collection-hit);
 }
 .collection-preview .collection-checkbox {
@@ -205,9 +254,11 @@
 }
 .collection-table th,
 .collection-table td {
-  padding: var(--collection-gap);
+  /* Satır yüksekliği tokendan gelir. Uzun metin satırı büyütür, sözcüğü bölmez. */
+  height: var(--collection-row);
+  padding: 0 var(--collection-gap);
+  vertical-align: middle;
   text-align: start;
-  vertical-align: top;
   min-width: var(--collection-column);
   border-bottom: 1px solid var(--collection-border);
   white-space: normal;
@@ -236,11 +287,72 @@
 }
 .collection-table .collection-checkbox {
   margin: 0;
-  min-height: var(--collection-control);
+  min-height: var(--collection-row);
   min-width: var(--collection-control);
   display: inline-flex;
   align-items: center;
   justify-content: center;
+}
+.collection-cards {
+  display: grid;
+  gap: var(--collection-gap);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.collection-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--collection-gap);
+  align-items: start;
+  min-height: var(--collection-row);
+  padding: var(--collection-gap);
+  border-radius: var(--collection-radius);
+  background: var(--collection-surface);
+  overflow-wrap: break-word;
+  transition: background-color var(--collection-duration) var(--collection-ease);
+}
+.collection-card[data-selecting='true'] {
+  grid-template-columns: auto minmax(0, 1fr);
+}
+.collection-card[data-selected='true'] {
+  background: var(--collection-selected);
+}
+.collection-card .collection-checkbox {
+  margin: 0;
+  min-height: var(--collection-hit);
+  min-width: var(--collection-hit);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.collection-card-body {
+  display: grid;
+  gap: calc(var(--collection-gap) / 2);
+  min-width: 0;
+}
+.collection-card-lead {
+  font-weight: 600;
+}
+.collection-card-fields {
+  display: grid;
+  gap: calc(var(--collection-gap) / 2);
+  margin: 0;
+}
+.collection-card-fields > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--collection-gap);
+}
+.collection-card-fields dt {
+  color: var(--collection-muted);
+}
+.collection-card-fields dd {
+  margin: 0;
+}
+.collection .collection-card-name {
+  margin: 0;
+  color: var(--collection-muted);
 }
 .collection-pagination {
   display: flex;
@@ -373,6 +485,7 @@ html[data-focus-mode='keyboard'] .collection-saved-option:has(input:focus-visibl
 }
 @media (prefers-reduced-motion: reduce) {
   .collection-saved-option,
+  .collection-card,
   .collection-table tbody tr {
     transition: none;
   }

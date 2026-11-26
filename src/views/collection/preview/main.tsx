@@ -59,6 +59,8 @@ const definition =
   state === 'unauthorized'
     ? { ...sampleDefinition, doctype: RESTRICTED_SAMPLE_DOCTYPE }
     : sampleDefinition;
+const row = params.get('row');
+const rowHeight = row === 'sm' || row === 'lg' ? row : 'md';
 const mode = params.get('theme') === 'light' ? 'light' : 'dark';
 const container = document.getElementById('root');
 if (!container) throw new Error('Missing preview root');
@@ -71,6 +73,7 @@ createRoot(container).render(
         definition={definition}
         source={source}
         savedViews={sampleSavedViews}
+        rowHeight={rowHeight}
         mode={mode}
       />
     </BrowserRouter>

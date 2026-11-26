@@ -1,14 +1,12 @@
 import { expect, test } from '../../../../tests/setup/playwright-fixtures';
 import type { Page } from '../../../../tests/setup/playwright-fixtures';
 import AxeBuilder from '@axe-core/playwright';
+import { isPhone } from './phone-helpers';
 
 const preview = '/src/views/collection/preview/';
 const screenshotDir = process.env['AJA_SCREENSHOT_DIR'];
 const phoneButtons = ['Süzgeç', 'Sırala', 'Seç', 'Tablo'] as const;
 
-function isPhone(page: Page) {
-  return (page.viewportSize()?.width ?? 0) < 768;
-}
 async function noPageOverflow(page: Page) {
   return page.evaluate(() => document.documentElement.scrollWidth <= innerWidth);
 }
@@ -16,12 +14,13 @@ async function noPageOverflow(page: Page) {
 async function forcedBreaks(page: Page) {
   return page
     .locator('.collection')
-    .evaluate((root) =>
-      [root, ...root.querySelectorAll<HTMLElement>('*')].filter(
-        (element) =>
-          getComputedStyle(element).wordBreak === 'break-all' ||
-          getComputedStyle(element).overflowWrap === 'anywhere',
-      ).length,
+    .evaluate(
+      (root) =>
+        [root, ...root.querySelectorAll<HTMLElement>('*')].filter(
+          (element) =>
+            getComputedStyle(element).wordBreak === 'break-all' ||
+            getComputedStyle(element).overflowWrap === 'anywhere',
+        ).length,
     );
 }
 
@@ -65,15 +64,19 @@ test('phone shows record cards, one tool row and a table toggle', async ({ page 
   const sizes = await Promise.all(
     phoneButtons.map((name) =>
       tools.getByRole('button', { name: new RegExp('^' + name) }).evaluate((button) => {
-          const rect = button.getBoundingClientRect();
-          return {
-            top: Math.round(rect.top),
-            height: rect.height,
-            width: rect.width,
-            font: parseFloat(getComputedStyle(button).fontSize),
-            clipped: button.scrollWidth > button.clientWidth,
-          };
-        }),
+        const rect = button.getBoundingClientRect();
+        return {
+          top: Math.round(rect.top),
+          height: rect.height,
+          width: rect.width,
+          font: parseFloat(getComputedStyle(button).fontSize),
+          // Dokunma katmanı düğmenin dışına taşar. Bu yüzden metin parçasının sınırı ölçülür.
+          clipped: [...button.querySelectorAll('span')].some((part) => {
+            const inner = part.getBoundingClientRect();
+            return inner.left < rect.left - 0.5 || inner.right > rect.right + 0.5;
+          }),
+        };
+      }),
     ),
   );
   for (const size of sizes) {
@@ -105,8 +108,16 @@ test('phone shows record cards, one tool row and a table toggle', async ({ page 
   // "Tablo" düğmesi kart ile tablo arasında geçiş yapar.
   const toggle = tools.getByRole('button', { name: 'Tablo', exact: true });
   await expect(toggle).toHaveAttribute('aria-pressed', 'false');
+  const restingBackground = await toggle.evaluate(
+    (element) => getComputedStyle(element).backgroundColor,
+  );
   await toggle.click();
   await expect(toggle).toHaveAttribute('aria-pressed', 'true');
+  // Basılı düğme görsel olarak da ayrılır. İmleç düğmeden çekilir ki üzerine gelme rengi karışmasın.
+  if (!testInfo.project.use.isMobile) await page.mouse.move(0, 0);
+  await expect
+    .poll(() => toggle.evaluate((element) => getComputedStyle(element).backgroundColor))
+    .not.toBe(restingBackground);
   await expect(cards).toHaveCount(0);
   const scroller = page.getByRole('region', { name: 'Kayıt tablosu yatay kaydırma' });
   await expect(scroller).toBeVisible();
@@ -118,21 +129,24 @@ test('phone shows record cards, one tool row and a table toggle', async ({ page 
   axe = await new AxeBuilder({ page }).include('.collection').analyze();
   expect(axe.violations).toEqual([]);
 
-  // Klavye ile kayar.
+  // Kutu klavyeyle odak alır. Ok tuşu kaydırması Chromium'da ölçülür.
+  // Playwright WebKit odaklı kutuyu ok tuşuyla kaydırmaz. Gerçek Safari denetimi ayrıca yapılır.
   await scroller.focus();
-  await page.keyboard.press('ArrowRight');
-  await expect.poll(() => scroller.evaluate((element) => element.scrollLeft)).toBeGreaterThan(0);
-  await scroller.evaluate((element) => {
-    element.scrollLeft = 0;
-  });
-  // Fare tekerleği ile kayar. Dokunmatik profilde fare tekerleği yoktur.
-  if (!testInfo.project.use.isMobile) {
+  await expect(scroller).toBeFocused();
+  if (testInfo.project.name.startsWith('chromium')) {
+    await page.keyboard.press('ArrowRight');
+    await expect.poll(() => scroller.evaluate((element) => element.scrollLeft)).toBeGreaterThan(0);
+    await scroller.evaluate((element) => {
+      element.scrollLeft = 0;
+    });
+  }
+  // Fare tekerleği ile kayar. Playwright WebKit yatay tekerlek olayını kutuya iletmez.
+  // Bu yüzden tekerlek denetimi Chromium'da koşar. Dokunmatik profilde fare tekerleği yoktur.
+  if (testInfo.project.name.startsWith('chromium')) {
     const area = await scroller.boundingBox();
     await page.mouse.move((area?.x ?? 0) + 20, (area?.y ?? 0) + 20);
     await page.mouse.wheel(120, 0);
-    await expect
-      .poll(() => scroller.evaluate((element) => element.scrollLeft))
-      .toBeGreaterThan(0);
+    await expect.poll(() => scroller.evaluate((element) => element.scrollLeft)).toBeGreaterThan(0);
     await scroller.evaluate((element) => {
       element.scrollLeft = 0;
     });
@@ -148,9 +162,7 @@ test('phone shows record cards, one tool row and a table toggle', async ({ page 
       yDistance: 0,
       gestureSourceType: 'touch',
     });
-    await expect
-      .poll(() => scroller.evaluate((element) => element.scrollLeft))
-      .toBeGreaterThan(0);
+    await expect.poll(() => scroller.evaluate((element) => element.scrollLeft)).toBeGreaterThan(0);
   }
   // Geri dönünce kartlar yeniden görünür.
   await toggle.click();
@@ -169,9 +181,14 @@ test('root font 200% keeps buttons and records readable', async ({ page }) => {
   for (const name of phoneButtons) {
     const button = tools.getByRole('button', { name: new RegExp('^' + name) });
     await expect(button).toBeVisible();
-    expect(await button.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(
-      true,
-    );
+    const clipped = await button.evaluate((element) => {
+      const rect = element.getBoundingClientRect();
+      return [...element.querySelectorAll('span')].some((part) => {
+        const inner = part.getBoundingClientRect();
+        return inner.left < rect.left - 0.5 || inner.right > rect.right + 0.5;
+      });
+    });
+    expect(clipped).toBe(false);
   }
   expect(await noPageOverflow(page)).toBe(true);
   expect(await forcedBreaks(page)).toBe(0);

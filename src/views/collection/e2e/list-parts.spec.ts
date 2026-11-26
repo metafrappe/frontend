@@ -1,5 +1,6 @@
 import { expect, test } from '../../../../tests/setup/playwright-fixtures';
 import AxeBuilder from '@axe-core/playwright';
+import { openPhoneTools } from './phone-helpers';
 
 const preview = '/src/views/collection/preview/';
 const screenshotDir = process.env['AJA_SCREENSHOT_DIR'];
@@ -51,6 +52,7 @@ test('saved view goes into the address and back returns to the previous view', a
   await page.goto(preview);
   await expect(page.getByText('ORNEK-0001', { exact: true })).toBeVisible();
   await expect(page.getByRole('radio', { name: 'Tümü' })).toBeChecked();
+  await openPhoneTools(page);
   await page.getByRole('radio', { name: 'Bekleyenler' }).click();
   await expect(page).toHaveURL(/saved=bekleyen/);
   await expect(page.getByRole('list', { name: 'Etkin süzgeçler' })).toContainText('Durum: Açık');
@@ -96,6 +98,8 @@ test('a shared filtered link opens the same list in a new tab and search survive
   const link = preview + '?filter=status&value=A%C3%A7%C4%B1k&sort=amount&direction=desc';
   const tab = await context.newPage();
   await tab.goto(link);
+  await expect(tab.getByText('ORNEK-0001', { exact: true })).toBeVisible();
+  await openPhoneTools(tab);
   await expect(tab.getByRole('list', { name: 'Etkin süzgeçler' })).toContainText('Durum: Açık');
   // Sıralama "Bekleyenler" görünümünden farklıdır. Bu yüzden hiçbir kayıtlı görünüm seçili değildir.
   await expect(tab.getByRole('radio', { name: 'Bekleyenler' })).not.toBeChecked();
@@ -108,6 +112,12 @@ test('a shared filtered link opens the same list in a new tab and search survive
 
   await page.goto(preview + '?search=%C3%96rnek&gizli=1&filter=yok');
   await page.reload();
+  await expect(
+    page
+      .getByText('ORNEK-0001', { exact: true })
+      .or(page.getByText('Kayıt bulunamadı.', { exact: true })),
+  ).toBeVisible();
+  await openPhoneTools(page);
   await expect(page.getByRole('textbox', { name: 'Kayıt ara' })).toHaveValue('Örnek');
   await expect(page.getByRole('list', { name: 'Etkin süzgeçler' })).toContainText('Arama: Örnek');
   await expect(page.getByText('1 süzgeç etkin')).toBeVisible();

@@ -204,6 +204,37 @@ Geri tuşu önceki sorguyu geri getirir.
 Sorgu dışındaki adres alanları korunur.
 Gizli bilgileri adres süzgeçlerine yazmayın.
 
+## Satır yüksekliği
+
+Tablo satırı üç düzeydedir: `sm` 36 px, `md` 42 px ve `lg` 48 px.
+Düzeyi `rowHeight` özelliği seçer. Varsayılan düzey `md` olur.
+Değerler `design/source/control-size-config.json` dosyasındaki denetim boyutlarından gelir.
+Dokunmatik ekranda (`any-pointer: coarse`) satır en az 48 px olur.
+Uzun metin satırı büyütür. Sözcük harf arasından bölünmez.
+
+```tsx
+<CollectionView definition={definition} source={source} rowHeight="sm" />
+```
+
+## Telefon düzeni
+
+Koleksiyon kendi genişliği 48rem altına inince telefon düzenine geçer.
+Ölçü pencereye değil koleksiyon kutusuna bakar.
+Telefonda kayıtlar kart olarak görünür.
+Kartın başında ilk alan kalın yazılır. Öteki alanlar ad ve değer olarak sıralanır.
+
+"Liste araçları" satırında dört düğme vardır:
+
+1. "Süzgeç" arama ve süzgeç alanını açar. Etkin süzgeç sayısı düğmede yazılır.
+2. "Sırala" sıralama alanını açar.
+3. "Seç" seçim kipini açar.
+4. "Tablo" kart ile tablo arasında geçiş yapar.
+
+Dört düğme 320 px'te tek satıra sığar. Her düğmenin dokunma alanı en az 48 px'tir.
+Tablo kendi kutusunda yatay kayar. Sayfa yatay kaymaz.
+Ekran daralınca odak süzgeç alanındaysa o alan açık kalır.
+Tek seçenekli "Görünüm" listesi telefonda gösterilmez.
+
 ## Ortak tasarım bağlantısı
 
 Üretim bileşeni ana uygulamanın `ConfigProvider` temasını kullanır.

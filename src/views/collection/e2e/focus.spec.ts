@@ -1,10 +1,12 @@
 import { expect, test } from '../../../../tests/setup/playwright-fixtures';
+import { showTable } from './phone-helpers';
 
 test('shared keyboard mode shows one underline without an internal checkbox ring', async ({
   page,
 }, testInfo) => {
   await page.goto('/src/views/collection/preview/');
   await expect(page.getByText('ORNEK-0001', { exact: true })).toBeVisible();
+  await showTable(page);
   await page.keyboard.press('Tab');
   await page.getByRole('button', { name: 'Seç', exact: true }).click();
   await page.keyboard.press('Tab');
