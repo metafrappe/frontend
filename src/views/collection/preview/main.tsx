@@ -6,7 +6,7 @@ import { RESTRICTED_SAMPLE_DOCTYPE, SAMPLE_CSRF_TOKEN } from '@/mocks/fixtures';
 import { SampleDataNotice } from '@/mocks/SampleDataNotice';
 import { createApiSource } from '../api-source';
 import { CollectionView } from '../CollectionView';
-import { sampleDefinition } from '../sample';
+import { sampleDefinition, sampleSavedViews } from '../sample';
 import type { CollectionSource } from '../types';
 import { TemporaryFoundation } from './TemporaryFoundation';
 import './preview.css';
@@ -70,6 +70,7 @@ createRoot(container).render(
         enableExperimentalCollectionViews={params.get('experimentalViews') === '1'}
         definition={definition}
         source={source}
+        savedViews={sampleSavedViews}
         mode={mode}
       />
     </BrowserRouter>

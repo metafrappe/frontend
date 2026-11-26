@@ -11,3 +11,13 @@
   bottom: calc(-1 * var(--hit-b, 0px));
   left: calc(-1 * var(--hit-l, 0px));
 }
+
+/* Geçici dokunma alanı tokenı. Kaldırma koşulu: foundation main dalına girince silinir. */
+[data-collection-preview] {
+  --hit-target: var(--hit-target-fine);
+}
+@media (any-pointer: coarse) {
+  [data-collection-preview] {
+    --hit-target: var(--hit-target-coarse);
+  }
+}

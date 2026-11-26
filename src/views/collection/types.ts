@@ -41,6 +41,14 @@ export interface CollectionQuery {
   direction: 'asc' | 'desc';
   filter: string;
   value: string;
+  /** Seçilen kayıtlı görünümün kimliği. Seçim yoksa boş metindir. */
+  saved: string;
+}
+/** Kayıtlı görünüm listenin süzgecini ve sıralamasını birlikte seçer. */
+export interface SavedView {
+  id: string;
+  label: string;
+  query: Partial<Pick<CollectionQuery, 'search' | 'sort' | 'direction' | 'filter' | 'value'>>;
 }
 export interface ListRequest {
   doctype: string;

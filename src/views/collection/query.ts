@@ -1,4 +1,10 @@
-import type { CollectionDefinition, CollectionQuery, ListRequest, ViewType } from './types';
+import type {
+  CollectionDefinition,
+  CollectionQuery,
+  ListRequest,
+  SavedView,
+  ViewType,
+} from './types';
 export const viewTypes: readonly ViewType[] = [
   'table',
   'kanban',
@@ -14,7 +20,9 @@ function pageNumber(value: string | null) {
 export function readQuery(
   params: URLSearchParams,
   definition: CollectionDefinition,
+  savedViews: readonly SavedView[] = [],
 ): CollectionQuery {
+  const saved = params.get('saved') ?? '';
   const view = params.get('view');
   const size = Number(params.get('size'));
   const sort = params.get('sort') ?? 'name';
@@ -33,6 +41,21 @@ export function readQuery(
     direction: params.get('direction') === 'desc' ? 'desc' : 'asc',
     filter: validFilter ? filter.fieldname : '',
     value: validFilter ? value : '',
+    saved: savedViews.some((item) => item.id === saved) ? saved : '',
+  };
+}
+/** Kayıtlı görünüm arama, süzgeç ve sıralamayı baştan kurar. Sayfa boyutu ve görünüm türü kalır. */
+export function applySavedView(query: CollectionQuery, view: SavedView): CollectionQuery {
+  return {
+    ...query,
+    search: '',
+    sort: 'name',
+    direction: 'asc',
+    filter: '',
+    value: '',
+    ...view.query,
+    page: 1,
+    saved: view.id,
   };
 }
 export function writeQuery(previous: URLSearchParams, query: CollectionQuery) {
@@ -64,4 +87,12 @@ export function toListRequest(
     limit_start: (safe.page - 1) * safe.size,
     limit_page_length: safe.size,
   };
+}
+/** Adreste kayıtlı görünüm yoksa, sorgusu birebir uyan görünüm seçili sayılır. */
+export function isSavedViewActive(query: CollectionQuery, view: SavedView): boolean {
+  if (query.saved) return query.saved === view.id;
+  const applied = applySavedView(query, view);
+  return (['search', 'sort', 'direction', 'filter', 'value'] as const).every(
+    (field) => applied[field] === query[field],
+  );
 }

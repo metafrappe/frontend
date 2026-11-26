@@ -65,6 +65,7 @@ test('expanded input and select targets work without covering their centers', as
 const preview = '/src/views/collection/preview/';
 test('table preserves readability, keyboard focus, selection and URL history', async ({
   page,
+  browserName,
 }, testInfo) => {
   await page.goto(preview + '?experimentalViews=1');
   await expect(page.getByText('ORNEK-0001', { exact: true })).toBeVisible();
@@ -85,6 +86,14 @@ test('table preserves readability, keyboard focus, selection and URL history', a
         .map((element) => parseFloat(getComputedStyle(element).fontSize)),
     );
   expect(Math.min(...fontSizes)).toBeGreaterThanOrEqual(14);
+  // Görünüm satırı önce gelir: kayıtlı görünüm ve görünüm türü, sonra arama.
+  // WebKit varsayılan ayarda Tab ile radyo düğmesine gitmez. Safari de böyle davranır.
+  await page.keyboard.press('Tab');
+  if (browserName !== 'webkit') {
+    await expect(page.getByRole('radio', { name: 'Tümü' })).toBeFocused();
+    await page.keyboard.press('Tab');
+  }
+  await expect(page.getByRole('combobox', { name: 'Görünüm', exact: true })).toBeFocused();
   await page.keyboard.press('Tab');
   await expect(page.getByRole('textbox', { name: 'Kayıt ara' })).toBeFocused();
   const wrapper = page.locator('.collection-input');

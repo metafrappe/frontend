@@ -443,11 +443,11 @@ describe('four-part list and URL state', () => {
     await screen.findByText('ORNEK-0001');
     expect(lastRequest(list)).toMatchObject({ filters: [], order_by: 'name asc' });
     expect(screen.getByText('Etkin süzgeç yok.')).toBeInTheDocument();
-    for (const view of savedViews)
-      expect(screen.getByRole('radio', { name: view.label })).not.toBeChecked();
+    expect(screen.getByRole('radio', { name: 'Tümü' })).toBeChecked();
+    expect(screen.getByRole('radio', { name: 'Bekleyenler' })).not.toBeChecked();
   });
 
-  it('removes one filter tag and leaves the saved view', async () => {
+  it('removes one filter tag and clears the saved view', async () => {
     mountList('?saved=bekleyen&filter=status&value=A%C3%A7%C4%B1k&search=x');
     await screen.findByRole('list', { name: 'Etkin süzgeçler' });
     expect(screen.getByText('2 süzgeç etkin')).toBeInTheDocument();
@@ -457,6 +457,8 @@ describe('four-part list and URL state', () => {
     });
     expect(screen.getByLabelText('Adres')).not.toHaveTextContent('saved=');
     expect(screen.getByText('1 süzgeç etkin')).toBeInTheDocument();
+    for (const view of savedViews)
+      expect(screen.getByRole('radio', { name: view.label })).not.toBeChecked();
   });
 
   it('keeps an empty bulk slot until a row is selected', async () => {

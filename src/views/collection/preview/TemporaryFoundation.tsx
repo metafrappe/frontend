@@ -36,6 +36,8 @@ export function TemporaryFoundation({
     '--font-ui': 'Outfit Variable, Outfit, sans-serif',
     '--font-default': source.typography.default + 'px',
     '--btn-h-md': source.sizes.md.button.height + 'px',
+    '--hit-target-fine': source.hitArea.target.fine + 'px',
+    '--hit-target-coarse': source.hitArea.target.coarse + 'px',
     '--radius': source.radius.default + 'px',
     '--focus-indicator-size': '2px',
     '--motion-duration-mid': '200ms',

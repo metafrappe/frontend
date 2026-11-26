@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applySavedView, readQuery, toListRequest, writeQuery } from './query';
+import { applySavedView, isSavedViewActive, readQuery, toListRequest, writeQuery } from './query';
 import { sampleDefinition } from './sample';
 import type { SavedView } from './types';
 
@@ -66,6 +66,19 @@ describe('collection URL state', () => {
       page: 1,
       view: 'table',
     });
+  });
+
+  it('marks the view whose query matches when the address names none', () => {
+    const clean = readQuery(new URLSearchParams(), sampleDefinition, savedViews);
+    expect(savedViews.map((view) => isSavedViewActive(clean, view))).toEqual([false, false, true]);
+    const pending = readQuery(
+      new URLSearchParams('filter=status&value=A%C3%A7%C4%B1k'),
+      sampleDefinition,
+      savedViews,
+    );
+    expect(isSavedViewActive(pending, savedViews[0]!)).toBe(true);
+    const named = { ...clean, saved: 'tutar' };
+    expect(savedViews.map((view) => isSavedViewActive(named, view))).toEqual([false, true, false]);
   });
 
   it('keeps unrelated address fields when writing', () => {

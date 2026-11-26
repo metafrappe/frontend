@@ -162,9 +162,41 @@ Gerçek uygulamada ayarı yalnız çağıran kod açabilir.
 Seçim çubuğu seçilen kayıtları gösterir ve seçimi kaldırır.
 Bu teslimde kayıt değiştiren toplu işlem yoktur.
 
+## Dört parça
+
+Her liste aynı dört parçayı bu sırayla çizer:
+
+1. Görünüm satırı. Kayıtlı görünümler ve görünüm türü buradadır.
+2. Süzgeç satırı. Etkin süzgeç etiketleri, arama, sıralama ve süzgeçler buradadır.
+3. Toplu işlem satırı. Kayıt seçilince seçim çubuğu burada görünür.
+4. Tablo.
+
+Her parçanın `data-collection-part` alanı vardır. Değerler `views`, `filters`, `bulk` ve `table` olur.
+Toplu işlem içeriği sonraki işte gelir.
+
+## Kayıtlı görünüm
+
+Kayıtlı görünümler `savedViews` özelliğinden gelir.
+Örnek görünümler "Bekleyenler", "Bu ay" ve "Tümü" olabilir.
+Özellik verilmezse liste yalnız "Tümü" görünümünü gösterir.
+
+```ts
+const savedViews = [
+  { id: 'bekleyen', label: 'Bekleyenler', query: { filter: 'status', value: 'Açık' } },
+  { id: 'tumu', label: 'Tümü', query: {} },
+];
+```
+
+Görünüm seçilince arama, süzgeç ve sıralama baştan kurulur.
+Sayfa boyutu ve görünüm türü korunur.
+Kullanıcı süzgeci elle değiştirirse kayıtlı görünüm seçimi kalkar.
+Adreste görünüm yoksa, sorgusu birebir uyan görünüm seçili görünür.
+
 ## Adres durumu
 
-Adreste sekiz sorgu alanı bulunur. Bu alanlar `view`, `page`, `size`, `search`, `sort`, `direction`, `filter` ve `value` alanlarıdır.
+Adreste dokuz sorgu alanı bulunur. Bu alanlar `view`, `page`, `size`, `search`, `sort`, `direction`, `filter`, `value` ve `saved` alanlarıdır.
+`saved` alanı seçilen kayıtlı görünümün kimliğini tutar.
+Bilinmeyen alan, değer ya da görünüm kimliği yok sayılır. Liste bozulmaz.
 
 Sayfa boyutu 10, 20 veya 50 kayıttır.
 Arama ve süzgeç değişince ilk sayfa açılır.

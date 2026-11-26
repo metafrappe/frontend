@@ -23,6 +23,7 @@ export function collectionVariables(
     '--collection-title': source.header.settings.titleSize + 'px',
     '--collection-line': source.typography.default + 8 + 'px',
     '--collection-control': 'var(--btn-h-md)',
+    '--collection-hit': 'var(--hit-target, var(--btn-h-md))',
     '--collection-column': source.sizes.md.input.height * 4 + 'px',
     '--collection-number': source.sizes.md.input.height * 3 + 'px',
     '--collection-lane': source.sizes.md.input.height * 6 + 'px',
