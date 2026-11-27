@@ -15,9 +15,9 @@ runs:
         BROWSERS: ${{ inputs.browsers }}
       run: |
         echo "pw=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
-        # Önbellek anahtarı tarayıcı kümesine bağlıdır: her matris işi kendi paketlerini saklar.
+        # The cache key depends on the browser set: each matrix job stores its own packages.
         echo "set=$(echo "$BROWSERS" | tr -s ' ' '\n' | sed '/^$/d' | sort | paste -sd- -)" >> "$GITHUB_OUTPUT"
-        # apt paketleri koşucu imajına bağlıdır: imaj sürümü değişince önbellek yenilenir.
+        # apt packages depend on the runner image: the cache is refreshed when the image version changes.
         echo "os=${ImageOS:-unknown}" >> "$GITHUB_OUTPUT"
         echo "image=${ImageVersion:-unknown}" >> "$GITHUB_OUTPUT"
     - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -28,8 +28,8 @@ runs:
       uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: ~/.cache/pw-debs
-        # İmaj sürümü anahtarın sonundadır. Tam anahtar yoksa aynı işletim sisteminin
-        # en yeni eski imaj paketleri denenir; kurulum olmazsa install.sh ağdan kurar.
+        # The image version is at the end of the key. Without an exact key, packages from the newest
+        # older image of the same OS are tried; if installation fails, install.sh installs from the network.
         key: pw-debs-${{ runner.arch }}-${{ steps.meta.outputs.pw }}-${{ steps.meta.outputs.set }}-${{ steps.meta.outputs.os }}-${{ steps.meta.outputs.image }}
         restore-keys: |
           pw-debs-${{ runner.arch }}-${{ steps.meta.outputs.pw }}-${{ steps.meta.outputs.set }}-${{ steps.meta.outputs.os }}-

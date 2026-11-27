@@ -1,8 +1,8 @@
-// Sahte sunucunun işçi dosyasını (mockServiceWorker.js) sunar.
+// Serves the mock server's worker file (mockServiceWorker.js).
 //
-// Geliştirme sunucusunda dosya her zaman sunulur. `VITE_API_MOCKS=off` ise tarayıcı onu kullanmaz.
-// Derlemede dosya yalnız `VITE_API_MOCKS=on` iken ya da e2e kipinde üretilir. Kural `src/mocks/start.ts` ile aynıdır.
-// Dosya MSW paketinden okunur. Böylece işçinin sürümü paketle aynı kalır.
+// The dev server always serves the file. If `VITE_API_MOCKS=off`, the browser does not use it.
+// In a build the file is emitted only when `VITE_API_MOCKS=on` or in e2e mode. Same rule as `src/mocks/start.ts`.
+// The file is read from the MSW package, so the worker version stays in step with the package.
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 
@@ -24,13 +24,13 @@ export function mockWorkerPlugin(): Plugin {
     name: 'atonota-mock-worker',
     configResolved(config) {
       base = config.base;
-      // e2e kipinde değer `vite/e2e-env.ts` dosyasından da gelebilir. Ortamdaki değer önce gelir.
+      // In e2e mode the value may also come from `vite/e2e-env.ts`. The environment value takes precedence.
       const mocks = config.env['VITE_API_MOCKS'] ?? e2eEnv(config.mode)['VITE_API_MOCKS'];
       emit = config.command === 'build' && mocks === 'on';
     },
     configureServer(server) {
       server.middlewares.use((request, response, next) => {
-        // Geliştirme sunucusu `base` yolunda çalışır. İşçi de o yolda sunulur.
+        // The dev server runs at the `base` path. The worker is served at that path too.
         if (new URL(request.url ?? '/', 'http://localhost').pathname !== `${base}${WORKER_FILE}`) {
           next();
           return;

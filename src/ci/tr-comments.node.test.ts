@@ -1,9 +1,9 @@
 // @vitest-environment node
-// Türkçe yorum sayacının testi (AJA-1456).
+// Test for the Turkish comment counter (AJA-1456).
 //
-// Sayaç kod yorumlarını ayrıştırıcıyla bulur. Tırnak içindeki metin yorum sayılmaz.
-// Yorumda Türkçe harf ya da sık bir Türkçe kelime varsa yorum Türkçedir.
-// Test küçük örnek dosyaları geçici bir klasöre yazar ve sayacı orada çalıştırır.
+// The counter finds code comments with a parser. Text inside quotes is not a comment.
+// A comment is Turkish if it has a Turkish letter or a common Turkish word.
+// The test writes small sample files to a temp folder and runs the counter there.
 import { spawnSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -37,10 +37,10 @@ describe('Türkçe yorumu tanıma', () => {
 
   it('İngilizce yorumu Türkçe saymaz', () => {
     expect(isTurkishComment('Keep the value stable for tests')).toBe(false);
-    // "I've", "var" ve "her" yanlış alarm vermez.
+    // "I've", "var" and "her" do not raise a false alarm.
     expect(isTurkishComment("I've moved her var into the de facto file")).toBe(false);
     expect(isTurkishComment('eslint-disable-next-line no-console')).toBe(false);
-    // Kod adının içindeki Türkçe kelime sayılmaz.
+    // A Turkish word inside an identifier does not count.
     expect(isTurkishComment('The `kimlik_yalniz_keycloak` setting is 1.')).toBe(false);
     expect(isTurkishComment('Calls kimlik_yalniz_keycloak and api.kullanici.get')).toBe(false);
   });

@@ -5,8 +5,8 @@ const DEMO = '/_demo/foundation';
 
 test.describe('temel kapılar', () => {
   test.beforeEach(async ({ page }) => {
-    // Geçişler bitmeden ölçüm yapılmasın. Tercih sayfa açılmadan verilir; sayfa içinde değiştirmek
-    // temayı yeniden kurar ve öğeleri yeniden bağlar.
+    // Do not measure before transitions finish. The preference is set before the page opens; changing it in the page
+    // rebuilds the theme and remounts the elements.
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.goto(DEMO);
     await expect(page.getByRole('heading', { level: 1, name: 'Atonota' })).toBeVisible();
@@ -73,24 +73,24 @@ test.describe('temel kapılar', () => {
       };
     });
     const [t, , , l] = info.hit.split(' ').map(Number);
-    // R1 + R2: üst/alt h·0.06; sol/sağ w·0.06 (komşu yoksa)
+    // R1 + R2: top/bottom h·0.06; left/right w·0.06 (if no neighbour)
     expect(t).toBeCloseTo(info.h * 0.06, 1);
     expect(l ?? 0).toBeLessThanOrEqual(info.w * 0.06 + 0.01);
-    // R7: ::after negatif offset ile dışa taşar; kutu konumlu
+    // R7: ::after overflows outwards with a negative offset; the box is positioned
     expect(info.position).not.toBe('static');
     expect(info.top).toBeLessThan(0);
     expect(info.left).toBeLessThan(0);
 
-    // R6: pasif buton genişlemez
+    // R6: a disabled button is not enlarged
     await expect(page.getByTestId('btn-disabled')).not.toHaveClass(/\bhit\b/);
 
-    // R4: Space.Compact ortak kenar 0
+    // R4: Space.Compact shared edge 0
     const leftHit = (await page.getByTestId('compact-left').getAttribute('data-hit')) ?? '';
     const rightHit = (await page.getByTestId('compact-right').getAttribute('data-hit')) ?? '';
     expect(Number(leftHit.split(' ')[1])).toBe(0);
     expect(Number(rightHit.split(' ')[3])).toBe(0);
 
-    // R9: input sarmalayıcıya uygulanır
+    // R9: applied to the input wrapper
     const wrapper = page.locator('.ant-input-affix-wrapper').first();
     await expect(wrapper).toHaveClass(/\bhit\b/);
     await expect(page.getByTestId('input-md')).not.toHaveClass(/\bhit\b/);
@@ -100,9 +100,9 @@ test.describe('temel kapılar', () => {
     const root = page.getByTestId('select-md');
     await root.evaluate((el) => el.scrollIntoView({ block: 'start' }));
     const box = (await root.boundingBox())!;
-    // Kök öğenin üst kenarına yakın, ::after katmanının üstüne tıkla
+    // Click near the root element's top edge, on the ::after layer
     await page.mouse.click(box.x + box.width / 2, box.y + 1);
-    // antd'nin role="listbox" öğesi ekran okuyucu içindir ve sıfır boyuttadır; görünen liste .ant-select-dropdown olur.
+    // antd's role="listbox" element is for screen readers and has zero size; the visible list is .ant-select-dropdown.
     await expect(page.locator('.ant-select-dropdown')).toBeVisible();
     await expect(root.locator('.ant-select-selection-search-input')).toHaveAttribute(
       'aria-expanded',
@@ -139,7 +139,7 @@ test.describe('temel kapılar', () => {
   async function switchToDark(page: Page) {
     await page.getByRole('radiogroup', { name: 'Tema' }).getByText('Koyu', { exact: true }).click();
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
-    // antd renk geçişi bitene kadar bekle: koyu buton zemini #34343B.
+    // Wait until the antd colour transition finishes: dark button background #34343B.
     await expect(page.getByTestId('btn-sm')).toHaveCSS('background-color', 'rgb(52, 52, 59)');
   }
 
@@ -184,7 +184,7 @@ test.describe('kök sayfa', () => {
     expect(family).toContain('Outfit');
   });
 
-  // Üretim derlemesinde deneme sayfasının olmadığını `src/app/build-output.node.test.ts` denetler.
+  // `src/app/build-output.node.test.ts` checks that the test page is absent from the production build.
   test('deneme sayfası e2e derlemesinde /_demo/foundation yolunda açılır', async ({ page }) => {
     await page.goto(DEMO);
     await expect(page.getByRole('heading', { level: 1, name: 'Atonota' })).toBeVisible();

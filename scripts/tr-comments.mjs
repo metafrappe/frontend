@@ -1,26 +1,27 @@
 #!/usr/bin/env node
 /**
- * Türkçe yorum sayacı (AJA-1456).
+ * Turkish comment counter (AJA-1456).
  *
- * Depodaki kod yorumlarını bulur ve Türkçe olanları sayar. Betik yorumu değiştirmez.
- * Sayıyı klasöre göre ve toplam olarak yazar. `--list` seçeneği dosya ve satırı da yazar.
- * Betik her zaman 0 koduyla çıkar. CI kapısını AJA-1458 işi kurar.
+ * Finds code comments in the repository and counts the Turkish ones. The script does not change comments.
+ * It prints the count per folder and in total. The `--list` option also prints file and line.
+ * The script always exits with code 0. The CI gate is set up by task AJA-1458.
  *
- * Yorumlar ayrıştırıcıyla bulunur. Düzenli ifadeyle yorum tahmin edilmez.
- * - `.ts`, `.tsx`, `.js` ve `.mjs` dosyalarını `typescript` paketi ayrıştırır.
- *   Metin, şablon metni, düzenli ifade ve JSX metni yorum sayılmaz.
- * - `.css`, `.yml`, `.yaml` ve `.sh` dosyaları için küçük sözcük ayırıcılar (lexer) vardır.
- *   Ayırıcı tırnak içini atlar. YAML blok metni (`|`, `>`) yorum sayılmaz.
- *   YAML içindeki `run: |` bloğu kabuk betiğidir. Bu bloğun yorumları kabuk kuralıyla bulunur.
- *   Kabukta shebang satırı, `$#`, `${#dizi}` ve heredoc gövdesi yorum sayılmaz.
+ * Comments are found with parsers. Comments are not guessed with regular expressions.
+ * - `.ts`, `.tsx`, `.js` and `.mjs` files are parsed by the `typescript` package.
+ *   Strings, template literals, regular expressions and JSX text are not comments.
+ * - `.css`, `.yml`, `.yaml` and `.sh` files have small lexers.
+ *   The lexer skips quoted text. YAML block scalars (`|`, `>`) are not comments.
+ *   A `run: |` block in YAML is a shell script. Its comments are found with the shell rules.
+ *   In shell, the shebang line, `$#`, `${#array}` and heredoc bodies are not comments.
  *
- * Türkçe yorum kuralı: Yorumda Türkçe harf (`ç ğ ı İ ö ş ü`) varsa yorum Türkçedir.
- * Harfi olmayan Türkçe yorum için sık kelimelerden bir liste vardır. Örnek: "Test icin sabit deger".
+ * Turkish comment rule: a comment containing a Turkish letter is Turkish.
+ * The letters are c-cedilla, g-breve, dotless i, dotted capital I, o-umlaut, s-cedilla and u-umlaut, with their capitals (`TR_LETTERS`).
+ * For Turkish comments without such letters there is a list of common words. Example: `Test icin sabit deger`.
  *
- * OpenAPI dosyaları backend'den gelir. Bu dosyalar ayrı sayılır ve toplama girmez.
- * `src/api/generated/` dosyaları OpenAPI'den üretilir. Bu dosyalar da OpenAPI bölümüne girer.
+ * OpenAPI files come from the backend. They are counted separately and are not in the total.
+ * `src/api/generated/` files are generated from OpenAPI. They also go into the OpenAPI section.
  *
- * Kullanım: node scripts/tr-comments.mjs [--list] [kök]
+ * Usage: node scripts/tr-comments.mjs [--list] [root]
  */
 import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, extname, join, relative, sep } from 'node:path';
@@ -43,18 +44,18 @@ const SKIP_DIRS = new Set([
   '.serena',
 ]);
 
-/** Backend'den gelen ya da ondan üretilen dosyalar. Ayrı sayılır. */
+/** Files that come from the backend or are generated from it. Counted separately. */
 const OPENAPI_PREFIXES = ['contracts/openapi/', 'src/api/generated/'];
 
 const TR_LETTERS = /[çğıİöşüÇĞÖŞÜ]/;
 
 /**
- * Türkçe harfi olmayan sık Türkçe kelimeler. Kelimeler küçük harfle ve ASCII biçimiyle yazılır.
- * Yanlış alarm veren kelimeler listeye alınmadı:
- * - `de` ve `da`: Almanca ve Danca dil kodudur.
- * - `var`: JavaScript anahtar sözcüğüdür.
- * - `her`, `once`, `son`, `gore`, `hem`, `alan`: İngilizce kelime ya da addır.
- * - `ne`, `o`, `ki`: kısa İngilizce kısaltmalarla karışır.
+ * Common Turkish words without Turkish letters. Words are written in lower case and ASCII form.
+ * Words that gave false alarms were left out:
+ * - `de` and `da`: German and Danish language codes.
+ * - `var`: a JavaScript keyword.
+ * - `her`, `once`, `son`, `gore`, `hem`, `alan`: English words or names.
+ * - `ne`, `o`, `ki`: clash with short English abbreviations.
  */
 export const TR_WORDS = new Set([
   've',
@@ -98,12 +99,12 @@ export const TR_WORDS = new Set([
   'deneme',
 ]);
 
-/** Yorum metni Türkçe mi? */
+/** Is the comment text Turkish? */
 export function isTurkishComment(text) {
   if (TR_LETTERS.test(text)) return true;
-  // Satır içi kod (`...`) atlanır. Boşlukla ayrılan parçalara bakılır.
-  // Kod adının içindeki kelime sayılmaz. Örnek: `kimlik_yalniz_keycloak`, `api.kullanici.get`.
-  // Kesme işareti kelimeyi bölmez. Böylece "I've" kelimesi "ve" sayılmaz.
+  // Inline code (`...`) is skipped. Space-separated tokens are checked.
+  // A word inside a code name does not count. Example: `kimlik_yalniz_keycloak`, `api.kullanici.get`.
+  // An apostrophe does not split a word. So `I've` is not counted as `ve`.
   for (const token of text.replace(/`[^`]*`/g, ' ').split(/\s+/)) {
     if (/[A-Za-z0-9][_./][A-Za-z0-9]/.test(token)) continue;
     const word = token.replace(/^[^A-Za-z]+|[^A-Za-z]+$/g, '');
@@ -112,7 +113,7 @@ export function isTurkishComment(text) {
   return false;
 }
 
-/** Blok yorumun satır başındaki yıldızları ve boş satırlarını atar. */
+/** Removes leading asterisks and blank lines from a block comment. */
 function cleanBlock(body) {
   return body
     .split('\n')
@@ -122,7 +123,7 @@ function cleanBlock(body) {
     .trim();
 }
 
-// --- TypeScript ve JavaScript -----------------------------------------------------------------
+// --- TypeScript and JavaScript ---------------------------------------------------------------
 
 function scriptKind(file) {
   if (file.endsWith('.tsx')) return ts.ScriptKind.TSX;
@@ -132,7 +133,7 @@ function scriptKind(file) {
 
 function tsComments(text, file) {
   const sf = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, scriptKind(file));
-  // JSX metninin başladığı yerler. Bu yerlerden yorum aranmaz. JSX metni yorum değildir.
+  // Where JSX text starts. Comments are not looked for at these positions. JSX text is not a comment.
   const jsxText = new Set();
   const nodes = [];
   const visit = (node) => {
@@ -193,7 +194,7 @@ function cssComments(text) {
   return out;
 }
 
-// --- Kabuk ------------------------------------------------------------------------------------
+// --- Shell ------------------------------------------------------------------------------------
 
 const SH_WORD_START = new Set([undefined, ' ', '\t', '\n', ';', '&', '|', '(', ')']);
 
@@ -244,7 +245,7 @@ function shComments(text, firstLine = 1) {
 
 const YAML_QUOTE_AFTER = new Set([undefined, ':', '-', '[', '{', ',', '?']);
 
-/** Satırın yorumsuz kısmını ve yorumunu ayırır. Tırnak durumu satırdan satıra taşınır. */
+/** Splits a line into its non-comment part and its comment. Quote state carries over between lines. */
 function splitYamlLine(line, state) {
   for (let i = 0; i < line.length; i++) {
     const c = line[i];
@@ -280,7 +281,7 @@ function yamlComments(text) {
     if (comment !== null) out.push({ line: n + 1, text: comment });
     const block = /(^|[\s:-])([|>])[-+0-9]*\s*$/.exec(value);
     if (!block || state.quote) continue;
-    // Blok metni: sonraki satırlar bu satırdan daha içeride durur. Boş satır da bloğa girer.
+    // Block scalar: the following lines are indented deeper than this line. Blank lines belong to the block too.
     const parent = indentOf(line);
     let end = n + 1;
     while (end < lines.length && (lines[end].trim() === '' || indentOf(lines[end]) > parent)) end++;
@@ -292,9 +293,9 @@ function yamlComments(text) {
   return out;
 }
 
-// --- Ortak ------------------------------------------------------------------------------------
+// --- Common -----------------------------------------------------------------------------------
 
-/** Dosyadaki bütün yorumları döner: `{ line, text }`. Satır numarası 1'den başlar. */
+/** Returns all comments in the file: `{ line, text }`. Line numbers start at 1. */
 export function extractComments(text, file) {
   const ext = extname(file);
   if (ext === '.css') return cssComments(text);
@@ -314,7 +315,7 @@ function listFiles(root, dir = root, out = []) {
   return out.sort();
 }
 
-/** Klasör adı: yolun ilk iki parçası. Örnek: `src/shell/a/b.ts` dosyası `src/shell` klasörüne girer. */
+/** Folder name: the first two path segments. Example: `src/shell/a/b.ts` goes into the `src/shell` folder. */
 export function folderOf(file) {
   const parts = file.split('/').slice(0, -1);
   return parts.slice(0, 2).join('/') || '.';
@@ -326,7 +327,7 @@ function group(hits) {
   return Object.fromEntries(Object.entries(byFolder).sort(([a], [b]) => a.localeCompare(b)));
 }
 
-/** Kökteki Türkçe yorumları tarar. OpenAPI dosyaları ayrı döner. */
+/** Scans the Turkish comments under the root. OpenAPI files are returned separately. */
 export function scanTurkishComments(root) {
   const hits = [];
   const openapiHits = [];
@@ -360,7 +361,7 @@ export function formatReport(result, { list = false } = {}) {
     table(result.openapi.byFolder, 'OpenAPI', result.openapi.total),
   ];
   if (list) {
-    // Çok satırlı yorumda Türkçe olan ilk satır gösterilir. Satır numarası yorumun başıdır.
+    // In a multi-line comment the first Turkish line is shown. The line number is the start of the comment.
     const excerpt = (text) => {
       const rows = text.split('\n');
       return (rows.find((row) => isTurkishComment(row)) ?? rows[0] ?? '').trim();

@@ -1,2 +1,2 @@
-// Bu klasörün sahibi `api-client` işidir. Arka uç OpenAPI sözleşmeleri buraya gelir.
+// This folder is owned by the `api-client` feature. Backend OpenAPI contracts go here.
 export {};

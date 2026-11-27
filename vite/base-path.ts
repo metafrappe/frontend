@@ -1,10 +1,10 @@
-// Panelin adres yolu (Vite `base`). Canlıda panel `/panel/` altında sunulur.
-// Arka uç bu yolla derlenmiş paketi bekler (frappesetup backend: platform_core/shell/panel_assets.py).
+// Panel base path (Vite `base`). In production the panel is served under `/panel/`.
+// The backend expects a bundle built with this path (frappesetup backend: platform_core/shell/panel_assets.py).
 //
-// Kural:
-// - `ATONOTA_BASE` verilirse o değer kullanılır. Değer `/` ile başlar. Sonuna `/` eklenir.
-// - Verilmezse üretim kipi (`vite build`, `vite preview`) `/panel/` kullanır.
-// - Geliştirme ve e2e kipi kök yolda (`/`) çalışır.
+// Rule:
+// - If `ATONOTA_BASE` is set, that value is used. It starts with `/`. A trailing `/` is added.
+// - Otherwise production mode (`vite build`, `vite preview`) uses `/panel/`.
+// - Development and e2e mode run at the root path (`/`).
 
 export const PANEL_BASE = '/panel/';
 

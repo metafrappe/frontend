@@ -19,7 +19,7 @@ test.describe('odak perdesi hareketi', () => {
     await expect(page.locator('body')).toHaveClass(/focus-dim-on/);
     await expect(toggle).toHaveClass(/focus-dim-source/);
     await expect(overlay).toHaveCSS('background-color', 'rgba(100, 116, 139, 0.33)');
-    // Açan öğe perdenin üstündedir
+    // The trigger element is above the overlay
     const [zOverlay, zSource] = await Promise.all([
       overlay.evaluate((el) => Number(getComputedStyle(el).zIndex)),
       toggle.evaluate((el) => Number(getComputedStyle(el).zIndex)),
@@ -45,7 +45,7 @@ test.describe('odak perdesi hareketi', () => {
     await page.emulateMedia({ reducedMotion: 'reduce' });
     const overlay = page.getByTestId('focus-dim-overlay');
     const duration = await overlay.evaluate((el) => getComputedStyle(el).transitionDuration);
-    // WebKit `transition: none` için boş değer döner.
+    // WebKit returns an empty value for `transition: none`.
     expect(['0s', '']).toContain(duration);
     await page.getByTestId('dim-toggle').click();
     await expect(overlay).toHaveCSS('background-color', 'rgba(100, 116, 139, 0.33)');

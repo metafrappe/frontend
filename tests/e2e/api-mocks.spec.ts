@@ -1,6 +1,6 @@
 import { expect, test } from '../setup/playwright-fixtures';
 
-// Tarayıcıdaki sahte sunucu (MSW) testleri. Derleme `VITE_API_MOCKS=on` ile yapılır.
+// In-browser mock server (MSW) tests. The build is made with `VITE_API_MOCKS=on`.
 
 test('sahte sunucu açıkken ekranda “Örnek veri” yazar', async ({ page }) => {
   await page.goto('/');
@@ -28,7 +28,7 @@ test('eşleşmeyen API isteği arka uca ulaşmaz', async ({ page, context }) => 
   await page.goto('/');
   await expect(page.getByRole('status').filter({ hasText: 'Örnek veri' })).toBeVisible();
 
-  // MSW eşleşmeyen isteği ağa bırakmaz. İsteği hata yanıtıyla ya da ağ hatasıyla bitirir.
+  // MSW does not pass an unmatched request to the network. It ends it with an error response or a network error.
   const status = await page.evaluate(async () => {
     try {
       return (await fetch('/api/method/bilinmeyen.uc')).status;
@@ -42,8 +42,8 @@ test('eşleşmeyen API isteği arka uca ulaşmaz', async ({ page, context }) => 
 });
 
 test('sayfa yenilenince ve ikinci sayfa açılınca panel yine açılır', async ({ page }) => {
-  // İşçi sayfayı denetlerken sayfa ve statik dosya istekleri olduğu gibi geçmelidir.
-  // Eski "error" kuralı ikinci açılışta yalnız bir JSON hata metni bırakıyordu.
+  // While the worker controls the page, page and static file requests must pass through unchanged.
+  // The old "error" rule left only a JSON error text on the second load.
   await page.goto('/');
   await expect(page.getByRole('status').filter({ hasText: 'Örnek veri' })).toBeVisible();
   await page.reload();

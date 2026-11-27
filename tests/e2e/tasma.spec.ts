@@ -3,13 +3,13 @@ import { expect, test, type Page } from '../setup/playwright-fixtures';
 const DEMO = '/_demo/foundation';
 
 /**
- * Yatay taşma (px). Üç ölçüm birlikte:
- * 1. belge genişliği, 2. öğe kutularının ekran dışına çıkması,
- * 3. içeriği kutusunu aşan öğeler (kesilen metin). `[data-scroll-x]` kapsayıcıları kendi içinde kayar ve sayılmaz.
+ * Horizontal overflow (px). Three measurements together:
+ * 1. document width, 2. element boxes extending off screen,
+ * 3. elements whose content exceeds their box (clipped text). `[data-scroll-x]` containers scroll internally and are not counted.
  */
 export async function overflow(page: Page): Promise<{ worst: number; offenders: string[] }> {
   return page.evaluate(() => {
-    // Dokunma alanı katmanı (::after) içerik değildir; ölçüm sırasında kapatılır.
+    // The touch target layer (::after) is not content; it is disabled during measurement.
     const probe = document.createElement('style');
     probe.textContent = '.hit::after { display: none !important; }';
     document.head.appendChild(probe);
@@ -19,7 +19,7 @@ export async function overflow(page: Page): Promise<{ worst: number; offenders: 
     for (const el of Array.from(document.body.querySelectorAll<HTMLElement>('*'))) {
       const r = el.getBoundingClientRect();
       if (r.width === 0 || r.height === 0) continue;
-      // Kaydırma kapsayıcısının içindekiler kayarak erişilir; kapsayıcının kendisi ölçülür.
+      // Contents of a scroll container are reached by scrolling; the container itself is measured.
       const scroller = el.closest('[data-scroll-x]');
       if (scroller && scroller !== el) continue;
       const outside = Math.max(r.right - limit, -r.left);
@@ -75,14 +75,14 @@ test.describe('yatay taşma', () => {
       return { inner: s.scrollWidth - s.clientWidth, overflowX: getComputedStyle(s).overflowX };
     });
     const viewport = page.viewportSize()!;
-    // Telefon genişliklerinde sütun en küçük genişlikleri toplamı ekranı aşar; tablo kaymalıdır.
+    // At phone widths the sum of column minimum widths exceeds the screen; the table must scroll.
     if (viewport.width < 600) {
       expect(scrollable.inner).toBeGreaterThan(0);
       expect(['auto', 'scroll']).toContain(scrollable.overflowX);
     }
     const result = await overflow(page);
     expect(result.worst, result.offenders.join('; ')).toBeLessThanOrEqual(0);
-    // Tablo başlıkları sözcük ortasından bölünmez
+    // Table headers do not break mid-word
     const broken = await container.evaluate((el) =>
       Array.from(el.querySelectorAll('th')).some(
         (th) => getComputedStyle(th).wordBreak === 'break-all',

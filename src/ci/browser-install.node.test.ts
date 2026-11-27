@@ -1,13 +1,13 @@
 // @vitest-environment node
-// CI tarayıcı kurulum betiğinin testleri (.github/actions/playwright-browsers/install.sh).
+// Tests for the CI browser install script (.github/actions/playwright-browsers/install.sh).
 //
-// Sorun: bir ağ denemesi süre sınırına takıldı. İçteki `apt-get` çalışmayı sürdürdü ve
-// dpkg kilidini tuttu. Sonraki denemeler hemen düştü. Bu testler betiğin ağ döngüsünü
-// yavaş bir sahte `npx` ile koşar. Sahte `npx`, `apt-get` adlı bir alt süreci kendi
-// oturumunda başlatır. `sudo` komutu pty ile böyle yapar. Bu yüzden yalnız süreç grubunu
-// durdurmak o süreci durdurmaz.
+// Problem: a network attempt hit its time limit. The inner `apt-get` kept running and
+// held the dpkg lock. Later attempts failed at once. These tests run the script's network loop
+// with a slow fake `npx`. The fake `npx` starts a child process named `apt-get` in its own
+// session. `sudo` does the same with a pty. So stopping only the process group
+// does not stop that process.
 //
-// Kaynak: frappesetup deposundaki aynı betiğin Python testi.
+// Source: the Python test for the same script in the frappesetup repository.
 import { spawnSync } from 'node:child_process';
 import {
   chmodSync,
@@ -28,7 +28,7 @@ const ROOT = resolve(import.meta.dirname, '..', '..');
 const SCRIPT = join(ROOT, '.github', 'actions', 'playwright-browsers', 'install.sh');
 const TEST_TIMEOUT_MS = 90_000;
 
-// Sahte `npx playwright install-deps`: 1. çağrı takılır, sonraki çağrılar başarılı olur.
+// Fake `npx playwright install-deps`: the 1st call hangs, later calls succeed.
 const FAKE_NPX = `#!/usr/bin/env bash
 set -u
 n=$(($(cat "$WORK/calls" 2>/dev/null || echo 0) + 1))
@@ -65,7 +65,7 @@ afterEach(() => {
       try {
         process.kill(pid, 'SIGKILL');
       } catch {
-        // Süreç zaten durmuş.
+        // The process has already stopped.
       }
     }
     rmSync(work, { recursive: true, force: true });
@@ -86,7 +86,7 @@ function runLoop(
   work: string,
   { extra = '', attempts = 2, seconds = 2, lockWait = 10 }: LoopOptions = {},
 ) {
-  // sudo komutu aynı kullanıcıyla çalıştırır ve kayda yazar. dpkg gerçekten hiç çalışmaz.
+  // sudo runs the command as the same user and logs it. dpkg never actually runs.
   const harness = `
 sudo() {
   echo "sudo $*" >> "$WORK/sudo.log"
@@ -158,7 +158,7 @@ describe('CI tarayıcı kurulum betiği', () => {
       expect(calls(work), out).toBe('2');
       const found = pids(work);
       expect(Object.keys(found).sort(), out).toEqual(['pid.apt', 'pid.group']);
-      // Yeni deneme, 1. denemenin bütün süreçleri durduktan sonra başladı.
+      // The new attempt started after every process of the 1st attempt had stopped.
       expect(
         readFileSync(join(work, 'seen-by-retry'), 'utf8').split(/\s+/).filter(Boolean),
         out,
@@ -177,7 +177,7 @@ describe('CI tarayıcı kurulum betiği', () => {
   it(
     'kilit beklemesinin kendi süre sınırı vardır',
     () => {
-      // Kilit hiç bırakılmaz. Döngü yeniden denemek yerine vazgeçmeli.
+      // The lock is never released. The loop should give up instead of retrying.
       const work = makeWork();
       const { proc, elapsedSeconds, out } = runLoop(work, {
         extra: 'apt_busy() { return 0; }',
@@ -193,7 +193,7 @@ describe('CI tarayıcı kurulum betiği', () => {
   it(
     'süre dolunca betiğin başlatmadığı apt süreçlerine dokunmaz',
     () => {
-      // Betiğin başlatmadığı, kendi oturumunda çalışan bir apt-get süreci.
+      // An apt-get process in its own session that the script did not start.
       const bystander = `
 perl -e 'use POSIX qw(setsid); setsid(); exec { "/bin/sleep" } "apt-get", "300"' \\
   </dev/null >/dev/null 2>&1 &
@@ -206,11 +206,11 @@ apt_busy() { return 1; }
       expect(proc.status, out).toBe(0);
       const found = pids(work);
       expect(Object.keys(found).sort(), out).toEqual(['pid.apt', 'pid.bystander', 'pid.group']);
-      // Betiğin kendi süreçleri durdu. Yabancı süreç çalışmayı sürdürüyor.
+      // The script's own processes stopped. The foreign process keeps running.
       expect(alive(found['pid.apt']!), out).toBe(false);
       expect(alive(found['pid.group']!), out).toBe(false);
       expect(alive(found['pid.bystander']!), out).toBe(true);
-      // Hiçbir süreç ad deseniyle durdurulmaz.
+      // No process is stopped by name pattern.
       expect(readFileSync(join(work, 'sudo.log'), 'utf8'), out).not.toContain('pkill');
       expect(elapsedSeconds, out).toBeLessThan(60);
     },
@@ -220,7 +220,7 @@ apt_busy() { return 1; }
   it(
     'dpkg --configure -a komutunun süre sınırı vardır',
     () => {
-      // `dpkg --configure -a` takılır. Döngü komutu durdurmalı ve açık hatayla düşmeli.
+      // `dpkg --configure -a` hangs. The loop should stop the command and fail with a clear error.
       const hang = `
 sudo() {
   echo "sudo $*" >> "$WORK/sudo.log"

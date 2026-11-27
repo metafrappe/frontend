@@ -12,9 +12,9 @@ import { mockWorkerPlugin } from './vite/mock-worker-plugin.ts';
 import { runtimeDesignSource } from './vite/runtime-design-source.ts';
 
 /**
- * e2e derlemesi (`vite build --mode e2e`): işlerin bağımsız deneme sayfaları da pakete girer.
- * Kural: `src/<iş>/preview/index.html` ya da `src/<iş>/harness/index.html`. Önizleme sunucusu bu
- * sayfaları aynı yolda sunar; örnek: /src/views/collection/preview/. Üretim derlemesine girmezler.
+ * e2e build (`vite build --mode e2e`): each feature's standalone harness pages are bundled too.
+ * Rule: `src/<feature>/preview/index.html` or `src/<feature>/harness/index.html`. The preview server
+ * serves these pages at the same path, e.g. /src/views/collection/preview/. They stay out of the production build.
  */
 function e2eInputs(): Record<string, string> {
   const extra = globSync('src/**/{preview,harness}/index.html', {
@@ -26,7 +26,7 @@ function e2eInputs(): Record<string, string> {
   ]);
 }
 
-/** `vi.mock('@ant-design/x')` kullanan kabuk testleri. Bkz. aşağıdaki `projects` açıklaması. */
+/** Shell tests that use `vi.mock('@ant-design/x')`. See the `projects` comment below. */
 const ANTD_X_MOCK_TESTS = [
   'src/shell/layout/AppShell.test.tsx',
   'src/shell/shellRoutes.test.tsx',
@@ -34,15 +34,15 @@ const ANTD_X_MOCK_TESTS = [
 ];
 
 export default defineConfig(({ mode }) => {
-  // Yerel arka uç: `VITE_DEV_BACKEND` verilirse Frappe yolları vekille ona gider (vite/dev-backend.ts).
+  // Local backend: if `VITE_DEV_BACKEND` is set, Frappe paths are proxied to it (vite/dev-backend.ts).
   const env = loadEnv(mode, process.cwd(), 'VITE_');
   const backend = readDevBackend(env);
   return {
-    // Panelin adres yolu: üretimde `/panel/`, geliştirmede ve e2e kipinde `/` (vite/base-path.ts).
+    // Panel base path: `/panel/` in production, `/` in development and e2e mode (vite/base-path.ts).
     base: resolveBase({ mode, env: process.env }),
-    // mockWorkerPlugin: sahte sunucunun işçi dosyasını yalnız gerektiğinde sunar (vite/mock-worker-plugin.ts).
-    // e2eEnvPlugin: e2e kipinin sahte sunucu ve Keycloak değerleri (vite/e2e-env.ts). Depoda `.env`
-    // dosyası yoktur. Değerler `loadEnv` sonucundan gelir; `.env.e2e.local` de okunur.
+    // mockWorkerPlugin: serves the mock server's worker file only when needed (vite/mock-worker-plugin.ts).
+    // e2eEnvPlugin: mock server and Keycloak values for e2e mode (vite/e2e-env.ts). The repository has no
+    // `.env` file. Values come from the `loadEnv` result; `.env.e2e.local` is read as well.
     plugins: [
       react(),
       mockWorkerPlugin(),
@@ -59,19 +59,19 @@ export default defineConfig(({ mode }) => {
       },
     },
     build: {
-      // Derleme bildirgesi (.vite/manifest.json): parça ve bağımlılık listesi. Yetenek bazlı teslim
-      // testleri (adaptive, modules) bununla sayfanın yalnız kendi parçalarını indirdiğini doğrular.
+      // Build manifest (.vite/manifest.json): list of chunks and dependencies. Capability-based delivery
+      // tests (adaptive, modules) use it to verify that a page downloads only its own chunks.
       manifest: true,
       rolldownOptions: {
         ...(mode === 'e2e' ? { input: e2eInputs() } : {}),
         output: {
-          // Paket parçalama: kitaplıklar ayrı parçadır; sürüm değişince yalnız ilgili parça iner.
-          // Sayfalar ve kabuk tembel `import()` ile kendi parçasına düşer (App.tsx ve shell rotaları).
+          // Code splitting: libraries are separate chunks; on a version change only that chunk is re-downloaded.
+          // Pages and the shell land in their own chunks via lazy `import()` (App.tsx and shell routes).
           codeSplitting: {
             groups: [
               { name: 'react', test: /node_modules\/(react|react-dom|scheduler)\// },
               { name: 'router', test: /node_modules\/(react-router|react-router-dom)\// },
-              // antd bileşenlerini kullanan rotalar belirler. Ant Design X grubu bunları kendine çekmez.
+              // The routes that use antd components decide where they go. The Ant Design X group does not pull them in.
               {
                 name: 'antd-x',
                 test: /node_modules\/@ant-design\/x\//,
@@ -99,13 +99,13 @@ export default defineConfig(({ mode }) => {
       setupFiles: ['tests/setup/vitest.setup.ts'],
       css: false,
       restoreMocks: true,
-      // Tek birim test kapısı: bütün src/**/*.test.{ts,tsx} dosyaları koşar.
-      // İki proje vardır. Neden: @ant-design/x paketi CJS derlemesinde bile antd/es dosyalarını ister;
-      // Node 24 bunu "antd/es/version" dizin içe aktarımında reddeder. Çözüm paketi önceden
-      // paketlemektir (optimizer). Üç kabuk testi ise @ant-design/x paketini vi.mock ile taklit eder;
-      // taklit ile önceden paketleme birlikte çalışmaz. Yalnız bu üç dosya "shell" projesinde koşar.
-      // Öteki kabuk testleri (örneğin rota yükleyicileri AI Studio sayfasını açar) "app" projesindedir.
-      // Kabuk taklidi kalkınca "shell" projesi silinir.
+      // Single unit test gate: every src/**/*.test.{ts,tsx} file runs.
+      // There are two projects. Why: even the CJS build of @ant-design/x requires antd/es files;
+      // Node 24 rejects this at the "antd/es/version" directory import. The fix is to pre-bundle
+      // the package (optimizer). Three shell tests, however, mock @ant-design/x with vi.mock;
+      // mocking and pre-bundling do not work together. Only those three files run in the "shell" project.
+      // Other shell tests (e.g. route loaders open the AI Studio page) are in the "app" project.
+      // Remove the "shell" project once the shell mock is gone.
       projects: [
         {
           extends: true,

@@ -4,15 +4,15 @@ import { loadEnv } from 'vite';
 import type { Plugin } from 'vite';
 
 /**
- * e2e kipinin ortam değerleri. Gizli bilgi değildir.
- * Vite bu değerleri yalnız `e2e` kipinde verir: `npm run build:e2e` ve `npm run dev:e2e`.
- * Depoda `.env` dosyası tutulmaz. Yayın kapısı her `.env` dosyasını gizli dosya sayar.
- * Keycloak kökü AtonotA Login giriş adresidir. Testler bu adresin yanıtını taklit eder.
- * Bu kök sahte sunucunun köküyle aynıdır: `src/mocks/fixtures.ts` içindeki `SAMPLE_KEYCLOAK_URL`.
- * Tarayıcı testleri `atonota.net` alanına giden isteği keser: `tests/setup/playwright-fixtures.ts`.
- * Test: `src/auth/e2e-env.test.ts` ve `src/mocks/build-output.node.test.ts`.
- * Bu kök üretimdeki varsayılan kökle aynıdır. `src/app/build-output.node.test.ts` bunu denetler.
- * Aynı test, üretim paketinde örnek alan adı (`*.example.test`) olmadığını da denetler.
+ * Environment values for e2e mode. They are not secrets.
+ * Vite provides these values only in `e2e` mode: `npm run build:e2e` and `npm run dev:e2e`.
+ * No `.env` file is kept in the repository. The release gate treats every `.env` file as a secret file.
+ * The Keycloak origin is the AtonotA Login sign-in address. Tests mock its responses.
+ * This origin matches the mock server's origin: `SAMPLE_KEYCLOAK_URL` in `src/mocks/fixtures.ts`.
+ * Browser tests intercept requests to the `atonota.net` domain: `tests/setup/playwright-fixtures.ts`.
+ * Tests: `src/auth/e2e-env.test.ts` and `src/mocks/build-output.node.test.ts`.
+ * This origin matches the production default. `src/app/build-output.node.test.ts` checks this.
+ * The same test also checks that the production bundle has no sample domain (`*.example.test`).
  */
 export const E2E_ENV = {
   VITE_API_MOCKS: 'on',
@@ -22,9 +22,9 @@ export const E2E_ENV = {
 export type E2eEnvKey = keyof typeof E2E_ENV;
 
 /**
- * Kipin e2e değerleri. Öteki kiplerde boş döner.
- * `env` içinde aynı adlı değer varsa o değer kullanılır.
- * Vite yapılandırması `env` olarak `loadEnv` sonucunu verir (bkz. `e2eEnvPlugin`).
+ * The e2e values for the mode. Returns empty in other modes.
+ * If `env` holds a value with the same name, that value is used.
+ * The Vite config passes the `loadEnv` result as `env` (see `e2eEnvPlugin`).
  */
 export function e2eEnv(
   mode: string,
@@ -36,7 +36,7 @@ export function e2eEnv(
   );
 }
 
-/** e2e değerlerini `import.meta.env` için `define` girdisine çevirir. */
+/** Converts the e2e values into `define` entries for `import.meta.env`. */
 export function e2eEnvDefine(
   mode: string,
   env: Record<string, string | undefined> = process.env,
@@ -50,10 +50,10 @@ export function e2eEnvDefine(
 }
 
 /**
- * e2e değerlerini Vite `define` girdisine yazan eklenti.
- * Değerler Vite'ın `loadEnv` sonucundan okunur. Bu sonuç `.env.e2e.local` gibi dosyaları ve
- * ortam değişkenlerini kapsar. Sahte sunucu eklentisi de aynı sonucu `config.env` ile okur.
- * Böylece iki yer aynı kaynağı kullanır (inceleme 1, K-2).
+ * Plugin that writes the e2e values into Vite `define` entries.
+ * Values are read from Vite's `loadEnv` result. That result covers files such as `.env.e2e.local` and
+ * environment variables. The mock server plugin reads the same result via `config.env`.
+ * So both places use the same source (review 1, K-2).
  */
 export function e2eEnvPlugin(): Plugin {
   return {

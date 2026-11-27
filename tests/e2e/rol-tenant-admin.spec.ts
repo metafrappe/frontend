@@ -1,7 +1,7 @@
 /**
- * "Tenant Admin" rolü: kiracı yöneticisi (G-62, AJA-831). Test koddan önce yazıldı.
- * Kiracı yöneticisi bugünkü panelin bütün gruplarını görür. "Müşteriler" grubunu görmez.
- * Sunucu testi: `backend/.../access/tests/test_role_tenant_admin.py`.
+ * "Tenant Admin" role: tenant administrator (G-62, AJA-831). The test was written before the code.
+ * The tenant administrator sees all groups of the current panel. They do not see the customers group.
+ * Server test: `backend/.../access/tests/test_role_tenant_admin.py`.
  */
 import { describeRole } from '../setup/panel-rolleri';
 import { test } from '../setup/playwright-fixtures';
