@@ -5,7 +5,7 @@ import { MODE_LABEL } from './SurfaceLabels';
 export function ScopeView({ block }: { block: ScopeBlock }) {
   return (
     <div data-genui="scope" className="genui-scope" role="group" aria-label="Kapsam">
-      <dl>
+      <dl data-testid="genui-scope-list">
         <div>
           <dt>Kiracı</dt>
           <dd>{block.tenant}</dd>
