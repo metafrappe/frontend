@@ -5,8 +5,13 @@
  * Dış istekler (kimlik sunucusu gibi) kesilir; yalnız yerel paket ölçülür.
  *
  * Paket `/panel/` yoluyla derlendiyse yollar o yolun altında açılır (örnek: `/` -> `/panel/`).
- * Kullanım: node scripts/initial-load.mjs [--build] [--out dist] [--port 4381] [--width 360] [yol ...]
+ * Kullanım: node scripts/initial-load.mjs [--build] [--check] [--static-only] [--limits dosya]
+ *        [--out dist] [--port 4381] [--width 360] [yol ...]
  * - `--build`: önce üretim derlemesini alır (`vite build`, sahte sunucu kapalı).
+ * - `--check`: boyut sınırı kapısı (AJA-1570). İlk açılışı, en büyük tek parçayı ve toplamı
+ *   `dist/` içinden ölçer (ham ve gzip). Sonra tarayıcıda gerçek aktarımı ölçer. Sonuçları
+ *   `scripts/size-budget.json` (ya da `--limits`) ile karşılaştırır. Sınır aşılırsa 1 koduyla çıkar.
+ * - `--static-only`: `--check` ile birlikte tarayıcıyı atlar; yalnız derleme çıktısı ölçülür.
  * - `--build` yoksa `dist/` hazır olmalıdır. Klasörde `mockServiceWorker.js` varsa bu bir e2e
  *   derlemesidir; betik ölçmeden durur. Böylece `npm run test:e2e` sonrası yanlış paket ölçülmez.
  *
@@ -24,6 +29,15 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { chromium } from '@playwright/test';
+
+import {
+  computeBuildMetrics,
+  evaluateBudget,
+  formatBudgetReport,
+  kb,
+  readBudgetFile,
+  readBuildSizes,
+} from './size-budget.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const require = createRequire(import.meta.url);
@@ -49,6 +63,9 @@ function option(name, fallback) {
   return value ?? fallback;
 }
 const shouldBuild = flag('build');
+const shouldCheck = flag('check');
+const staticOnly = flag('static-only');
+const limitsPath = resolve(root, option('limits', 'scripts/size-budget.json'));
 const outDir = option('out', 'dist');
 const port = Number(option('port', '4381'));
 const width = Number(option('width', '360'));
@@ -108,6 +125,37 @@ function isPortFree(portToCheck) {
     });
     socket.once('error', () => done(true));
   });
+}
+
+/** Static part of the gate: raw and gzip sizes from the build output. */
+let budget = null;
+let buildMetrics = null;
+if (shouldCheck) {
+  budget = readBudgetFile(limitsPath);
+  const manifestPath = join(outPath, '.vite', 'manifest.json');
+  if (!existsSync(manifestPath)) {
+    console.error(`Derleme listesi yok: ${manifestPath}. Boyut sınırı ölçülemedi.`);
+    process.exit(2);
+  }
+  buildMetrics = computeBuildMetrics(
+    JSON.parse(readFileSync(manifestPath, 'utf8')),
+    readBuildSizes(outPath),
+  );
+  const row = (label, size) =>
+    console.log(`${label.padEnd(34)} ham ${kb(size.rawBytes)}, gzip ${kb(size.gzipBytes)}`);
+  console.log(`\n== Derleme çıktısı: ${outPath} (sınır tarihi ${budget.date}) ==`);
+  row('İlk açılış JS', buildMetrics.initial.js);
+  row('İlk açılış CSS', buildMetrics.initial.css);
+  row('İlk açılış tüm dosyalar', buildMetrics.initial.all);
+  row(`En büyük JS (${buildMetrics.single.js.file})`, buildMetrics.single.js);
+  row(`En büyük CSS (${buildMetrics.single.css.file})`, buildMetrics.single.css);
+  row('Toplam JS', buildMetrics.total.js);
+  row('Toplam tüm dosyalar', buildMetrics.total.all);
+  if (staticOnly) {
+    const result = evaluateBudget(buildMetrics, null, budget.limits);
+    console.log(formatBudgetReport(result));
+    process.exit(result.ok ? 0 : 1);
+  }
 }
 
 if (!(await isPortFree(port))) {
@@ -215,15 +263,19 @@ async function measure(browser, path) {
   const totals = {};
   for (const r of rows) totals[kindOf(r.name)] = (totals[kindOf(r.name)] ?? 0) + r.encoded;
   const total = rows.reduce((sum, r) => sum + r.encoded, 0);
+  // Gate value: only the bundle's own files (under the base path). API calls are not part of the bundle.
+  const bundleTotal = rows
+    .filter((r) => r.name.startsWith(appBase))
+    .reduce((sum, r) => sum + r.encoded, 0);
   console.log(
     `\n== ${appBase.replace(/\/$/, '')}${path} (${width} px, Chromium, aktarılan bayt) ==`,
   );
   for (const r of rows)
     console.log(`${String(r.encoded).padStart(8)} B  ${kindOf(r.name).padEnd(9)} ${r.name}`);
-  for (const [k, v] of Object.entries(totals))
-    console.log(`${k.padEnd(10)} ${(v / 1024).toFixed(1)} KB (${v} B)`);
-  console.log(`TOPLAM     ${(total / 1024).toFixed(1)} KB, ${rows.length} istek`);
+  for (const [k, v] of Object.entries(totals)) console.log(`${k.padEnd(10)} ${kb(v)} (${v} B)`);
+  console.log(`TOPLAM     ${kb(total)}, ${rows.length} istek`);
   await context.close();
+  return bundleTotal;
 }
 
 let exitCode = 0;
@@ -231,7 +283,14 @@ try {
   await waitForServer();
   const browser = await chromium.launch();
   try {
-    for (const path of paths) await measure(browser, path);
+    /** @type {Record<string, number>} */
+    const transfer = {};
+    for (const path of paths) transfer[path] = await measure(browser, path);
+    if (buildMetrics && budget) {
+      const result = evaluateBudget(buildMetrics, transfer, budget.limits);
+      console.log(formatBudgetReport(result));
+      if (!result.ok) exitCode = 1;
+    }
   } finally {
     await browser.close();
   }
