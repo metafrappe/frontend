@@ -462,8 +462,8 @@ html[data-focus-mode='keyboard'] .atonota-tabs .ant-segmented-item:focus-within 
 /* Text read by a screen reader only. Example: the characters-left message of a text counter. */
 .atonota-visually-hidden {
   position: absolute;
-  inline-size: 0;
-  block-size: 0;
+  inline-size: var(--ant-line-width);
+  block-size: var(--ant-line-width);
   overflow: hidden;
   clip-path: inset(50%);
   white-space: nowrap;

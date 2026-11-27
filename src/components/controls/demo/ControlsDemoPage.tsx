@@ -124,7 +124,7 @@ export default function ControlsDemoPage() {
           }}
         >
           <Input aria-label="Kısa not" maxLength={10} showCount data-testid="limited" />
-          <output data-testid="submit-count">{submits}</output>
+          <span data-testid="submit-count">{submits}</span>
         </form>
       </section>
     </div>

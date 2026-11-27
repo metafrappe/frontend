@@ -4,6 +4,7 @@ import { expect, test } from '../../../../tests/setup/playwright-fixtures';
 const demo = '/_demo/controls';
 const HINDI = 'क्षि';
 const FAMILY = '👩‍👩‍👧';
+// The e2e sample boot data sets the user language to Turkish.
 
 test.describe('text input rules', () => {
   test('the counter counts perceived characters and cuts at a character boundary', async ({
@@ -13,12 +14,13 @@ test.describe('text input rules', () => {
     const field = page.getByLabel('Kısa not');
     const form = page.getByTestId('text-form');
     await field.fill(`${HINDI}${FAMILY}é`);
+    await expect(form.locator('.ant-input-show-count-suffix')).toBeVisible();
     await expect(form.locator('.ant-input-show-count-suffix')).toContainText('3 / 10');
-    await expect(form.getByRole('status')).toHaveText('7 characters remaining');
+    await expect(form.getByRole('status')).toHaveText('7 karakter kaldı');
 
     await field.fill(`abcdefghi${FAMILY}${HINDI}`);
     await expect(field).toHaveValue(`abcdefghi${FAMILY}`);
-    await expect(form.getByRole('status')).toHaveText('0 characters remaining');
+    await expect(form.getByRole('status')).toHaveText('0 karakter kaldı');
 
     // The page does not overflow sideways, even at 320 CSS px.
     const overflow = await page.evaluate(

@@ -37,7 +37,11 @@ const InputField = forwardRef<InputRef, InputProps>(function Input(
       {...rules}
       ref={ref}
       className={['atonota-input', className].filter(Boolean).join(' ')}
-      suffix={suffix ?? <span className="hit-sfx" aria-hidden="true" />}
+      // The hit-area CSS hides a suffix that holds `hit-sfx`. A shown counter already makes the
+      // affix wrapper, so the empty suffix is left out and the counter stays visible.
+      suffix={
+        suffix ?? (rules.count?.show ? undefined : <span className="hit-sfx" aria-hidden="true" />)
+      }
     />
   );
 });
