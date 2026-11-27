@@ -27,6 +27,34 @@ describe('wrap gate: overflow-wrap: anywhere', () => {
     expect(findWrapViolations('.ant-typography h1 { overflow-wrap: anywhere }', 'src/a.css')).toHaveLength(1);
   });
 
+  it('reads the outer rule when it holds a nested rule', () => {
+    const media = 'td { overflow-wrap: anywhere; @media (min-width: 600px) { color: inherit; } }';
+    expect(findWrapViolations(media, 'src/a.css')).toHaveLength(1);
+    const hover = ['h2 {', '  overflow-wrap: anywhere;', '  &:hover {', '    color: red;', '  }', '}'].join(
+      '\n',
+    );
+    const violations = findWrapViolations(hover, 'src/a.css');
+    expect(violations).toHaveLength(1);
+    expect(violations[0]).toMatchObject({ line: 2, selector: 'h2' });
+  });
+
+  it('joins a nested selector with its parent selector', () => {
+    const cell = findWrapViolations('table { & td { overflow-wrap: anywhere } }', 'src/a.css');
+    expect(cell).toHaveLength(1);
+    expect(cell[0]?.reason).toContain('table cell');
+    expect(findWrapViolations('.grid { th { overflow-wrap: anywhere } }', 'src/a.css')).toHaveLength(1);
+    expect(findWrapViolations('.note { & a { overflow-wrap: anywhere } }', 'src/a.css')).toEqual([]);
+  });
+
+  it('still catches a table cell rule inside @media and @container', () => {
+    expect(
+      findWrapViolations('@media (min-width: 1px) { td { overflow-wrap: anywhere } }', 'src/a.css'),
+    ).toHaveLength(1);
+    expect(
+      findWrapViolations('@container card (min-width: 1px) { td { overflow-wrap: anywhere } }', 'src/a.css'),
+    ).toHaveLength(1);
+  });
+
   it('allows overflow-wrap: anywhere on a link', () => {
     expect(findWrapViolations('.note a { overflow-wrap: anywhere; }', 'src/a.css')).toEqual([]);
     expect(findWrapViolations('a.long-url { overflow-wrap: anywhere; }', 'src/a.css')).toEqual([]);
