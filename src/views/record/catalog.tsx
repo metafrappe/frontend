@@ -2,6 +2,9 @@ import { CalendarBlank, Clock, Sparkle, WarningCircle } from '@phosphor-icons/re
 import { Button, Checkbox, Input, InputNumber, Select } from 'antd';
 import type { ReactNode } from 'react';
 
+import { formatNumberInput, resolveNumberLocale } from '@/app/locale';
+import { LocaleNumberInput } from '@/components/controls';
+
 import { CATALOG_VERSION, resolveCatalogEntry } from './catalogRegistry';
 import { evaluateFieldState, isFrappeTruthy } from './conditions';
 import { ChildTableField, TableMultiSelectField } from './fields/ChildTableField';
@@ -341,56 +344,36 @@ export function CatalogField(props: CatalogFieldProps): ReactNode {
       }
 
       case 'Float':
-      case 'Percent': {
-        const numVal =
-          typeof value === 'number'
-            ? value
-            : value === '' || value === null || value === undefined
-              ? null
-              : Number(value);
-        const prec = parsePrecision(field.precision);
-        return (
-          <InputNumber<number>
-            id={a11y.controlId}
-            aria-labelledby={a11y.labelId}
-            aria-describedby={a11y.ariaDescribedBy}
-            aria-invalid={a11y.ariaInvalid}
-            size={compactCell ? 'small' : 'middle'}
-            style={{ width: '100%', fontVariantNumeric: 'tabular-nums' }}
-            {...(prec !== undefined ? { precision: prec } : {})}
-            {...(field.non_negative === true ? { min: 0 } : {})}
-            {...(entry.canonicalType === 'Percent' ? { addonAfter: '%' } : {})}
-            readOnly={state.readOnly}
-            value={numVal !== null && Number.isFinite(numVal) ? numVal : null}
-            onChange={(next) => onChange(field.fieldname, next)}
-          />
-        );
-      }
-
+      case 'Percent':
       case 'Currency': {
-        const numVal =
-          typeof value === 'number'
-            ? value
-            : value === '' || value === null || value === undefined
-              ? null
-              : Number(value);
+        // The number is typed in the format of the user's region (AJA-1765).
+        const numberLocale = resolveNumberLocale(formatting?.format_locale, locale);
+        const isCurrency = entry.canonicalType === 'Currency';
         const currencyCode =
           formatting?.currency ??
           (field.options && field.options.length <= 5 ? field.options : 'TRY');
-        const currencyPrecision = parsePrecision(field.precision, 2) ?? 2;
+        const prec = isCurrency
+          ? (parsePrecision(field.precision, 2) ?? 2)
+          : parsePrecision(field.precision);
         return (
-          <InputNumber<number>
+          <LocaleNumberInput
             id={a11y.controlId}
             aria-labelledby={a11y.labelId}
             aria-describedby={a11y.ariaDescribedBy}
             aria-invalid={a11y.ariaInvalid}
             size={compactCell ? 'small' : 'middle'}
-            style={{ width: '100%', fontVariantNumeric: 'tabular-nums' }}
-            precision={currencyPrecision}
-            {...(field.non_negative === true ? { min: 0 } : {})}
-            prefix={currencyCode}
+            locale={numberLocale}
+            precision={prec}
+            {...(isCurrency ? { prefix: currencyCode } : {})}
+            {...(entry.canonicalType === 'Percent' ? { addonAfter: '%' } : {})}
             readOnly={state.readOnly}
-            value={numVal !== null && Number.isFinite(numVal) ? numVal : null}
+            value={value}
+            messages={{
+              ambiguous: formatRecordMessage(locale, 'numberAmbiguous'),
+              invalid: formatRecordMessage(locale, 'numberInvalid', {
+                example: formatNumberInput(1234.56, numberLocale, prec ?? 2),
+              }),
+            }}
             onChange={(next) => onChange(field.fieldname, next)}
           />
         );

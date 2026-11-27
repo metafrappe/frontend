@@ -20,3 +20,13 @@ export {
   useSetFormatting,
   useSetLanguage,
 } from './LanguageProvider';
+export {
+  formatNumberInput,
+  isUnresolvedNumber,
+  numberSymbols,
+  parseLocaleNumber,
+  resolveNumberLocale,
+  UnresolvedNumber,
+  type NumberEntry,
+  type NumberSymbols,
+} from './number-input';

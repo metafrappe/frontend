@@ -12,6 +12,12 @@ export interface SiteFormatting {
   time_zone?: string | null | undefined;
   /** Sitenin varsayılan para birimi. Örnek: `TRY`. Yoksa tutar düz sayı yazılır. */
   currency?: string | null | undefined;
+  /**
+   * BCP 47 tag of the user's region formats. Example: `fr-FR`.
+   * Today only number entry uses it (AJA-1765). If absent, the language's format locale is used.
+   * The real boot data field comes from AJA-1732. Until then tests pass a fake value.
+   */
+  format_locale?: string | null | undefined;
 }
 
 export interface FormatSettings {

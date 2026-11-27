@@ -1,3 +1,5 @@
+import { isUnresolvedNumber } from '@/app/locale';
+
 import { evaluateFieldState, isFrappeTruthy } from './conditions';
 import { isLayoutBreakFieldType } from './layout';
 import { formatRecordMessage } from './messages';
@@ -149,6 +151,15 @@ export function validateRecordDraft(
       field.fieldtype === 'Currency' ||
       field.fieldtype === 'Percent'
     ) {
+      // Unclear or broken typed text is never saved silently (AJA-1765).
+      if (isUnresolvedNumber(rawValue)) {
+        errors[field.fieldname] = formatRecordMessage(
+          locale,
+          rawValue.reason === 'ambiguous' ? 'validationNumberAmbiguous' : 'validationNumber',
+          { label },
+        );
+        continue;
+      }
       const num = parseNumericDraftValue(rawValue);
       if (!Number.isFinite(num)) {
         errors[field.fieldname] = formatRecordMessage(locale, 'validationNumber', { label });

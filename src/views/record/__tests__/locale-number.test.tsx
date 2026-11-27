@@ -2,11 +2,9 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
-import type { SiteFormatting } from '@/app/locale';
-
 import { RecordApiError } from '../adapter';
 import { RecordView } from '../RecordView';
-import type { DocTypeMeta, RecordDataAdapter, RecordDocument } from '../types';
+import type { DocTypeMeta, RecordDataAdapter, RecordDocument, SiteFormatting } from '../types';
 
 /**
  * Locale number entry in the record form (AJA-1765, G-73).
@@ -41,8 +39,20 @@ const META: DocTypeMeta = {
   mobile_cache_allowed: false,
 };
 
-const FRANCE: SiteFormatting = { currency: 'EUR', format_locale: 'fr-FR' };
-const GERMANY: SiteFormatting = { currency: 'EUR', format_locale: 'de-DE' };
+const FRANCE: SiteFormatting = {
+  time_zone: 'Europe/Paris',
+  currency: 'EUR',
+  number_format: '# ###,##',
+  rounding_method: "Banker's Rounding",
+  format_locale: 'fr-FR',
+};
+const GERMANY: SiteFormatting = {
+  time_zone: 'Europe/Berlin',
+  currency: 'EUR',
+  number_format: '#.###,##',
+  rounding_method: "Banker's Rounding",
+  format_locale: 'de-DE',
+};
 
 /** The amount as the French region writes it. The group sign is a narrow space. */
 const FRENCH_AMOUNT = new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 2 }).format(1234.56);

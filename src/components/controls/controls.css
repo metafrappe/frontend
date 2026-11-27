@@ -458,3 +458,33 @@ html[data-focus-mode='keyboard'] .atonota-tabs .ant-segmented-item:focus-within 
     box-shadow: none;
   }
 }
+
+/* Locale number entry (AJA-1765). The question and its choices sit under the field. */
+.atonota-number-entry {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  min-inline-size: 0;
+}
+
+.atonota-number-entry .atonota-input {
+  font-variant-numeric: tabular-nums;
+}
+
+.atonota-number-message {
+  margin: 0;
+  font-size: var(--font-min);
+  color: var(--color-text);
+}
+
+.atonota-number-question {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.atonota-number-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+}

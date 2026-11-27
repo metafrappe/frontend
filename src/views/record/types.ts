@@ -106,6 +106,12 @@ export interface SiteFormatting {
   currency: string | null;
   number_format: string;
   rounding_method: string;
+  /**
+   * BCP 47 tag of the user's region formats. Example: `fr-FR`.
+   * Number entry reads the separators from it (AJA-1765). If absent, the language's format locale is used.
+   * The boot data does not carry it yet. The real field comes from AJA-1732.
+   */
+  format_locale?: string | null | undefined;
 }
 
 export interface RecordDocument {
