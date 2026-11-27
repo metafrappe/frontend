@@ -43,7 +43,7 @@ export interface Formatter {
   date: (value: string) => string;
   /** Saat ve dakika, sitenin saat diliminde. */
   time: (value: Date) => string;
-  /** Gün ve saat, sitenin saat diliminde. */
+  /** Gün ve saat, sitenin saat diliminde. Yaz saati gecesinde tekrarlanan saatte saat dilimi kısaltması da yazılır. */
   dateTime: (value: Date) => string;
   /** Frappe tarih-saat değeri. Değer sitenin saat dilimiyle okunur. Okunamayan değer olduğu gibi döner. */
   frappeDateTime: (value: string) => string;
@@ -134,6 +134,25 @@ function zoneOffset(instant: number, timeZone: string): number {
   return wall - Math.floor(instant / 1000) * 1000;
 }
 
+/** Milisaniye olarak altı saat. Her yaz saati kayması bundan kısadır. */
+const SIX_HOURS = 6 * 60 * 60 * 1000;
+
+/**
+ * Anın duvar saati bu saat diliminde iki kez yaşanıyor mu, bunu söyler.
+ * Örnek: Londra'da 25 Ekim 2026 günü 01:30 önce BST, sonra GMT olur.
+ */
+function isRepeatedWallTime(instant: number, timeZone: string): boolean {
+  const offset = zoneOffset(instant, timeZone);
+  const wall = instant + offset;
+  const neighbours = [
+    zoneOffset(instant - SIX_HOURS, timeZone),
+    zoneOffset(instant + SIX_HOURS, timeZone),
+  ];
+  return neighbours.some(
+    (other) => other !== offset && zoneOffset(wall - other, timeZone) === other,
+  );
+}
+
 /**
  * Frappe tarih-saat değerini sitenin saat dilimiyle okur.
  * Frappe değeri saat dilimi taşımaz. Örnek: `2026-11-27 09:05:00` İstanbul'da 06.05 UTC olur.
@@ -190,6 +209,18 @@ export function createFormatter(settings: FormatSettings): Formatter {
   const dayFormat = new Intl.DateTimeFormat(intl, { ...DAY, timeZone: 'UTC' });
   const timeFormat = new Intl.DateTimeFormat(intl, { ...TIME, ...zone });
   const dateTimeFormat = new Intl.DateTimeFormat(intl, { ...DAY, ...TIME, ...zone });
+  // Yaz saati gecesinde bir saat tekrarlanır. Saat dilimi kısaltması iki anı birbirinden ayırır.
+  const zonedDateTimeFormat = new Intl.DateTimeFormat(intl, {
+    ...DAY,
+    ...TIME,
+    ...zone,
+    timeZoneName: 'short',
+  });
+  const activeZone = dateTimeFormat.resolvedOptions().timeZone;
+  const formatDateTime = (value: Date) =>
+    isRepeatedWallTime(value.getTime(), activeZone)
+      ? zonedDateTimeFormat.format(value)
+      : dateTimeFormat.format(value);
   const listFormat = new Intl.ListFormat(intl, { type: 'conjunction' });
   const parse = (value: string) => parseFrappeDatetime(value, timeZone);
   const unit = distanceUnit({
@@ -213,10 +244,10 @@ export function createFormatter(settings: FormatSettings): Formatter {
       return day ? dayFormat.format(day) : value;
     },
     time: (value) => timeFormat.format(value),
-    dateTime: (value) => dateTimeFormat.format(value),
+    dateTime: formatDateTime,
     frappeDateTime: (value) => {
       const instant = parse(value);
-      return instant ? dateTimeFormat.format(instant) : value;
+      return instant ? formatDateTime(instant) : value;
     },
     parseFrappeDatetime: parse,
     currency: (value, code) => {
