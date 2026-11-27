@@ -107,5 +107,21 @@ test('a direct Ant Design Select also opens a 9px panel', async ({ page }) => {
   await select.click();
   const popup = await selectPopup(page, combobox);
   await expect(popup).toBeVisible();
-  await expect(popup).toHaveCSS('border-radius', '9px');
+  const surface = await popup.evaluate((el) => {
+    const style = getComputedStyle(el);
+    return {
+      corners: [
+        style.borderTopLeftRadius,
+        style.borderTopRightRadius,
+        style.borderBottomLeftRadius,
+        style.borderBottomRightRadius,
+      ],
+      // AD-2: köşe antd iç sınıfı yerine ConfigProvider `select.styles.popup.root` alanından gelir.
+      fromConfig: (el as HTMLElement).style.borderRadius,
+    };
+  });
+  expect(surface).toEqual({
+    corners: ['9px', '9px', '9px', '9px'],
+    fromConfig: 'var(--r-menu)',
+  });
 });

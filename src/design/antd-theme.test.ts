@@ -2,7 +2,7 @@ import designSource from '@design-source/control-size-config.json';
 import { theme as antdThemeApi } from 'antd';
 import { describe, expect, it } from 'vitest';
 
-import { buildAntdTheme } from './antd-theme';
+import { antdComponentConfig, buildAntdTheme } from './antd-theme';
 import { blendOver, contrastRatio, darkenToContrast } from './color';
 import { danger, palette, primary, textDescription } from './tokens';
 
@@ -220,5 +220,11 @@ describe('buildAntdTheme', () => {
     expect(token?.lineHeight).toBeCloseTo(24 / 16, 6);
     expect(token?.lineHeightSM).toBeCloseTo(22 / 14, 6);
     expect(token?.lineHeightLG).toBeCloseTo(26 / 18, 6);
+  });
+
+  it('Select açılır paneli köşesini ConfigProvider üzerinden menü radius değişkeninden alır (AD-2)', () => {
+    expect(antdComponentConfig.select?.styles?.popup?.root).toEqual({
+      borderRadius: 'var(--r-menu)',
+    });
   });
 });

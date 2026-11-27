@@ -157,6 +157,13 @@ const SelectField = forwardRef(function Select<Value, Option extends SelectOptio
         </SelectPopup>
       )}
       className={['atonota-select', className].filter(Boolean).join(' ')}
+      // The attached panel keeps its flush corners from controls.css. antd uses
+      // `styles.popup.root` before the ConfigProvider value, so an own object blocks
+      // the app-wide inline corner (node_modules/antd/es/select/index.js:117).
+      styles={{
+        ...props.styles,
+        popup: { ...props.styles?.popup, root: { ...props.styles?.popup?.root } },
+      }}
       classNames={{
         ...classNames,
         popup: {

@@ -2,7 +2,7 @@
  * antd temasını kaynak kararlardan üretir. Açık ve koyu tema aynı tokenlardan çıkar.
  * Başlangıç noktası kaynaktaki `derived.antdTheme` nesnesidir; test bununla karşılaştırır.
  */
-import { theme as antdTheme, type ThemeConfig } from 'antd';
+import { theme as antdTheme, type ConfigProviderProps, type ThemeConfig } from 'antd';
 
 import { duration, easing, seconds } from './motion';
 import { designSource, type ThemeMode } from './source';
@@ -22,6 +22,16 @@ import {
   textDescription,
   typography,
 } from './tokens';
+
+/**
+ * ConfigProvider bileşen ayarları (AD-2: önce token, sonra `classNames` ve `styles`).
+ * antd 5.29.3'te büyük kontrol ve açılır panel aynı `borderRadiusLG` tokenını paylaşır.
+ * Select paneli bu yüzden köşesini `select.styles.popup.root` alanından alır
+ * (node_modules/antd/es/select/index.js:117). Sarmalanmış Select kendi değerini verir.
+ */
+export const antdComponentConfig = {
+  select: { styles: { popup: { root: { borderRadius: 'var(--r-menu)' } } } },
+} satisfies Pick<ConfigProviderProps, 'select'>;
 
 export interface BuildThemeOptions {
   /** `prefers-reduced-motion: reduce` açıkken antd hareketi kapanır. */

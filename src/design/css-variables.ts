@@ -371,9 +371,17 @@ export function buildDesignCss(): string {
     baseCss(),
     controlFixCss(),
     // antd 5.29.3 shares borderRadiusLG between large controls and popup surfaces.
-    // Remove this adapter when antd exposes separate popup radius tokens.
-    // Attached controls retain their existing flush-corner rules in controls.css.
-    ':root .ant-select-dropdown:not(.atonota-control-popup), :root .ant-mentions-dropdown, :root .ant-picker-dropdown .ant-picker-panel-container { border-radius: var(--r-menu); }',
+    // Select gets its popup corner from ConfigProvider `select.styles.popup.root` (antd-theme.ts).
+    // Mentions and Picker have no such path, so this adapter stays for them (AD-2 exception):
+    // - Mentions: ConfigProvider `mentions` only carries className and style for the input.
+    //   The popup class comes only from the `popupClassName` prop
+    //   (node_modules/antd/es/mentions/index.js:121 and :135).
+    // - Picker: ConfigProvider `datePicker.styles.popup.root` styles the outer `.ant-picker-dropdown`
+    //   (node_modules/antd/es/date-picker/hooks/useMergedPickerSemantic.js:6-28). The visible
+    //   corner is drawn by the inner `.ant-picker-panel-container`
+    //   (node_modules/antd/es/date-picker/style/index.js:326-330).
+    // Remove this adapter when antd exposes separate popup radius tokens or popup semantic slots.
+    ':root .ant-mentions-dropdown, :root .ant-picker-dropdown .ant-picker-panel-container { border-radius: var(--r-menu); }',
     primaryButtonCss(),
     focusCss(),
     hitArea.css,
