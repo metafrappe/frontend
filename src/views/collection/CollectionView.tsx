@@ -219,6 +219,11 @@ export function CollectionView({
   const filterFieldsId = useId();
   const sortFieldsId = useId();
   const page = current?.status === 'ready' ? current.page : undefined;
+  // Sayfa düğmeleri ilk yanıt gelene kadar gizlidir. Böylece düğme ilk çizimde son rengindedir.
+  // Kapalıdan açığa renk geçişi koşmaz. Hata yanıtında da düğmeler görünür, kullanıcı geri dönebilir.
+  // Sonraki yüklemelerde düğmeler görünür kalır, odak kaybolmaz.
+  const [settled, setSettled] = useState(false);
+  if (current && !settled) setSettled(true);
   const scope = key + query.view;
   const selected =
     selection.key === scope &&
@@ -568,7 +573,7 @@ export function CollectionView({
         </div>
         <nav aria-label="Kayıt sayfaları" className="collection-pagination">
           <p>{query.page}. sayfa.</p>
-          <div className="collection-page-actions">
+          <div className="collection-page-actions" hidden={!settled}>
             <Button
               disabled={query.page <= 1}
               onClick={() => {

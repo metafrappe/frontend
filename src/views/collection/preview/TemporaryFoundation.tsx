@@ -1,5 +1,5 @@
-import { ConfigProvider } from 'antd';
-import { useRef, useSyncExternalStore } from 'react';
+import { ConfigProvider, theme } from 'antd';
+import { useLayoutEffect, useRef, useSyncExternalStore } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
 import { useLocaleBundle } from '@/app/locale';
 
@@ -32,7 +32,16 @@ export function TemporaryFoundation({
   const { antd: locale } = useLocaleBundle();
   useTemporaryInteractions(root);
   const reduced = useSyncExternalStore(subscribe, snapshot, () => false);
+  const config = collectionTheme(mode, reduced);
+  const design = theme.getDesignToken(config);
+  // Tarayıcı tuvali de temanın rengini alır. Sayfa kısa olsa da altta beyaz alan kalmaz.
+  useLayoutEffect(() => {
+    document.documentElement.style.colorScheme = mode;
+  }, [mode]);
   const variables = {
+    '--preview-bg': design.colorBgLayout,
+    '--preview-text': design.colorText,
+    '--preview-scheme': mode,
     '--font-ui': 'Outfit Variable, Outfit, sans-serif',
     '--font-default': source.typography.default + 'px',
     '--btn-h-md': source.sizes.md.button.height + 'px',
@@ -50,11 +59,7 @@ export function TemporaryFoundation({
     ).dropdown,
   } as CSSProperties;
   return (
-    <ConfigProvider
-      locale={locale}
-      theme={collectionTheme(mode, reduced)}
-      wave={{ disabled: true }}
-    >
+    <ConfigProvider locale={locale} theme={config} wave={{ disabled: true }}>
       <div ref={root} data-collection-preview data-theme={mode} style={variables}>
         {children}
       </div>

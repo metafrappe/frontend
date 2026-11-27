@@ -3,11 +3,11 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { createApiClient, createCsrfStore, readApiConfig } from '@/api';
 import { RESTRICTED_SAMPLE_DOCTYPE, SAMPLE_CSRF_TOKEN } from '@/mocks/fixtures';
-import { SampleDataNotice } from '@/mocks/SampleDataNotice';
 import { createApiSource } from '../api-source';
 import { CollectionView } from '../CollectionView';
 import { sampleDefinition, sampleSavedViews } from '../sample';
 import type { CollectionSource } from '../types';
+import { PreviewNotice } from './PreviewNotice';
 import { TemporaryFoundation } from './TemporaryFoundation';
 import './preview.css';
 
@@ -66,7 +66,8 @@ const container = document.getElementById('root');
 if (!container) throw new Error('Missing preview root');
 createRoot(container).render(
   <TemporaryFoundation mode={mode}>
-    {mocks.active ? <SampleDataNotice /> : null}
+    <h1 className="preview-title">Koleksiyon örneği</h1>
+    {mocks.active ? <PreviewNotice /> : null}
     <BrowserRouter>
       <CollectionView
         enableExperimentalCollectionViews={params.get('experimentalViews') === '1'}
