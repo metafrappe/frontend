@@ -73,6 +73,63 @@ function classify(selector) {
 }
 
 /**
+ * Joins a nested selector with its parent (CSS Nesting). `&` stands for the parent; without `&` the
+ * nested selector is a descendant of the parent. Every comma part of both sides is combined.
+ */
+function nestSelector(parent, child) {
+  const childParts = splitSelector(child);
+  if (!parent) return childParts.join(', ');
+  const parentParts = splitSelector(parent);
+  return parentParts
+    .flatMap((p) => childParts.map((c) => (c.includes('&') ? c.replaceAll('&', p) : `${p} ${c}`)))
+    .join(', ');
+}
+
+function splitSelector(selector) {
+  return normalise(selector)
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+/**
+ * Walks the CSS with balanced braces and returns every declaration with the full selector of the
+ * rule it belongs to: { selector, start, text }. A rule may hold declarations and nested rules in any
+ * order. Conditional at-rules (`@media`, `@container`, `@supports`, `@layer`) keep the selector of
+ * the rule around them.
+ */
+function cssDeclarations(css) {
+  const out = [];
+  const stack = [''];
+  let segmentStart = 0;
+  let quote = '';
+  for (let i = 0; i < css.length; i += 1) {
+    const ch = css[i];
+    if (quote) {
+      if (ch === '\\') i += 1;
+      else if (ch === quote) quote = '';
+      continue;
+    }
+    if (ch === '"' || ch === "'") {
+      quote = ch;
+      continue;
+    }
+    if (ch !== '{' && ch !== '}' && ch !== ';') continue;
+    const segment = css.slice(segmentStart, i);
+    const current = stack[stack.length - 1] ?? '';
+    if (ch === '{') {
+      const prelude = normalise(segment);
+      stack.push(prelude.startsWith('@') ? current : nestSelector(current, prelude));
+    } else {
+      if (segment.trim()) out.push({ selector: current, start: segmentStart, text: segment });
+      if (ch === '}' && stack.length > 1) stack.pop();
+    }
+    segmentStart = i + 1;
+  }
+  return out;
+}
+
+/**
  * Returns the violations in the text: { file, line, selector, reason, text }.
  * `allow` is the list from `readWrapAllowList()`.
  */
@@ -101,19 +158,15 @@ export function findWrapViolations(text, file, allow = []) {
   if (!CSS_EXT.has(ext)) return [];
 
   const css = stripComments(clean);
-  for (const rule of css.matchAll(/([^{}]*)\{([^{}]*)\}/g)) {
-    const [, rawSelector = '', body = ''] = rule;
-    // At-rule statements (`@import ...;`) before the selector are not part of it.
-    const selector = normalise(rawSelector.slice(rawSelector.lastIndexOf(';') + 1));
-    const bodyStart = rule.index + rawSelector.length + 1;
-    for (const m of body.matchAll(ANYWHERE_DECL)) {
+  for (const { selector, start, text: declaration } of cssDeclarations(css)) {
+    for (const m of declaration.matchAll(ANYWHERE_DECL)) {
       const kind = classify(selector);
       if (kind === 'link') continue;
       if (kind === 'other' && allow.some((a) => a.dosya === f && normalise(a.secici) === selector))
         continue;
       out.push({
         file: f,
-        line: lineAt(css, bodyStart + m.index),
+        line: lineAt(css, start + m.index),
         selector,
         reason:
           kind === 'other'
