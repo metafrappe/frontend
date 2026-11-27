@@ -38,7 +38,10 @@ export function favouriteHandlers(server: FakeFavouriteServer) {
       server.setBodies.push(body);
       if (server.hold) await server.hold;
       if (server.reject) {
-        return HttpResponse.json({ exc_type: server.reject.code }, { status: server.reject.status });
+        return HttpResponse.json(
+          { exc_type: server.reject.code },
+          { status: server.reject.status },
+        );
       }
       const target =
         typeof body === 'object' && body !== null && 'favourite' in body
