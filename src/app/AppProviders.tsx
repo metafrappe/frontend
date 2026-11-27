@@ -45,7 +45,12 @@ function ThemedProviders({ children }: { children: ReactNode }) {
   );
 
   return (
-    <ConfigProvider theme={theme} locale={locale} {...antdComponentConfig} {...(csp ? { csp } : {})}>
+    <ConfigProvider
+      theme={theme}
+      locale={locale}
+      {...antdComponentConfig}
+      {...(csp ? { csp } : {})}
+    >
       <AntdApp>
         <BodyTheme />
         {children}
