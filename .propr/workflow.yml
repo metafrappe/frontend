@@ -1,0 +1,10 @@
+# yaml-language-server: $schema=https://docs.propr.dev/schemas/repository-workflow.schema.json
+# Biçim: ProPR belgesi "Configure repository workflow policy and hooks"
+# (docs/features/repository-workflow.md, bölüm "Auto-merge policy").
+# Bu yollardan birini değiştiren PR'ı ProPR kendiliğinden birleştirmez.
+# Bu PR'ları insan birleştirir.
+auto_merge:
+  enabled: true
+  protected_paths:
+    - '.github/**'
+    - '.propr/**'
