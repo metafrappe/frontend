@@ -13,7 +13,7 @@ import {
   X,
 } from '@phosphor-icons/react';
 import { Button, Dropdown, Segmented, Select, Tag } from 'antd';
-import { Input } from '@/components/controls';
+import { PlainInput as Input } from '@/components/controls';
 import { Fragment, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 

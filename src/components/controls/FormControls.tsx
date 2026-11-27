@@ -75,6 +75,36 @@ Object.assign(InputField, {
 
 export const Input = InputField as typeof AntInput;
 
+/**
+ * A plain antd input with the same text rules (AJA-1764). Some forms keep the plain antd look:
+ * their own focus line and height. Example: the search box in the page header.
+ * This input adds no `atonota-input` class and no `hit-sfx` suffix.
+ */
+const PlainInputField = forwardRef<InputRef, InputProps>(function PlainInput(
+  { maxLength, showCount, count, onPressEnter, onKeyDown, ...props },
+  ref,
+) {
+  const rules = useTextRules<HTMLInputElement>({
+    maxLength,
+    showCount,
+    count,
+    onPressEnter,
+    onKeyDown,
+    'aria-describedby': props['aria-describedby'],
+  });
+  return <AntInput {...props} {...rules} ref={ref} />;
+});
+
+Object.assign(PlainInputField, {
+  Group: AntInput.Group,
+  Search: AntInput.Search,
+  TextArea: TextAreaField,
+  Password: AntInput.Password,
+  OTP: AntInput.OTP,
+});
+
+export const PlainInput = PlainInputField as typeof AntInput;
+
 type NumberRef = ComponentRef<typeof AntInputNumber>;
 type NumberValue = NonNullable<InputNumberProps['value']>;
 

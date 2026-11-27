@@ -1,5 +1,5 @@
 import { Alert, Button, Checkbox, Modal, Select } from 'antd';
-import { Input } from '@/components/controls';
+import { PlainInput as Input } from '@/components/controls';
 import {
   useCallback,
   useEffect,

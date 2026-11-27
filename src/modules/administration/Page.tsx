@@ -1,5 +1,5 @@
 import { Alert, Button, Select } from 'antd';
-import { Input } from '@/components/controls';
+import { PlainInput as Input } from '@/components/controls';
 import { useCallback, useId, useState } from 'react';
 import { isReadOnly, useRoles } from '../access';
 import { parseExplanation } from '../contracts';

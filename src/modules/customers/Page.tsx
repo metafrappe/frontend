@@ -2,7 +2,7 @@
 // "Reseller Admin" yeni müşteri isteği gönderir. "Reseller Assistant" sayfayı yalnız okur.
 // Menü ve sayfa kapısı bu sayfayı kiracı hesabına açmaz. Yetkiyi sunucu yine denetler.
 import { Alert, Button } from 'antd';
-import { Input } from '@/components/controls';
+import { PlainInput as Input } from '@/components/controls';
 import { useCallback, useId, useState } from 'react';
 
 import type { CustomerStatus, ResellerCustomer } from '../../api';

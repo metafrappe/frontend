@@ -1,5 +1,5 @@
 import { Alert, Button, Select } from 'antd';
-import { Input } from '@/components/controls';
+import { PlainInput as Input } from '@/components/controls';
 import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { ApiError } from '@/api';
 import type {
