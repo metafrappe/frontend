@@ -12,8 +12,8 @@ import {
   WarningCircle,
   X,
 } from '@phosphor-icons/react';
-import { Button, Dropdown, Input, Segmented, Select, Tag } from 'antd';
-import { Fragment, useEffect, useRef, useState } from 'react';
+import { Button, Dropdown, Input, Segmented, Select } from 'antd';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import { useFormat } from '@/app/locale';
@@ -354,20 +354,27 @@ function Toolbar(p: PageHeaderProps) {
       </div>
 
       {!isForm && filters.length > 0 && (
+        // A filter that does not fit wraps onto a new line. No filter is hidden,
+        // so each remove button stays in the Tab order (AJA-1746).
         <div className="shell-hd-chips" role="group" aria-label={t.header.activeFilters}>
-          {filters.map((f) => (
-            <Fragment key={f.key}>
-              <Tag
-                className="shell-hd-chip"
-                closable
-                closeIcon={<X aria-label={t.header.removeFilter(f.label)} />}
-                onClose={() => p.onRemoveFilter?.(f.key)}
-              >
-                {f.label}
-              </Tag>
-            </Fragment>
-          ))}
-          <Button type="link" size="small" onClick={p.onClearFilters}>
+          <ul className="shell-hd-chiplist">
+            {filters.map((f) => (
+              <li key={f.key} className="shell-hd-chip">
+                <span className="shell-hd-chip-label">{f.label}</span>
+                <button
+                  type="button"
+                  className="shell-hd-chip-x"
+                  // A peer for the touch area engine: a neighbour's layer does not cover this button.
+                  data-hit-target=""
+                  aria-label={t.header.removeFilter(f.label)}
+                  onClick={() => p.onRemoveFilter?.(f.key)}
+                >
+                  <X aria-hidden="true" />
+                </button>
+              </li>
+            ))}
+          </ul>
+          <Button type="link" className="shell-hd-clear" onClick={p.onClearFilters}>
             {t.header.clearFilters}
           </Button>
         </div>
