@@ -345,7 +345,7 @@ export function HarnessApp() {
           createMode
           adapter={adapter}
           themeMode={themeMode}
-          locale="tr"
+          locale={HARNESS_LANGUAGE}
           breadcrumbs={[]}
         />
       ) : isLeave ? (
