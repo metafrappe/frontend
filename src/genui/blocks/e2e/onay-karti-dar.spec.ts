@@ -7,7 +7,8 @@ import { expect, test } from '../../../../tests/setup/playwright-fixtures';
  */
 const STUDIO = '/panel/ai';
 
-const LONG_APPROVE = 'Bestellungsänderung verbindlich bestätigen und Lieferantenbenachrichtigung senden';
+const LONG_APPROVE =
+  'Bestellungsänderung verbindlich bestätigen und Lieferantenbenachrichtigung senden';
 const LONG_REJECT = 'Abbrechen und Bestellungsänderung verwerfen';
 
 test.describe('onay kartı dar alanda', () => {
@@ -23,39 +24,48 @@ test.describe('onay kartı dar alanda', () => {
 
     const buttons = card.locator('.genui-actions button');
     await expect(buttons).toHaveCount(2);
-    await buttons.nth(0).evaluate((el, text) => {
-      el.querySelector('span:last-child')!.textContent = text;
-    }, LONG_APPROVE);
-    await buttons.nth(1).evaluate((el, text) => {
-      el.querySelector('span:last-child')!.textContent = text;
-    }, LONG_REJECT);
+    await buttons
+      .nth(0)
+      .locator('span:last-child')
+      .evaluate((el, text) => {
+        el.textContent = text;
+      }, LONG_APPROVE);
+    await buttons
+      .nth(1)
+      .locator('span:last-child')
+      .evaluate((el, text) => {
+        el.textContent = text;
+      }, LONG_REJECT);
 
+    // Visible boxes are measured. `scrollWidth` would also count the invisible touch layer
+    // (`::after`) that the touch area engine draws around a button.
     const report = await card.evaluate((el) => {
       const cardBox = el.getBoundingClientRect();
       const items = [...el.querySelectorAll<HTMLElement>('.genui-actions button')].map((button) => {
-        const label = button.querySelector<HTMLElement>('span:last-child')!;
+        const label = button.querySelector<HTMLElement>('span:last-child') ?? button;
         const rect = button.getBoundingClientRect();
+        const text = label.getBoundingClientRect();
         return {
           left: rect.left,
           right: rect.right,
-          clipped: label.scrollWidth > label.clientWidth + 1 || button.scrollWidth > button.clientWidth + 1,
+          textInside: text.left >= rect.left - 0.5 && text.right <= rect.right + 0.5,
+          clipped: label.scrollWidth > label.clientWidth + 1,
           fontSize: parseFloat(getComputedStyle(label).fontSize),
         };
       });
       return {
         cardLeft: cardBox.left,
         cardRight: cardBox.right,
-        cardOverflow: el.scrollWidth - el.clientWidth,
         pageOverflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
         items,
       };
     });
 
     expect(report.pageOverflow, 'sayfa yatay taşmaz').toBeLessThanOrEqual(0);
-    expect(report.cardOverflow, 'kart yatay taşmaz').toBeLessThanOrEqual(0);
     for (const item of report.items) {
-      expect(item.left).toBeGreaterThanOrEqual(report.cardLeft - 0.5);
-      expect(item.right).toBeLessThanOrEqual(report.cardRight + 0.5);
+      expect(item.left, 'düğme kartın içinde başlar').toBeGreaterThanOrEqual(report.cardLeft - 0.5);
+      expect(item.right, 'düğme kartın içinde biter').toBeLessThanOrEqual(report.cardRight + 0.5);
+      expect(item.textInside, 'düğme metni düğmenin içindedir').toBe(true);
       expect(item.clipped, 'düğme metni kırpılmaz').toBe(false);
       expect(item.fontSize, 'düğme metni 14 CSS px altına inmez').toBeGreaterThanOrEqual(14);
     }

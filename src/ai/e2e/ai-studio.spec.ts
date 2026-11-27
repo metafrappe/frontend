@@ -120,7 +120,7 @@ test.describe('AI Studio', () => {
     await ask(page, 'Geciken siparişleri bul');
     const confirm = await waitConfirm(page);
     await expect(page.getByText(/^Onaylıyorum/)).toHaveCount(0);
-    await confirm.getByRole('button', { name: 'Gönder' }).click();
+    await confirm.getByRole('button', { name: 'Onayla' }).click();
     await expect(page.getByText(/^Onaylıyorum/)).toHaveCount(1);
     const log = page.getByRole('log');
     await expect(log).toContainText('gerçek bir işlem yapılmadı', { timeout: 15_000 });
@@ -136,7 +136,7 @@ test.describe('AI Studio', () => {
     const confirm = await waitConfirm(page);
     await expect(page.getByRole('button', { name: 'Mesajı gönder' })).toBeVisible();
     await ask(page, 'Bu haftanın satış özetini çıkar');
-    await expect(confirm.getByRole('button', { name: 'Gönder' })).toBeDisabled();
+    await expect(confirm.getByRole('button', { name: 'Onayla' })).toBeDisabled();
     await expect(confirm).toContainText('Yanıt bitince onay verebilirsiniz.');
   });
 

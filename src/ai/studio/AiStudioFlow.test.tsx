@@ -2,11 +2,12 @@ import {
   cleanup,
   configure,
   getConfig,
-  render,
+  render as renderUi,
   screen,
   waitFor,
   within,
 } from '@testing-library/react';
+import type { ReactElement, ReactNode } from 'react';
 import userEvent from '@testing-library/user-event';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 
@@ -14,6 +15,15 @@ import { encodeAgentEvent, MOCK_SOURCE } from '../agent';
 import type { AgentEvent, AgentRequest, AgentTransport } from '../agent';
 import { AiStudio } from './AiStudio';
 import { createFlowDemoTransport } from './flowDemo';
+
+import { LanguageProvider } from '@/app/locale';
+
+/** These tests check the Turkish texts, so the UI language is Turkish (AJA-1859). */
+function TurkishUi({ children }: { children: ReactNode }) {
+  return <LanguageProvider initialLanguage="tr">{children}</LanguageProvider>;
+}
+
+const render = (ui: ReactElement) => renderUi(ui, { wrapper: TurkishUi });
 
 /*
  * Akışı ekrana bağlama testleri (AJA-1159).

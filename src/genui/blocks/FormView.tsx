@@ -10,8 +10,9 @@ import type {
   GenUIActionHandler,
   GenUIDecision,
 } from '../types';
+import { useGenuiStrings } from '../useGenuiStrings';
 import { ChangeTable } from './ChangeTable';
-import { BUSY_NOTE, FAILED_NOTE, USED_NOTE, useDecision } from './useDecision';
+import { useDecision } from './useDecision';
 
 function initialValues(fields: FormField[]): FormValues {
   const values: FormValues = {};
@@ -77,6 +78,7 @@ export function FormView({
   busy?: boolean;
   decided?: GenUIDecision | undefined;
 }) {
+  const text = useGenuiStrings();
   const [form] = Form.useForm<FormValues>();
   const [initial] = useState(() => initialValues(block.fields));
   const [pending, setPending] = useState<FormValues | null>(null);
@@ -96,14 +98,14 @@ export function FormView({
 
   const tag =
     decision === 'approved'
-      ? 'Onay gönderildi'
+      ? text.form.tagApproved
       : decision === 'rejected'
-        ? 'Vazgeçildi'
+        ? text.form.tagRejected
         : notice === 'used'
-          ? 'Daha önce gönderildi'
+          ? text.form.tagUsed
           : pending
-            ? 'Değişikliği kontrol edin'
-            : 'Taslak, onayınızı bekliyor';
+            ? text.form.tagCheck
+            : text.form.tagDraft;
 
   return (
     <section data-genui="form" className="genui-card genui-form">
@@ -128,7 +130,9 @@ export function FormView({
               key={field.name}
               name={field.name}
               label={field.label}
-              rules={field.required ? [{ required: true, message: `${field.label} gerekli.` }] : []}
+              rules={
+                field.required ? [{ required: true, message: text.form.required(field.label) }] : []
+              }
             >
               <FieldControl field={field} disabled={locked || pending !== null} />
             </Form.Item>
@@ -137,14 +141,18 @@ export function FormView({
 
         {pending && !locked && (
           <div className="genui-review">
-            <p className="genui-summary">Şu değişiklik gönderilecek. Kontrol edip onaylayın.</p>
+            <p className="genui-summary">{text.form.review}</p>
             <ChangeTable changes={diff(block.fields, initial, pending)} />
           </div>
         )}
 
-        {busy && !locked && <p className="genui-muted-text">{BUSY_NOTE}</p>}
-        {notice === 'busy' && <Alert type="error" showIcon message={FAILED_NOTE} role="alert" />}
-        {notice === 'used' && <Alert type="warning" showIcon message={USED_NOTE} role="alert" />}
+        {busy && !locked && <p className="genui-muted-text">{text.busyNote}</p>}
+        {notice === 'busy' && (
+          <Alert type="error" showIcon message={text.failedNote} role="alert" />
+        )}
+        {notice === 'used' && (
+          <Alert type="warning" showIcon message={text.usedNote} role="alert" />
+        )}
 
         {locked && !decision ? null : decision ? (
           <p role="status" className="genui-done-line">
@@ -153,9 +161,7 @@ export function FormView({
             ) : (
               <XCircle weight="fill" aria-hidden />
             )}
-            {decision === 'approved'
-              ? 'Değerler gönderildi. Kayıt sonucunu asistan yeni mesajla bildirecek.'
-              : 'Vazgeçtiniz. Hiçbir kayıt yapılmadı.'}
+            {decision === 'approved' ? text.form.approvedNote : text.form.rejectedNote}
           </p>
         ) : pending ? (
           <div className="genui-actions">
@@ -165,19 +171,19 @@ export function FormView({
               disabled={busy}
               onClick={() => send('approved', pending)}
             >
-              Onayla ve gönder
+              {text.form.approveAndSend}
             </Button>
             <Button size="small" disabled={false} onClick={() => setPending(null)}>
-              Düzenlemeye dön
+              {text.form.backToEdit}
             </Button>
           </div>
         ) : (
           <div className="genui-actions">
             <Button size="small" type="primary" htmlType="submit" disabled={busy}>
-              {block.submitLabel}
+              {text.form.save}
             </Button>
             <Button size="small" disabled={busy} onClick={() => send('rejected')}>
-              {block.cancelLabel ?? 'Vazgeç'}
+              {text.reject}
             </Button>
           </div>
         )}

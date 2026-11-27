@@ -1,9 +1,11 @@
 import { Table as TableIcon } from '@phosphor-icons/react';
 import { Table } from 'antd';
 
+import { useGenuiStrings } from '../useGenuiStrings';
 import type { TableBlock, TableCell } from '../types';
 
 export function TableView({ block }: { block: TableBlock }) {
+  const text = useGenuiStrings();
   // Satır anahtarı sütunu her zaman kimliktir. Diğerleri açıklamadır, sarılır.
   const columns = block.columns.map((column) => {
     const kind = column.key === block.rowKey ? 'id' : (column.kind ?? 'text');
@@ -23,7 +25,7 @@ export function TableView({ block }: { block: TableBlock }) {
       <header className="genui-card-h">
         <TableIcon aria-hidden />
         <strong>{block.title}</strong>
-        <span className="genui-muted">{block.rows.length} satır</span>
+        <span className="genui-muted">{text.rows(block.rows.length)}</span>
       </header>
       {/* Tablo kendi kapsayıcısında yatay kayar. Sayfa taşmaz. */}
       <div className="genui-table-scroll">

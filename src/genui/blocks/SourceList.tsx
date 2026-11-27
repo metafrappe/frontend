@@ -1,3 +1,4 @@
+import { useGenuiStrings } from '../useGenuiStrings';
 import type { SourceItem } from '../types';
 
 function isExternal(url: string): boolean {
@@ -10,7 +11,8 @@ function isExternal(url: string): boolean {
  * Dış bağlantı yeni sekmede açılır ve yönlendiren bilgisi gitmez.
  */
 export function SourceList({ items }: { items: SourceItem[] }) {
-  if (items.length === 0) return <p className="genui-source-empty">Kaynak yok.</p>;
+  const text = useGenuiStrings();
+  if (items.length === 0) return <p className="genui-source-empty">{text.noSources}</p>;
   return (
     <ul className="genui-source-list">
       {items.map((item, index) => (
@@ -22,7 +24,7 @@ export function SourceList({ items }: { items: SourceItem[] }) {
               {...(isExternal(item.url) ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
             >
               {item.title}
-              {isExternal(item.url) && <span className="genui-sr"> (yeni sekmede açılır)</span>}
+              {isExternal(item.url) && <span className="genui-sr"> {text.newTab}</span>}
             </a>
           ) : (
             <span className="genui-source-text">{item.title}</span>
