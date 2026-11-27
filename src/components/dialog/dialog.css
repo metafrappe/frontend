@@ -10,6 +10,14 @@
   container-type: inline-size;
 }
 
+/*
+ * A container has no width of its own, so the short confirm gets a definite width.
+ * It never passes the screen.
+ */
+.atonota-popconfirm .ant-popover-inner {
+  inline-size: min(22rem, calc(100vw - 2 * var(--space-md)));
+}
+
 /* Buttons keep their whole text. Long labels wrap between words, never off the box. */
 .atonota-dialog :is(.ant-modal-footer, .ant-popconfirm-buttons) .ant-btn {
   block-size: auto;
@@ -68,7 +76,8 @@
  * Only the body scrolls, so the last button stays on screen.
  */
 .atonota-dialog .ant-modal {
-  inset-block-start: var(--space-md);
+  inset-block-start: var(--space-xs);
+  margin-block: 0;
   padding-block-end: 0;
   max-inline-size: calc(100vw - 2 * var(--space-md));
 }
@@ -76,7 +85,7 @@
 .atonota-dialog .ant-modal-content {
   display: flex;
   flex-direction: column;
-  max-block-size: calc(100dvh - 2 * var(--space-md));
+  max-block-size: calc(100dvh - 2 * var(--space-xs));
 }
 
 .atonota-dialog .ant-modal-header,

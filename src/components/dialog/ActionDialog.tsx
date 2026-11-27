@@ -3,7 +3,7 @@ import type { ButtonProps, ModalProps } from 'antd';
 import type { ReactNode } from 'react';
 
 import { Button } from '../controls';
-import { useFocusReturn } from './focus-return';
+import { useEscapeWhileOpening, useFocusReturn } from './focus-return';
 import { assertResultLabel } from './labels';
 import './dialog.css';
 
@@ -14,6 +14,7 @@ interface BaseProps {
   /** Closes the dialog without doing the action. Escape and the close icon call it too. */
   onCancel: () => void;
   width?: ModalProps['width'];
+  /** Default true: a closed dialog leaves the page, so only one dialog footer exists. */
   destroyOnHidden?: boolean;
   className?: string;
   'data-testid'?: string;
@@ -47,6 +48,7 @@ export function ActionDialog(props: ActionDialogProps) {
   const { open, title, children, onCancel, width, destroyOnHidden, className } = props;
   if (props.confirmLabel !== undefined) assertResultLabel(props.confirmLabel);
   const restore = useFocusReturn(open);
+  useEscapeWhileOpening(open, onCancel);
 
   const footer =
     props.confirmLabel === undefined ? null : (
@@ -71,7 +73,7 @@ export function ActionDialog(props: ActionDialogProps) {
       onCancel={onCancel}
       footer={footer}
       {...(width === undefined ? {} : { width })}
-      destroyOnHidden={destroyOnHidden ?? false}
+      destroyOnHidden={destroyOnHidden ?? true}
       focusTriggerAfterClose={false}
       afterClose={restore}
       rootClassName={className ? `atonota-dialog ${className}` : 'atonota-dialog'}

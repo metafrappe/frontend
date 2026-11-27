@@ -50,3 +50,25 @@ export function useFocusReturn(open: boolean) {
     if (!focusFirst(saved.next)) focusFirst(saved.previous);
   }, []);
 }
+
+/** Open dialog layers. Escape inside them is handled by the dialog itself. */
+const LAYER = '.ant-modal-wrap, .ant-drawer, .ant-popover';
+
+/**
+ * Closes on Escape while focus has not moved into the dialog yet. The dialog moves focus
+ * after its open step, so a quick Escape right after opening would otherwise be lost.
+ */
+export function useEscapeWhileOpening(open: boolean, close: () => void) {
+  useLayoutEffect(() => {
+    if (!open) return undefined;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape' || event.defaultPrevented) return;
+      const target = event.target instanceof Element ? event.target : null;
+      if (target?.closest(LAYER)) return;
+      event.preventDefault();
+      close();
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [open, close]);
+}

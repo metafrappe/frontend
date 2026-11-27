@@ -102,6 +102,8 @@ function SurfaceButtonsDemo() {
         cancelLabel="Vazgeç"
         confirmButtonProps={{ 'data-testid': 'btn-modal-primary' }}
         data-testid="demo-modal"
+        // The contrast test checks the dialog after its button closes it, so it stays in the page.
+        destroyOnHidden={false}
       >
         <Typography.Paragraph>
           Bu kayıt silinecek. Devam etmek istiyor musunuz?
