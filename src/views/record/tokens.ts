@@ -146,6 +146,8 @@ export function buildRecordAntdTheme(mode: RecordThemeMode): ThemeConfig {
         // hesaplardı: 36 × 1.5 = 54 px. Panel 414 px olur ve 320 px ekrana sığmazdı.
         cellWidth: RECORD_PICKER_TOUCH_TARGET_PX,
         cellHeight: RECORD_PICKER_TOUCH_TARGET_PX - PICKER_CELL_PAD_Y_PX * 2,
+        // Odakta kenarlık rengi değişmez. Odak göstergesi yalnız alttaki çizgidir.
+        activeBorderColor: isDark ? darkPalette.border : BASE_ANTD_TOKENS.colorBorder,
         controlHeight: sizes.md.input.height,
         controlHeightSM: sizes.sm.input.height,
         controlHeightLG: sizes.lg.input.height,

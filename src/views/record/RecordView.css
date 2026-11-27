@@ -729,11 +729,12 @@
 }
 
 /* The visible controls retain their central size tokens; touch surfaces need room. */
-.rv-root[data-rv-viewport='phone'] :is(.ant-btn, .ant-input, .ant-select, .ant-select-selector) {
+.rv-root[data-rv-viewport='phone']
+  :is(.ant-btn, .ant-input, .ant-select, .ant-select-selector, .ant-picker) {
   min-height: var(--rv-hit-target);
 }
 @media (any-pointer: coarse) {
-  .rv-root :is(.ant-btn, .ant-input, .ant-select, .ant-select-selector) {
+  .rv-root :is(.ant-btn, .ant-input, .ant-select, .ant-select-selector, .ant-picker) {
     min-height: var(--rv-hit-target);
   }
 }
