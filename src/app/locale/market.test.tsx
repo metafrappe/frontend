@@ -33,8 +33,10 @@ const CLOSES_AT = '2026-11-27T22:30:00Z';
 const DUE_DAY = '2026-11-27';
 
 /** Expected text is built with `Intl`, not copied from the code under test. */
-const eur = (intl: string) =>
-  new Intl.NumberFormat(intl, { style: 'currency', currency: 'EUR' }).format(AMOUNT);
+const money = (intl: string, currency: string) =>
+  // `toHaveTextContent` collapses the no-break space in the received text; the expected text is collapsed too.
+  new Intl.NumberFormat(intl, { style: 'currency', currency }).format(AMOUNT).replace(/\s+/g, ' ');
+const eur = (intl: string) => money(intl, 'EUR');
 
 function Probe() {
   const language = useLanguage();
@@ -214,8 +216,15 @@ describe('Root: açılış verisinin locale alanı', () => {
     expect(screen.getByRole('status', { name: 'Kapanış' })).toHaveTextContent('11:30');
     // The due day is a calendar day. It stays Friday 27 November in every time zone.
     expect(screen.getByRole('status', { name: 'Son gün' })).toHaveTextContent(
-      'Friday 27 November 2026',
+      new Intl.DateTimeFormat('en-GB', {
+        timeZone: 'UTC',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+        weekday: 'long',
+      }).format(new Date(Date.UTC(2026, 10, 27))),
     );
+    expect(screen.getByRole('status', { name: 'Son gün' })).toHaveTextContent('27 November 2026');
   });
 
   it('5. yeni alanlar yoksa arayüz en-GB ile açılır ve bozulmaz', async () => {
@@ -228,7 +237,7 @@ describe('Root: açılış verisinin locale alanı', () => {
     // The old fields still apply: lira and Istanbul.
     await waitFor(() =>
       expect(screen.getByRole('status', { name: 'Tutar' })).toHaveTextContent(
-        new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'TRY' }).format(AMOUNT),
+        money('en-GB', 'TRY'),
       ),
     );
     expect(screen.getByRole('status', { name: 'Dil' })).toHaveTextContent('en');
@@ -251,7 +260,7 @@ describe('Root: açılış verisinin locale alanı', () => {
     );
     await waitFor(() =>
       expect(screen.getByRole('status', { name: 'Tutar' })).toHaveTextContent(
-        new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'TRY' }).format(AMOUNT),
+        money('en-GB', 'TRY'),
       ),
     );
     expect(screen.getByRole('status', { name: 'Uzaklık' })).toHaveTextContent('km');

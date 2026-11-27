@@ -5,6 +5,7 @@
  */
 import type { AppLanguage } from './language';
 import { localeBundle } from './locale-map';
+import { distanceUnit, type DistanceUnit, type MeasurementSystem } from './market';
 
 /** Açılış verisinin biçim alanlarından arayüzün kullandıkları. */
 export interface SiteFormatting {
@@ -12,13 +13,22 @@ export interface SiteFormatting {
   time_zone?: string | null | undefined;
   /** Sitenin varsayılan para birimi. Örnek: `TRY`. Yoksa tutar düz sayı yazılır. */
   currency?: string | null | undefined;
+  /** `locale` alanındaki bölge. Örnek: `GB`. Uzaklık birimi için kullanılır. */
+  region?: string | null | undefined;
+  /** `locale` alanındaki ölçü sistemi. Bölgenin önüne geçer. */
+  measurement_system?: MeasurementSystem | null | undefined;
 }
 
 export interface FormatSettings {
   language: AppLanguage;
   timeZone?: string | null | undefined;
   currency?: string | null | undefined;
+  region?: string | null | undefined;
+  measurementSystem?: MeasurementSystem | null | undefined;
 }
+
+/** Kilometres in one mile. */
+const KM_PER_MILE = 1.609344;
 
 export interface Formatter {
   language: AppLanguage;
@@ -43,6 +53,10 @@ export interface Formatter {
   currency: (value: number, code?: string | null) => string;
   /** Liste. Örnek: "a, b ve c". */
   list: (items: readonly string[]) => string;
+  /** Yol uzaklığının birimi. Dilden değil ölçü sisteminden ve bölgeden gelir. */
+  distanceUnit: DistanceUnit;
+  /** Yol uzaklığı. Değer kilometredir. Örnek: `GB` bölgesinde 42.195 -> "26.2 mi". */
+  distance: (kilometres: number) => string;
   /** Kullanıcının diline göre küçük harf. Türkçede `I` -> `ı` olur. */
   lower: (text: string) => string;
   /** Kullanıcının diline göre büyük harf. Türkçede `i` -> `İ` olur. */
@@ -178,6 +192,15 @@ export function createFormatter(settings: FormatSettings): Formatter {
   const dateTimeFormat = new Intl.DateTimeFormat(intl, { ...DAY, ...TIME, ...zone });
   const listFormat = new Intl.ListFormat(intl, { type: 'conjunction' });
   const parse = (value: string) => parseFrappeDatetime(value, timeZone);
+  const unit = distanceUnit({
+    region: settings.region,
+    measurementSystem: settings.measurementSystem,
+  });
+  const distanceFormat = new Intl.NumberFormat(intl, {
+    style: 'unit',
+    unit,
+    maximumFractionDigits: 1,
+  });
 
   return {
     language: settings.language,
@@ -203,6 +226,9 @@ export function createFormatter(settings: FormatSettings): Formatter {
         : new Intl.NumberFormat(intl).format(value);
     },
     list: (items) => listFormat.format(items),
+    distanceUnit: unit,
+    distance: (kilometres) =>
+      distanceFormat.format(unit === 'mile' ? kilometres / KM_PER_MILE : kilometres),
     lower: (text) => text.toLocaleLowerCase(intl),
     upper: (text) => text.toLocaleUpperCase(intl),
   };

@@ -1,4 +1,4 @@
-import { expect, test } from '../../../tests/setup/playwright-fixtures';
+import { expect, test, type Page } from '../../../tests/setup/playwright-fixtures';
 
 /**
  * AJA-1770: changing only the language keeps the amount and the draft; the road distance follows the region.
@@ -8,7 +8,7 @@ import { expect, test } from '../../../tests/setup/playwright-fixtures';
 const DRAFT =
   'Angebotsentwurf: Lieferung der Ersatzteile bis Freitag, Rückfragen bitte telefonisch';
 
-async function noHorizontalOverflow(page: import('@playwright/test').Page) {
+async function noHorizontalOverflow(page: Page) {
   const overflow = await page.evaluate(
     () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
   );
@@ -85,7 +85,7 @@ test.describe('locale market demo', () => {
 
   test('5. without the new fields the page opens in en-GB', async ({ page }, testInfo) => {
     await page.goto('/_demo/locale');
-    await expect(page.getByRole('status', { name: 'Format locale' })).toHaveText('en-GB');
+    await expect(page.getByRole('status', { name: 'Format locale' })).toHaveText(/^en-GB$/);
     await expect(page.getByRole('status', { name: 'Road distance' })).toHaveText('42.2 km');
     await expect(page.getByRole('status', { name: 'Amount' })).toHaveText('1,234,567.89');
     await noHorizontalOverflow(page);

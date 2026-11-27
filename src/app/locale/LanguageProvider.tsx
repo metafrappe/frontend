@@ -9,7 +9,7 @@ interface LanguageState {
   language: AppLanguage;
   /** Açılış verisindeki ham dili alır. Boş dil yedek dile düşer. */
   setLanguage: (raw: string | null | undefined) => void;
-  /** Açılış verisindeki saat dilimi ve para birimi (IC-13). */
+  /** Açılış verisindeki saat dilimi, para birimi, bölge ve ölçü sistemi (IC-13, AJA-1732). */
   formatting: SiteFormatting;
   /** Açılış verisi gelince saat dilimini ve para birimini kaydeder. */
   setFormatting: (formatting: SiteFormatting) => void;
@@ -50,7 +50,12 @@ export function LanguageProvider({
   const setFormatting = useCallback<LanguageState['setFormatting']>(
     (next) =>
       setFormattingState((prev) =>
-        prev.time_zone === next.time_zone && prev.currency === next.currency ? prev : next,
+        prev.time_zone === next.time_zone &&
+        prev.currency === next.currency &&
+        prev.region === next.region &&
+        prev.measurement_system === next.measurement_system
+          ? prev
+          : next,
       ),
     [],
   );
@@ -89,10 +94,15 @@ export function useSetFormatting(): LanguageState['setFormatting'] {
  */
 export function useFormat(): Formatter {
   const { language, formatting } = useLanguageState();
-  const { time_zone: timeZone, currency } = formatting;
+  const {
+    time_zone: timeZone,
+    currency,
+    region,
+    measurement_system: measurementSystem,
+  } = formatting;
   return useMemo(
-    () => createFormatter({ language, timeZone, currency }),
-    [language, timeZone, currency],
+    () => createFormatter({ language, timeZone, currency, region, measurementSystem }),
+    [language, timeZone, currency, region, measurementSystem],
   );
 }
 
