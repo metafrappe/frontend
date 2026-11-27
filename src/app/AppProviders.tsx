@@ -1,7 +1,7 @@
 import { App as AntdApp, ConfigProvider, theme as antdThemeApi } from 'antd';
 import { useEffect, useMemo, type ReactNode } from 'react';
 
-import { buildAntdTheme } from '@/design/antd-theme';
+import { antdComponentConfig, buildAntdTheme } from '@/design/antd-theme';
 import { installCspNonce } from '@/design/csp-nonce';
 import { ensureDesignStyles } from '@/design/css-variables';
 import { FocusDimOverlay } from '@/engines/focus-dim';
@@ -45,7 +45,12 @@ function ThemedProviders({ children }: { children: ReactNode }) {
   );
 
   return (
-    <ConfigProvider theme={theme} locale={locale} {...(csp ? { csp } : {})}>
+    <ConfigProvider
+      theme={theme}
+      locale={locale}
+      {...antdComponentConfig}
+      {...(csp ? { csp } : {})}
+    >
       <AntdApp>
         <BodyTheme />
         {children}

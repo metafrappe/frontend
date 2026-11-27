@@ -15,7 +15,7 @@
   min-width: 0;
   padding: var(--ai-gap);
   border: 1px solid var(--ai-border);
-  border-radius: var(--card-radius);
+  border-radius: var(--r-panel);
   background: var(--ai-bg-c);
   box-shadow: var(--ai-shadow-card);
   color: var(--ai-text);
@@ -65,7 +65,7 @@
   min-width: 0;
   padding: var(--ai-gap);
   border: 1px solid var(--ai-border);
-  border-radius: var(--card-radius);
+  border-radius: var(--r-panel);
   background: var(--ai-bg-c);
 }
 
@@ -292,7 +292,7 @@
   justify-content: center;
   width: var(--btn-h-sm);
   height: var(--btn-h-sm);
-  border-radius: var(--card-radius);
+  border-radius: var(--r-control);
   color: var(--ai-warning);
   font-size: var(--ai-font-lg);
 }
@@ -374,7 +374,7 @@
   gap: var(--ai-gap-sm) var(--ai-gap-md);
   margin: 0;
   padding: var(--ai-gap-sm) var(--ai-gap);
-  border-radius: var(--card-radius);
+  border-radius: var(--r-menu);
   background: var(--ai-fill);
   color: var(--ai-text);
   font-size: var(--font-min);
@@ -449,7 +449,8 @@
   align-items: flex-start;
   min-width: 0;
   padding: var(--ai-gap-sm) var(--ai-gap);
-  border-radius: var(--card-radius);
+  /* innerRadius(21, 12): the card's paddingSM inset. Standalone sources share this surface. */
+  border-radius: var(--r-menu);
   background: var(--ai-fill);
   color: var(--ai-text);
   font-size: var(--font-min);

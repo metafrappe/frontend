@@ -79,6 +79,7 @@
 
 /* ---------- Temel ---------- */
 .shell {
+  border-radius: var(--r-none);
   --shell-z-dim: 1000;
   --shell-z-raised: 1001;
   --shell-z-fly: 1002;
@@ -780,7 +781,7 @@ html:has(.shell[data-layout='compact']) {
   min-width: var(--shell-tag-h);
   height: var(--shell-tag-h);
   padding: 0 var(--shell-space-sm);
-  border-radius: var(--shell-radius);
+  border-radius: var(--r-micro);
   background: var(--shell-bg-e);
   color: var(--color-text);
   font-size: var(--shell-fs-min);
@@ -1070,7 +1071,7 @@ html:has(.shell[data-layout='compact']) {
   flex-direction: column;
   gap: var(--shell-space-md);
   padding: var(--shell-space-md);
-  border-radius: var(--shell-radius);
+  border-radius: var(--r-surface);
   background: var(--shell-bg-c);
   box-shadow: inset 0 0 0 var(--shell-hairline) var(--shell-pri);
 }
@@ -1109,7 +1110,7 @@ html:has(.shell[data-layout='compact']) {
   flex-direction: column;
   gap: var(--shell-space-md);
   padding: var(--shell-space-ml);
-  border-radius: var(--shell-radius);
+  border-radius: var(--r-surface-lg);
   background: var(--shell-foot);
   color: var(--shell-foot-tx);
 }
@@ -1180,7 +1181,7 @@ html:has(.shell[data-layout='compact']) {
   max-height: calc(100dvh - var(--shell-space-xl));
   padding: var(--shell-space-md);
   overflow: auto;
-  border-radius: var(--shell-radius);
+  border-radius: var(--r-menu);
   background: var(--shell-bg-el);
   box-shadow: var(--shell-shadow);
   animation: shell-fly-in var(--shell-fly-dur) var(--shell-ease) both;
@@ -1429,7 +1430,7 @@ html:has(.shell[data-layout='compact']) {
   align-items: center;
   height: calc(var(--shell-fs-min) + var(--shell-lh-add));
   padding: 0 var(--shell-space-md);
-  border-radius: var(--shell-radius);
+  border-radius: var(--r-micro);
   background: var(--shell-bg-e);
   color: var(--shell-tx2);
   font-size: var(--shell-fs-min);
@@ -1441,7 +1442,7 @@ html:has(.shell[data-layout='compact']) {
   display: inline-block;
   width: var(--shell-skel-w);
   height: var(--shell-skel-h);
-  border-radius: var(--shell-radius);
+  border-radius: var(--r-micro);
   background: var(--shell-ghost);
   animation: shell-skel var(--shell-skel-dur) var(--shell-ease) infinite alternate;
 }
@@ -1566,7 +1567,7 @@ html:has(.shell[data-layout='compact']) {
   min-width: var(--shell-tag-h);
   height: var(--shell-tag-h);
   margin-left: var(--shell-space-sm);
-  border-radius: var(--shell-radius);
+  border-radius: var(--r-micro);
   background: var(--shell-pri);
   color: var(--shell-bg);
   font-size: var(--shell-fs-min);
@@ -1697,7 +1698,7 @@ html:has(.shell[data-layout='compact']) {
   flex-direction: column;
   gap: var(--shell-space-md);
   padding: var(--shell-space-ml);
-  border-radius: var(--shell-radius);
+  border-radius: var(--r-surface-lg);
   background: var(--shell-bg-e);
 }
 
@@ -1717,7 +1718,7 @@ html:has(.shell[data-layout='compact']) {
   flex-direction: column;
   gap: var(--shell-space-2xs);
   padding: var(--shell-space-ml);
-  border-radius: var(--shell-radius);
+  border-radius: var(--r-panel);
   background: var(--shell-bg-c);
   box-shadow: var(--shell-shadow);
   cursor: pointer;
@@ -1742,7 +1743,7 @@ html:has(.shell[data-layout='compact']) {
   flex-direction: column;
   gap: var(--shell-space-2xs);
   padding: var(--shell-space-ml) var(--shell-space-lg);
-  border-radius: var(--shell-radius);
+  border-radius: var(--r-panel);
   background: var(--shell-bg-c);
   box-shadow: var(--shell-shadow);
 }
@@ -1768,7 +1769,7 @@ html:has(.shell[data-layout='compact']) {
 .shell-quote {
   margin: 0;
   padding: var(--shell-space-ml) var(--shell-space-lg);
-  border-radius: var(--shell-radius);
+  border-radius: var(--r-surface-lg);
   background: var(--shell-bg-e);
 }
 

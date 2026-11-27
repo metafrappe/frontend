@@ -31,7 +31,7 @@ export function ReviewView({ block }: { block: ReviewBlock }) {
         <dd>{block.reversible}</dd>
       </dl>
       <ChangeTable changes={block.changes} />
-      <div className="genui-source">
+      <div className="genui-source" data-testid="genui-review-source">
         <div>
           <strong>Kaynak</strong>
           <SourceList items={block.sources ?? []} />

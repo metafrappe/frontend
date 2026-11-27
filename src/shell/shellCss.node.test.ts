@@ -45,7 +45,23 @@ describe('shell.css', () => {
       m[1]?.trim(),
     );
     for (const v of values) {
-      expect(['var(--shell-radius)', '50%', '0']).toContain(v);
+      expect([
+        'var(--shell-radius)',
+        '50%',
+        '0',
+        ...[
+          'none',
+          'micro',
+          'control',
+          'ring',
+          'menu',
+          'surface',
+          'surface-lg',
+          'panel',
+          'shell-sm',
+          'shell',
+        ].map((name) => `var(--r-${name})`),
+      ]).toContain(v);
     }
   });
 });

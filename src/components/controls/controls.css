@@ -31,7 +31,7 @@
 .atonota-control-popup {
   max-inline-size: calc(100vw - 2 * var(--radius));
   overflow: hidden;
-  border-radius: var(--radius);
+  border-radius: var(--r-menu);
   box-shadow: var(--shadow-dropdown);
   transform-origin: top left;
 }
@@ -195,7 +195,7 @@ html[data-focus-mode='keyboard']
 }
 
 .atonota-card.ant-card {
-  border-radius: var(--card-radius);
+  border-radius: var(--r-panel);
   box-shadow: none;
 }
 

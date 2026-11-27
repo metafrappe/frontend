@@ -298,6 +298,7 @@ export const textDescription = {
 } as const;
 
 export const radius = {
+  ...s.radius.tokens,
   control: s.radius.default,
   card: s.cards.radius,
 } as const;

@@ -131,6 +131,11 @@ describe('CSS değişkenleri', () => {
     expect(css).toContain('@media (forced-colors: active)');
   });
 
+  it('Select açılır paneli için antd iç sınıfına köşe vermez (AD-2)', () => {
+    // Select köşesi ConfigProvider `select.styles.popup.root` alanından gelir (antd-theme.ts).
+    expect(buildDesignCss()).not.toContain('.ant-select-dropdown');
+  });
+
   it('reduced motion bloğu içerir', () => {
     expect(buildDesignCss()).toContain('@media (prefers-reduced-motion: reduce)');
   });

@@ -125,7 +125,7 @@ export function ConfirmView({
       className={`genui-card genui-confirm${risk === 'R3' ? ' is-r3' : ''}`}
     >
       <header className="genui-card-h">
-        <span className="genui-warn" aria-hidden>
+        <span className="genui-warn" aria-hidden data-testid="genui-warn">
           <Warning />
         </span>
         <strong>{block.title}</strong>

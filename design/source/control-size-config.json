@@ -12,7 +12,7 @@
     "Minimum metin boyutu 14 px. 12, 10 ve 9 px kaldırıldı.",
     "Gövde metin boyutu 16 px.",
     "Satır kutusu = fontSize + 8 px; yükseklik − fontSize çift olmalı (tam piksel padding).",
-    "Radius 5 px (karar verildi, sabit).",
+    "Kontroller 5 px olur. Kartlar 21 px, açılır paneller 9 px olur.",
     "Primary normal #00aacc, hover #00b2dd (normal ile active arası), active #00baee. Açık tema: zemin #00aacc, metin siyah %85 → hover %100. Koyu tema: metin #00aacc %85 → hover %100, zemin #00aacc %14 → hover %22.",
     "Yükseklik → metin: 36 px → 14 px, 42 px → 16 px, 48 px → 18 px.",
     "Son karar: yükseklik Small 36, Medium 42, Large 48 (buton ve input). Buton ve input metni 14 / 16 / 18. Linkler buton metin boyutunda, dokunma alanı +%12. Değişmeyecek.",
@@ -85,7 +85,19 @@
   "radius": {
     "default": 5,
     "locked": true,
-    "decision": "Radius kararı verildi: 5 px. Seçenek kaldırıldı."
+    "decision": "Kontroller 5 px olur. Diğer köşeler radius.md yönergesindeki basamaklara uyar.",
+    "tokens": {
+      "none": 0,
+      "micro": 3,
+      "control": 5,
+      "ring": 7,
+      "menu": 9,
+      "surface": 13,
+      "surface-lg": 17,
+      "panel": 21,
+      "shell-sm": 25,
+      "shell": 29
+    }
   },
   "sizes": {
     "sm": {
@@ -537,7 +549,7 @@
     "duration": 140,
     "joinedItems": {
       "value": true,
-      "rule": "Öğeler aralıksız ve radiussuz birleşik; yalnızca liste dış köşeleri yuvarlak (radius 5 px)."
+      "rule": "Öğeler aralıksız ve radiussuz birleşik; yalnızca liste dış köşeleri yuvarlak (radius 9 px)."
     },
     "attachedSelect": {
       "value": true,
@@ -585,7 +597,7 @@
         "lineHeight": 22,
         "icon": "14 px çizgi ikon",
         "groups": "grup başlığı + öğeler; gruplar arası 1 px ayırıcı",
-        "shortcut": "sağda kbd: 14 px mono, 1 px kenarlık, 4 px radius",
+        "shortcut": "sağda kbd: 14 px mono, 1 px kenarlık, 3 px radius",
         "description": false,
         "selection": false,
         "search": false,
@@ -600,7 +612,7 @@
         "paddingBlock": 8,
         "fontSize": 14,
         "lineHeight": 22,
-        "icon": "32 × 32 ikon kutusu, 6 px radius, 1 px kenarlık",
+        "icon": "32 × 32 ikon kutusu, 5 px radius, 1 px kenarlık",
         "groups": false,
         "shortcut": false,
         "description": "başlık 14 px / 600 + açıklama 14 px; ikon kutusu 32 px. En küçük metin 14 px (AJA-997)",
@@ -700,7 +712,7 @@
       "decided": true,
       "height": 32,
       "boxSize": 20,
-      "radius": 5,
+      "radius": 3,
       "style": "filled",
       "labelSize": 14,
       "antdTheme": {
@@ -713,7 +725,7 @@
           "colorPrimaryHover": "#00b2dd",
           "colorPrimaryActive": "#00baee",
           "controlInteractiveSize": 20,
-          "borderRadiusSM": 5
+          "borderRadiusSM": 3
         },
         "components": {}
       }
@@ -1144,7 +1156,7 @@
     "formColumns": 2,
     "size": "md",
     "dropdownsOpen": true,
-    "radius": 10,
+    "radius": 21,
     "padding": 24
   },
   "panel": {
@@ -1286,15 +1298,17 @@
         "controlHeightSM": 36,
         "controlHeightLG": 48,
         "borderRadius": 5,
-        "borderRadiusSM": 4,
-        "borderRadiusLG": 7,
+        "borderRadiusSM": 5,
+        "borderRadiusLG": 9,
         "boxShadowSecondary": "0px 0.06px 0.14px 0 rgba(0,0,0,0.05), 0px 0.13px 0.28px 0 rgba(0,0,0,0.05), 0px 0.25px 0.56px 0 rgba(0,0,0,0.05), 0px 0.5px 1.13px 0 rgba(0,0,0,0.05), 0px 1px 2.25px 0 rgba(0,0,0,0.05), 0px 2px 4.5px 0 rgba(0,0,0,0.05), 0px 4px 9px 0 rgba(0,0,0,0.05), 0px 8px 18px 0 rgba(0,0,0,0.05), 0px 16px 36px 0 rgba(0,0,0,0.05)",
         "colorBgLayout": "#17171A",
         "colorBgContainer": "#1F1F23",
         "colorBgElevated": "#2A2A30",
         "colorBorder": "#111114",
         "colorBorderSecondary": "#151518",
-        "colorSplit": "#151518"
+        "colorSplit": "#151518",
+        "borderRadiusXS": 3,
+        "borderRadiusOuter": 5
       },
       "components": {
         "Button": {
@@ -1348,7 +1362,8 @@
           "fontSize": 16
         },
         "Card": {
-          "borderRadiusLG": 10
+          "borderRadiusLG": 21,
+          "borderRadiusSM": 17
         },
         "InputNumber": {
           "colorBgContainer": "#141418",
@@ -1369,7 +1384,7 @@
       "input": "inset 0px 1px 2px 0 rgba(0,0,0,1)",
       "dropdown": "0px 0.06px 0.14px 0 rgba(0,0,0,0.05), 0px 0.13px 0.28px 0 rgba(0,0,0,0.05), 0px 0.25px 0.56px 0 rgba(0,0,0,0.05), 0px 0.5px 1.13px 0 rgba(0,0,0,0.05), 0px 1px 2.25px 0 rgba(0,0,0,0.05), 0px 2px 4.5px 0 rgba(0,0,0,0.05), 0px 4px 9px 0 rgba(0,0,0,0.05), 0px 8px 18px 0 rgba(0,0,0,0.05), 0px 16px 36px 0 rgba(0,0,0,0.05)"
     },
-    "css": ":root {\n  /* tipografi */\n  --font-min: 14px;\n  --font-default: 16px;\n\n  --btn-h-sm: 36px;  --btn-fs-sm: 14px;\n  --input-h-sm: 36px;  --input-fs-sm: 14px;\n  --btn-h-md: 42px;  --btn-fs-md: 16px;\n  --input-h-md: 42px;  --input-fs-md: 16px;\n  --btn-h-lg: 48px;  --btn-fs-lg: 18px;\n  --input-h-lg: 48px;  --input-fs-lg: 18px;\n\n  --color-primary: #00aacc;\n  --color-primary-hover: #00b2dd;\n  --color-primary-active: #00baee;\n  --primary-text: rgba(0,0,0,0.85);\n  --primary-text-hover: rgba(0,0,0,1);\n  --radius: 5px;\n  --card-radius: 10px;\n  --hit-expand: 0.12;\n\n  --shadow-card: 0.13px 0.13px 0.19px 0 rgba(11,18,32,0.01), 0.27px 0.27px 0.38px 0 rgba(11,18,32,0.01), 0.53px 0.53px 0.75px 0 rgba(11,18,32,0.01), 1.06px 1.06px 1.5px 0 rgba(11,18,32,0.01), 2.12px 2.12px 3px 0 rgba(11,18,32,0.01), 4.24px 4.24px 6px 0 rgba(11,18,32,0.01), 8.49px 8.49px 12px 0 rgba(11,18,32,0.01);\n  --shadow-button: 0px 2px 0 0 rgba(11,18,32,0.36);\n  --shadow-input: inset 0px 1px 2px 0 rgba(11,18,32,0.36);\n  --shadow-dropdown: 0px 0.06px 0.14px 0 rgba(11,18,32,0.02), 0px 0.13px 0.28px 0 rgba(11,18,32,0.02), 0px 0.25px 0.56px 0 rgba(11,18,32,0.02), 0px 0.5px 1.13px 0 rgba(11,18,32,0.02), 0px 1px 2.25px 0 rgba(11,18,32,0.02), 0px 2px 4.5px 0 rgba(11,18,32,0.02), 0px 4px 9px 0 rgba(11,18,32,0.02), 0px 8px 18px 0 rgba(11,18,32,0.02), 0px 16px 36px 0 rgba(11,18,32,0.02);\n}\n[data-theme=\"dark\"] {\n  --shadow-card: 0.13px 0.13px 0.19px 0 rgba(0,0,0,0.03), 0.27px 0.27px 0.38px 0 rgba(0,0,0,0.03), 0.53px 0.53px 0.75px 0 rgba(0,0,0,0.03), 1.06px 1.06px 1.5px 0 rgba(0,0,0,0.03), 2.12px 2.12px 3px 0 rgba(0,0,0,0.03), 4.24px 4.24px 6px 0 rgba(0,0,0,0.03), 8.49px 8.49px 12px 0 rgba(0,0,0,0.03);\n  --shadow-button: 0px 2px 0 0 rgba(0,0,0,1);\n  --shadow-input: inset 0px 1px 2px 0 rgba(0,0,0,1);\n  --shadow-dropdown: 0px 0.06px 0.14px 0 rgba(0,0,0,0.05), 0px 0.13px 0.28px 0 rgba(0,0,0,0.05), 0px 0.25px 0.56px 0 rgba(0,0,0,0.05), 0px 0.5px 1.13px 0 rgba(0,0,0,0.05), 0px 1px 2.25px 0 rgba(0,0,0,0.05), 0px 2px 4.5px 0 rgba(0,0,0,0.05), 0px 4px 9px 0 rgba(0,0,0,0.05), 0px 8px 18px 0 rgba(0,0,0,0.05), 0px 16px 36px 0 rgba(0,0,0,0.05);\n\n  --font-weight-sm: 400;\n  --font-weight-md: 500;\n  --font-weight-lg: 600;  /* 600, font 600 içermiyorsa 500 */\n}\n\n/* Tıklanabilir alan = görünen alan × 1.12 (HIT_RULES R1–R10)\n   --hit-t/r/b/l değerlerini HitArea motoru yazar: ideal olarak her kenar boyutun %6’i,\n   komşu kontrole göre boşluk/2 ile sınırlı. Görünen kutu ve yerleşim değişmez. */\n.hit { position: relative; }\n.hit::after {\n  content: \"\";\n  position: absolute;\n  top: calc(var(--hit-t, 0px) * -1);\n  right: calc(var(--hit-r, 0px) * -1);\n  bottom: calc(var(--hit-b, 0px) * -1);\n  left: calc(var(--hit-l, 0px) * -1);\n}\n\n/* JS yoksa yedek: yalnızca R1 + R2 (komşu kuralı yok).\n   top/bottom yüzdesi yüksekliğe, left/right yüzdesi genişliğe göre hesaplanır. */\n.hit-fallback { position: relative; }\n.hit-fallback::after { content: \"\"; position: absolute; inset: -6%; }\n\n/* R9: Input için görünmez suffix (affix sarmalayıcıyı zorlar) */\n.ant-input-suffix:has(> .hit-sfx) { display: none; }\n\n/* Input satır kutusu = fontSize + 8; buton satır kutusu çift */\n.ant-input, .ant-input-affix-wrapper, .ant-input-affix-wrapper > input.ant-input { line-height: 24px; }\n.ant-input-sm, .ant-input-affix-wrapper.ant-input-affix-wrapper-sm, .ant-input-affix-wrapper-sm > input.ant-input { line-height: 22px; }\n.ant-input-lg, .ant-input-affix-wrapper.ant-input-affix-wrapper-lg, .ant-input-affix-wrapper-lg > input.ant-input { line-height: 26px; }\n/* Input yüksekliği font metriklerinden bağımsız: sistem boyutuna sabit */\n.ant-input-affix-wrapper { height: 42px; }\n.ant-input-affix-wrapper.ant-input-affix-wrapper-sm { height: 36px; }\n.ant-input-affix-wrapper.ant-input-affix-wrapper-lg { height: 48px; }\n.ant-select-sm .ant-select-selection-item, .ant-select-sm .ant-select-selection-placeholder { font-size: 14px; }\n.ant-btn { font-size: 16px; line-height: 24px; }\n.ant-btn.ant-btn-sm { font-size: 14px; line-height: 22px; }\n.ant-btn.ant-btn-lg { font-size: 18px; line-height: 26px; }\n.ant-btn:not(:disabled):active, .ant-btn.ant-dropdown-open { box-shadow: none; }\n.ant-btn, .ant-input, .ant-select-selection-item { font-weight: var(--font-weight-md); }\n.ant-btn-sm, .ant-input-sm, .ant-input-affix-wrapper-sm .ant-input, .ant-select-sm .ant-select-selection-item { font-weight: var(--font-weight-sm); }\n.ant-btn-lg, .ant-input-lg, .ant-input-affix-wrapper-lg .ant-input, .ant-select-lg .ant-select-selection-item { font-weight: var(--font-weight-lg); }"
+    "css": ":root {\n  /* tipografi */\n  --font-min: 14px;\n  --font-default: 16px;\n\n  --btn-h-sm: 36px;  --btn-fs-sm: 14px;\n  --input-h-sm: 36px;  --input-fs-sm: 14px;\n  --btn-h-md: 42px;  --btn-fs-md: 16px;\n  --input-h-md: 42px;  --input-fs-md: 16px;\n  --btn-h-lg: 48px;  --btn-fs-lg: 18px;\n  --input-h-lg: 48px;  --input-fs-lg: 18px;\n\n  --color-primary: #00aacc;\n  --color-primary-hover: #00b2dd;\n  --color-primary-active: #00baee;\n  --primary-text: rgba(0,0,0,0.85);\n  --primary-text-hover: rgba(0,0,0,1);\n  --r-none: 0px;\n  --r-micro: 3px;\n  --r-control: 5px;\n  --r-ring: 7px;\n  --r-menu: 9px;\n  --r-surface: 13px;\n  --r-surface-lg: 17px;\n  --r-panel: 21px;\n  --r-shell-sm: 25px;\n  --r-shell: 29px;\n  --radius: 5px;\n  --card-radius: 21px;\n  --hit-expand: 0.12;\n\n  --shadow-card: 0.13px 0.13px 0.19px 0 rgba(11,18,32,0.01), 0.27px 0.27px 0.38px 0 rgba(11,18,32,0.01), 0.53px 0.53px 0.75px 0 rgba(11,18,32,0.01), 1.06px 1.06px 1.5px 0 rgba(11,18,32,0.01), 2.12px 2.12px 3px 0 rgba(11,18,32,0.01), 4.24px 4.24px 6px 0 rgba(11,18,32,0.01), 8.49px 8.49px 12px 0 rgba(11,18,32,0.01);\n  --shadow-button: 0px 2px 0 0 rgba(11,18,32,0.36);\n  --shadow-input: inset 0px 1px 2px 0 rgba(11,18,32,0.36);\n  --shadow-dropdown: 0px 0.06px 0.14px 0 rgba(11,18,32,0.02), 0px 0.13px 0.28px 0 rgba(11,18,32,0.02), 0px 0.25px 0.56px 0 rgba(11,18,32,0.02), 0px 0.5px 1.13px 0 rgba(11,18,32,0.02), 0px 1px 2.25px 0 rgba(11,18,32,0.02), 0px 2px 4.5px 0 rgba(11,18,32,0.02), 0px 4px 9px 0 rgba(11,18,32,0.02), 0px 8px 18px 0 rgba(11,18,32,0.02), 0px 16px 36px 0 rgba(11,18,32,0.02);\n}\n[data-theme=\"dark\"] {\n  --shadow-card: 0.13px 0.13px 0.19px 0 rgba(0,0,0,0.03), 0.27px 0.27px 0.38px 0 rgba(0,0,0,0.03), 0.53px 0.53px 0.75px 0 rgba(0,0,0,0.03), 1.06px 1.06px 1.5px 0 rgba(0,0,0,0.03), 2.12px 2.12px 3px 0 rgba(0,0,0,0.03), 4.24px 4.24px 6px 0 rgba(0,0,0,0.03), 8.49px 8.49px 12px 0 rgba(0,0,0,0.03);\n  --shadow-button: 0px 2px 0 0 rgba(0,0,0,1);\n  --shadow-input: inset 0px 1px 2px 0 rgba(0,0,0,1);\n  --shadow-dropdown: 0px 0.06px 0.14px 0 rgba(0,0,0,0.05), 0px 0.13px 0.28px 0 rgba(0,0,0,0.05), 0px 0.25px 0.56px 0 rgba(0,0,0,0.05), 0px 0.5px 1.13px 0 rgba(0,0,0,0.05), 0px 1px 2.25px 0 rgba(0,0,0,0.05), 0px 2px 4.5px 0 rgba(0,0,0,0.05), 0px 4px 9px 0 rgba(0,0,0,0.05), 0px 8px 18px 0 rgba(0,0,0,0.05), 0px 16px 36px 0 rgba(0,0,0,0.05);\n\n  --font-weight-sm: 400;\n  --font-weight-md: 500;\n  --font-weight-lg: 600;  /* 600, font 600 içermiyorsa 500 */\n}\n\n/* Tıklanabilir alan = görünen alan × 1.12 (HIT_RULES R1–R10)\n   --hit-t/r/b/l değerlerini HitArea motoru yazar: ideal olarak her kenar boyutun %6’i,\n   komşu kontrole göre boşluk/2 ile sınırlı. Görünen kutu ve yerleşim değişmez. */\n.hit { position: relative; }\n.hit::after {\n  content: \"\";\n  position: absolute;\n  top: calc(var(--hit-t, 0px) * -1);\n  right: calc(var(--hit-r, 0px) * -1);\n  bottom: calc(var(--hit-b, 0px) * -1);\n  left: calc(var(--hit-l, 0px) * -1);\n}\n\n/* JS yoksa yedek: yalnızca R1 + R2 (komşu kuralı yok).\n   top/bottom yüzdesi yüksekliğe, left/right yüzdesi genişliğe göre hesaplanır. */\n.hit-fallback { position: relative; }\n.hit-fallback::after { content: \"\"; position: absolute; inset: -6%; }\n\n/* R9: Input için görünmez suffix (affix sarmalayıcıyı zorlar) */\n.ant-input-suffix:has(> .hit-sfx) { display: none; }\n\n/* Input satır kutusu = fontSize + 8; buton satır kutusu çift */\n.ant-input, .ant-input-affix-wrapper, .ant-input-affix-wrapper > input.ant-input { line-height: 24px; }\n.ant-input-sm, .ant-input-affix-wrapper.ant-input-affix-wrapper-sm, .ant-input-affix-wrapper-sm > input.ant-input { line-height: 22px; }\n.ant-input-lg, .ant-input-affix-wrapper.ant-input-affix-wrapper-lg, .ant-input-affix-wrapper-lg > input.ant-input { line-height: 26px; }\n/* Input yüksekliği font metriklerinden bağımsız: sistem boyutuna sabit */\n.ant-input-affix-wrapper { height: 42px; }\n.ant-input-affix-wrapper.ant-input-affix-wrapper-sm { height: 36px; }\n.ant-input-affix-wrapper.ant-input-affix-wrapper-lg { height: 48px; }\n.ant-select-sm .ant-select-selection-item, .ant-select-sm .ant-select-selection-placeholder { font-size: 14px; }\n.ant-btn { font-size: 16px; line-height: 24px; }\n.ant-btn.ant-btn-sm { font-size: 14px; line-height: 22px; }\n.ant-btn.ant-btn-lg { font-size: 18px; line-height: 26px; }\n.ant-btn:not(:disabled):active, .ant-btn.ant-dropdown-open { box-shadow: none; }\n.ant-btn, .ant-input, .ant-select-selection-item { font-weight: var(--font-weight-md); }\n.ant-btn-sm, .ant-input-sm, .ant-input-affix-wrapper-sm .ant-input, .ant-select-sm .ant-select-selection-item { font-weight: var(--font-weight-sm); }\n.ant-btn-lg, .ant-input-lg, .ant-input-affix-wrapper-lg .ant-input, .ant-select-lg .ant-select-selection-item { font-weight: var(--font-weight-lg); }"
   },
   "lightPalette": {
     "layout": "#f4f5f7",
