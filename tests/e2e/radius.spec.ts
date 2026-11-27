@@ -1,5 +1,26 @@
 import { expect, test } from '../setup/playwright-fixtures';
 
+test('GenUI warning icons use the control corner instead of a capsule', async ({ page }) => {
+  await page.goto('/panel/ai');
+  const prompt = page.getByRole('textbox', { name: 'Asistana mesaj yazın' });
+  await prompt.fill('Gecikme riski olan siparişleri bul');
+  await prompt.press('Enter');
+  await expect(page.locator('[data-genui="confirm"]')).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator('.genui-warn').first()).toHaveCSS('border-radius', '5px');
+});
+
+test('GenUI inset surfaces use the inner corner of their card', async ({ page }) => {
+  await page.goto('/_demo/genui');
+  const source = page.locator('.genui-diff-review .genui-source').first();
+  const geometry = await source.evaluate((el) => {
+    const parent = getComputedStyle(el.closest('.genui-card')!);
+    return { outer: parseFloat(parent.borderRadius), inset: parseFloat(parent.paddingLeft) };
+  });
+  expect(geometry).toEqual({ outer: 21, inset: 12 });
+  await expect(source).toHaveCSS('border-radius', `${geometry.outer - geometry.inset}px`);
+  await expect(page.locator('.genui-scope dl').first()).toHaveCSS('border-radius', '9px');
+});
+
 test('cards and GenUI use the 21px panel step', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce', colorScheme: 'light' });
   for (const [path, selector] of [

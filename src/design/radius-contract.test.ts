@@ -45,6 +45,7 @@ describe('radius guideline contract', () => {
       'DatePicker',
       'Cascader',
       'Mentions',
+      'Radio',
     ] as const) {
       expect(components?.[name], name).toMatchObject({
         borderRadius: 5,
@@ -82,6 +83,7 @@ describe('radius guideline contract', () => {
     expect(instructions).toContain('docs/standartlar/radius.md');
     expect(instructions).toContain('npm run check:radius');
     expect(instructions).toContain('`--r-ring` odak için kullanılmaz');
+    expect(instructions).toContain('JSX `radius` özniteliği');
   });
 
   it('distinguishes full-bleed shell, popup, small leaf and card corners', () => {

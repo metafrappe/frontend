@@ -210,6 +210,7 @@ export function buildAntdTheme(mode: ThemeMode, options: BuildThemeOptions = {})
     DatePicker: anchorAllSizes,
     Cascader: anchorAllSizes,
     Mentions: anchorAllSizes,
+    Radio: anchorAllSizes,
     Tag: { borderRadiusSM: radius.micro },
     Checkbox: { borderRadiusSM: radius.micro },
     Segmented: {

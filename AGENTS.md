@@ -95,6 +95,8 @@ Bileşenler `--r-*` tokenlarını kullanır. `--r-ring` odak için kullanılmaz.
 Kapı CSS dosyalarını, kaynak kodunu ve `control-size-config.json` dosyasını tarar.
 İzinli basamaklar 0, 3, 5, 7, 9, 13, 17, 21, 25 ve 29 px olur.
 Kapı hesaplanan değerleri denetlemez. Tokenlar ve kapsül yüzdeleri geçerlidir.
+JSX `radius` özniteliği ve kısa nesne yazımı bu kapının kapsamı dışındadır.
+JSON hataları alan yolunu gösterir. Satır numarası göstermez.
 `npm test` ve `npm run lint` bu kapıyı çalıştırır.
 Yeni bileşen bu kapıdan geçmelidir. Görsel referansları bağımsız QA inceler.
 

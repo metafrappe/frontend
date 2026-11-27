@@ -11,6 +11,7 @@ export function outerRadius(
   corners: { r: number; dx: number; dy: number }[],
   box?: { w: number; h: number },
 ): number {
+  if (corners.length === 0) throw new RangeError('At least one corner is required');
   const raw = Math.max(...corners.map((c) => c.r + Math.min(Math.min(c.dx, c.dy), R.bind)));
   const capsule = box ? Math.min(box.w, box.h) / 2 : Infinity;
   if (raw > R.max) {

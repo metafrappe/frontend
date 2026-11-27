@@ -3,6 +3,9 @@ import { describe, expect, it, vi } from 'vitest';
 import { innerRadius, isValidRadius, leafRadius, outerRadius } from './radius';
 
 describe('radius geometry from section 7.2', () => {
+  it('rejects a container without any corner-adjacent child', () => {
+    expect(() => outerRadius([])).toThrow('At least one corner is required');
+  });
   it('uses the corner-adjacent child and clamps the gap to 16', () => {
     expect(outerRadius([{ r: 5, dx: 24, dy: 24 }])).toBe(21);
     expect(

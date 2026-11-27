@@ -106,4 +106,17 @@ describe('authored radius gate', () => {
       execFileSync(process.execPath, ['scripts/radius-gate.mjs'], { encoding: 'utf8' }),
     ).not.toThrow();
   });
+  it('reports JSON property paths without inventing source line numbers', () => {
+    const root = mkdtempSync(join(tmpdir(), 'radius-gate-'));
+    try {
+      mkdirSync(join(root, 'design/source'), { recursive: true });
+      writeFileSync(join(root, 'design/source/control-size-config.json'), JSON.stringify({ cards: { radius: 10 } }, null, 2));
+      const result = spawnSync(process.execPath, ['scripts/radius-gate.mjs', root], { encoding: 'utf8' });
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain('control-size-config.json: cards.radius: 10');
+      expect(result.stderr).not.toContain('.json:1:');
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
 });

@@ -137,7 +137,10 @@ export function checkRadiusFiles(root) {
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const violations = checkRadiusFiles(resolve(process.argv[2] ?? '.'));
-  for (const { file, line, reason } of violations) console.error(`${file}:${line}: ${reason}`);
+  for (const { file, line, reason } of violations) {
+    const location = extname(file) === '.json' ? file : `${file}:${line}`;
+    console.error(`${location}: ${reason}`);
+  }
   if (violations.length) process.exitCode = 1;
   else console.log('Radius gate passed.');
 }
