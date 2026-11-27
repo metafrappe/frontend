@@ -1,0 +1,18 @@
+{
+  "rule": "Sınırı yalnız proje sahibi yükseltir.",
+  "date": "2026-11-27",
+  "dateText": "27 Kasım 2026 Cuma",
+  "status": "Öneri. Proje sahibinin onayı bekleniyor (BY-1).",
+  "measuredOn": "27 Kasım 2026 Cuma günü main bde06c6 üretim derlemesi. Sınır, ölçülen değerin yaklaşık yüzde 5 üstüdür.",
+  "unit": "bayt. Raporda 1 KB 1.000 bayttır.",
+  "limits": {
+    "initialJsGzipBytes": 229000,
+    "initialCssGzipBytes": 9000,
+    "initialAllGzipBytes": 386000,
+    "singleJsGzipBytes": 79000,
+    "singleCssGzipBytes": 9000,
+    "totalJsGzipBytes": 715000,
+    "totalAllGzipBytes": 888000,
+    "initialTransferBytes": 284000
+  }
+}

@@ -109,6 +109,7 @@ Proje sahibinin genel kuralları bu depoda da geçerlidir. Orkestratör 26 Kası
 - Her bileşen 320, 360, 375, 390 px, yatay telefon, tablet ve masaüstünde denenir.
 - Teslimden önce şu dört kapı geçmelidir: `npm run lint`, `npm run typecheck`, `npm test` ve `npm run test:e2e`.
 - Çalıştırılmayan denetim `not_run` diye raporlanır.
+- Boyut sınırı kapısı `npm run perf:budget` komutudur. Kapı CI'da derlemeden sonra koşar. Sınırlar `scripts/size-budget.json` dosyasında tarihle yazılıdır. Sınır aşılınca kapı başarısız olur. Önce kodu küçültün. Sınırı yalnız proje sahibi yükseltir.
 
 ## Git
 

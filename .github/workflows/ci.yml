@@ -43,6 +43,15 @@ jobs:
         run: npm test
       - name: Derleme
         run: npm run build
+      # Size budget gate (AJA-1570, BY-1 and BY-2). Limits: scripts/size-budget.json.
+      # Measures the build output (raw and gzip) and the real transfer in Chromium.
+      # Fails when a limit is exceeded. Only the project owner raises a limit.
+      - name: Tarayıcıyı kur (boyut sınırı)
+        uses: ./.github/actions/playwright-browsers
+        with:
+          browsers: chromium
+      - name: Boyut sınırı
+        run: npm run perf:budget
 
   # Tarayıcı testleri parçalara bölünür (AJA-961). Tek Chromium işi 26 ile 27 dakika
   # sürüyordu ve 30 dakikalık sınıra takılıyordu. Her parça testlerin bir dilimini koşar.
