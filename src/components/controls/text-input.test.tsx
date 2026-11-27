@@ -10,7 +10,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { LanguageProvider } from '@/app/locale';
 
-import { Input } from '.';
+import { Input, PlainInput } from '.';
 import { countGraphemes, truncateGraphemes } from './text-count';
 
 const HINDI = 'क्षि'; // 4 UTF-16 code units, 1 perceived character.
@@ -153,5 +153,39 @@ describe('Enter during candidate selection (IME)', () => {
     expect(onPressEnter).not.toHaveBeenCalled();
     fireEvent.keyDown(area, { key: 'Enter' });
     expect(onPressEnter).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('plain input', () => {
+  // Forms that had the plain antd look keep it. They still get the text rules.
+  it('keeps the plain antd look and still counts perceived characters', () => {
+    render(
+      <PlainInput aria-label="Search" maxLength={3} showCount defaultValue={`${HINDI}${FAMILY}`} />,
+    );
+    const input = screen.getByLabelText('Search');
+    expect(document.querySelector('.atonota-input')).toBeNull();
+    expect(document.querySelector('.hit-sfx')).toBeNull();
+    expect(input).not.toHaveAttribute('maxlength');
+    expect(document.querySelector('.ant-input-show-count-suffix')).toHaveTextContent('2 / 3');
+  });
+
+  it('adds no affix wrapper when no counter is shown', () => {
+    render(<PlainInput aria-label="Search" />);
+    expect(screen.getByLabelText('Search').closest('.ant-input-affix-wrapper')).toBeNull();
+  });
+
+  it('blocks Enter in the plain input and its text area while the candidate window is open', () => {
+    const onPressEnter = vi.fn();
+    render(
+      <>
+        <PlainInput aria-label="Search" onPressEnter={onPressEnter} />
+        <PlainInput.TextArea aria-label="Note" onPressEnter={onPressEnter} />
+      </>,
+    );
+    for (const name of ['Search', 'Note']) {
+      const field = screen.getByLabelText(name);
+      expect(fireEvent.keyDown(field, { key: 'Enter', isComposing: true })).toBe(false);
+    }
+    expect(onPressEnter).not.toHaveBeenCalled();
   });
 });
