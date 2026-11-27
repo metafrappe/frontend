@@ -9,7 +9,7 @@ import '@fontsource/jetbrains-mono/400.css';
 
 import { StrictMode, useState } from 'react';
 
-import { resolveLanguage } from '@/app/locale';
+import { FALLBACK_LANGUAGE, resolveLanguage } from '@/app/locale';
 import { sampleBootstrap } from '@/mocks/fixtures';
 import { SAMPLE_REGIONS } from '@/mocks/regions';
 
