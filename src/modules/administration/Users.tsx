@@ -7,6 +7,7 @@ import { useModule } from '../context';
 import { DateValue, Pager, ResourceView, Section } from '../shared';
 import { useUserCopy } from './users-messages';
 import './users.css';
+import { foldCode } from '@/app/locale/code';
 
 // The same shape the server checks (`user_admin.invite_user`). The server checks again.
 const EMAIL = /^[^@\s]{1,64}@[^@\s]{1,189}$/;
@@ -153,7 +154,8 @@ function InviteForm({ admin, close }: { admin: UserAdminClient; close: () => voi
   const send = useMutation();
 
   async function submit() {
-    const email = input.email.trim().toLowerCase();
+    // An email address is an identifier. Its case does not depend on the user's language.
+    const email = foldCode(input.email);
     if (!EMAIL.test(email)) {
       setEmailError(text.emailInvalid);
       return;

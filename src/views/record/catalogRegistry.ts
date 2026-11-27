@@ -1,4 +1,5 @@
 import type { DocField } from './types';
+import { foldCode } from '@/app/locale/code';
 
 export const CATALOG_VERSION = 2;
 export const SUPPORTED_CATALOG_VERSIONS = [1, 2] as const;
@@ -14,7 +15,7 @@ export interface CatalogEntry {
 }
 
 function normalizeComponentKey(key: string): string {
-  return key.trim().toLowerCase().replace(/_/g, '-');
+  return foldCode(key).replace(/_/g, '-');
 }
 
 const CATALOG_DEFINITIONS: Readonly<Record<string, Omit<CatalogEntry, 'supported'>>> = {

@@ -20,3 +20,5 @@ export {
   useSetFormatting,
   useSetLanguage,
 } from './LanguageProvider';
+export { capitalizeCode, codeMatches, foldCode } from './code';
+export { compareText, foldText, textMatches } from './text';
