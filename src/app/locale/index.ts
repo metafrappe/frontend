@@ -20,3 +20,11 @@ export {
   useSetFormatting,
   useSetLanguage,
 } from './LanguageProvider';
+export {
+  formatMessage,
+  MessageFormatError,
+  translate,
+  useMessage,
+  type MessageKey,
+  type MessageValues,
+} from './messages';

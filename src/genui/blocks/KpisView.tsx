@@ -1,10 +1,12 @@
 import { TrendDown, TrendUp } from '@phosphor-icons/react';
+import { useMessage } from '@/app/locale';
 
 import type { KpisBlock } from '../types';
 
 export function KpisView({ block }: { block: KpisBlock }) {
+  const m = useMessage();
   return (
-    <section data-genui="kpis" className="genui-kpis" aria-label="Göstergeler">
+    <section data-genui="kpis" className="genui-kpis" aria-label={m('genui.kpis.label')}>
       {block.items.map((item) => {
         const hasDelta = item.delta !== undefined;
         const up = (item.delta ?? 0) >= 0;

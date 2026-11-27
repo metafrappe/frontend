@@ -7,6 +7,7 @@ import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import {
+  checkEmbeddedText,
   findEmbeddedText,
   readAllowList,
   scanEmbeddedText,
@@ -16,10 +17,13 @@ const ROOT = join(import.meta.dirname, '..', '..', '..');
 const GATE = join(ROOT, 'scripts', 'ui-text-gate.mjs');
 
 /**
- * İzin listesinin üst sınırı. Liste bu işle kurulurken 36 dosyaydı.
+ * İzin listesinin üst sınırı. Bu işten önce kapının kurallarına göre 34 dosyada gömülü metin vardı.
  * Bu iş beş genui dosyasını kataloğa taşıdı. Sınır yalnız aşağı iner.
  */
-const ALLOW_LIST_MAX = 31;
+const ALLOW_LIST_MAX = 29;
+
+/** Kapı alt süreçte TypeScript ayrıştırıcısını yükler. Yüklü makinede 5 saniyeyi aşabilir. */
+const SPAWN_TIMEOUT = 30_000;
 
 const temps: string[] = [];
 afterEach(() => {
@@ -93,28 +97,40 @@ describe('gömülü metin kapısı', () => {
     expect(hits).toEqual([]);
   });
 
-  it('yeni bir bileşene gömülü metin eklenince kapı başarısız olur', () => {
-    const dir = project({ 'src/new/Widget.tsx': 'export const W = () => <p>Yeni metin</p>;\n' });
-    const result = runGate(dir);
-    expect(result.code).not.toBe(0);
-    expect(result.output).toContain('src/new/Widget.tsx');
-  });
+  it(
+    'yeni bir bileşene gömülü metin eklenince kapı başarısız olur',
+    () => {
+      const dir = project({ 'src/new/Widget.tsx': 'export const W = () => <p>Yeni metin</p>;\n' });
+      const result = runGate(dir);
+      expect(result.code).not.toBe(0);
+      expect(result.output).toContain('src/new/Widget.tsx');
+    },
+    SPAWN_TIMEOUT,
+  );
 
-  it('izin listesindeki eski dosya kapıyı düşürmez', () => {
-    const dir = project({ 'src/old/Old.tsx': 'export const O = () => <p>Eski metin</p>;\n' }, [
-      'src/old/Old.tsx',
-    ]);
-    expect(runGate(dir).code).toBe(0);
-  });
+  it(
+    'izin listesindeki eski dosya kapıyı düşürmez',
+    () => {
+      const dir = project({ 'src/old/Old.tsx': 'export const O = () => <p>Eski metin</p>;\n' }, [
+        'src/old/Old.tsx',
+      ]);
+      expect(runGate(dir).code).toBe(0);
+    },
+    SPAWN_TIMEOUT,
+  );
 
-  it('metni kalmayan dosya izin listesinde kalırsa kapı başarısız olur', () => {
-    const dir = project({ 'src/old/Clean.tsx': 'export const C = () => <p>{1}</p>;\n' }, [
-      'src/old/Clean.tsx',
-    ]);
-    const result = runGate(dir);
-    expect(result.code).not.toBe(0);
-    expect(result.output).toContain('src/old/Clean.tsx');
-  });
+  it(
+    'metni kalmayan dosya izin listesinde kalırsa kapı başarısız olur',
+    () => {
+      const dir = project({ 'src/old/Clean.tsx': 'export const C = () => <p>{1}</p>;\n' }, [
+        'src/old/Clean.tsx',
+      ]);
+      const result = runGate(dir);
+      expect(result.code).not.toBe(0);
+      expect(result.output).toContain('src/old/Clean.tsx');
+    },
+    SPAWN_TIMEOUT,
+  );
 
   it('test, önizleme ve örnek veri dosyalarını taramaz', () => {
     const dir = project({
@@ -127,11 +143,13 @@ describe('gömülü metin kapısı', () => {
 });
 
 describe('depodaki durum', () => {
-  it('depo kapıdan geçer', () => {
-    const result = runGate(ROOT);
-    expect(result.output).toBe(result.code === 0 ? result.output : '');
-    expect(result.code).toBe(0);
-  });
+  it(
+    'depo kapıdan geçer',
+    () => {
+      expect(checkEmbeddedText(ROOT)).toEqual({ violations: [], stale: [] });
+    },
+    SPAWN_TIMEOUT,
+  );
 
   it(`izin listesi en çok ${ALLOW_LIST_MAX} dosyadır ve yalnız kısalır`, () => {
     expect(readAllowList(ROOT).length).toBeLessThanOrEqual(ALLOW_LIST_MAX);

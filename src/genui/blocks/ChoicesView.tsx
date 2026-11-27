@@ -1,4 +1,5 @@
 import { Prompts } from '@ant-design/x';
+import { useMessage } from '@/app/locale';
 import { LocalizedXProvider } from '@/app/locale/LocalizedXProvider';
 import { Sparkle } from '@phosphor-icons/react';
 
@@ -11,9 +12,10 @@ export function ChoicesView({
   block: ChoicesBlock;
   onAction: GenUIActionHandler;
 }) {
+  const m = useMessage();
   return (
     <LocalizedXProvider>
-      <section data-genui="choices" className="genui-choices" aria-label="Öneriler">
+      <section data-genui="choices" className="genui-choices" aria-label={m('genui.choices.label')}>
         <Prompts
           wrap
           items={block.items.map((label, index) => ({

@@ -1,0 +1,150 @@
+{
+  "_aciklama": "Gömülü metin kapısının geçici izinleri (AJA-1365). Her kayıt bir dosya yolu, sahip alan ve neden içerir. Dosya kataloğa taşınınca kayıt silinir. Liste yalnız kısalır.",
+  "izinler": [
+    {
+      "dosya": "src/ai/studio/AiStudio.tsx",
+      "sahip": "ai-studio",
+      "neden": "Kapı kurulmadan önce yazılmış metin. Dosya kataloğa taşınınca kayıt silinecek."
+    },
+    {
+      "dosya": "src/ai/studio/AssistantBody.tsx",
+      "sahip": "ai-studio",
+      "neden": "Kapı kurulmadan önce yazılmış metin. Dosya kataloğa taşınınca kayıt silinecek."
+    },
+    {
+      "dosya": "src/ai/studio/ConversationsPanel.tsx",
+      "sahip": "ai-studio",
+      "neden": "Kapı kurulmadan önce yazılmış metin. Dosya kataloğa taşınınca kayıt silinecek."
+    },
+    {
+      "dosya": "src/ai/studio/FlowSteps.tsx",
+      "sahip": "ai-studio",
+      "neden": "Kapı kurulmadan önce yazılmış metin. Dosya kataloğa taşınınca kayıt silinecek."
+    },
+    {
+      "dosya": "src/ai/studio/ModePicker.tsx",
+      "sahip": "ai-studio",
+      "neden": "Kapı kurulmadan önce yazılmış metin. Dosya kataloğa taşınınca kayıt silinecek."
+    },
+    {
+      "dosya": "src/ai/studio/Workspace.tsx",
+      "sahip": "ai-studio",
+      "neden": "Kapı kurulmadan önce yazılmış metin. Dosya kataloğa taşınınca kayıt silinecek."
+    },
+    {
+      "dosya": "src/app/FoundationPage.tsx",
+      "sahip": "app-FoundationPage.tsx",
+      "neden": "Kapı kurulmadan önce yazılmış metin. Dosya kataloğa taşınınca kayıt silinecek."
+    },
+    {
+      "dosya": "src/app/ThemeModeSwitch.tsx",
+      "sahip": "app-ThemeModeSwitch.tsx",
+      "neden": "Kapı kurulmadan önce yazılmış metin. Dosya kataloğa taşınınca kayıt silinecek."
+    },
+    {
+      "dosya": "src/components/controls/demo/ControlsDemoPage.tsx",
+      "sahip": "components-controls",
+      "neden": "Kapı kurulmadan önce yazılmış metin. Dosya kataloğa taşınınca kayıt silinecek."
+    },
+    {
+      "dosya": "src/genui/blocks/ChangeTable.tsx",
+      "sahip": "genui-blocks",
+      "neden": "Kapı kurulmadan önce yazılmış metin. Dosya kataloğa taşınınca kayıt silinecek."
+    },
+    {
+      "dosya": "src/genui/blocks/ConfirmView.tsx",
+      "sahip": "genui-blocks",
+      "neden": "Kapı kurulmadan önce yazılmış metin. Dosya kataloğa taşınınca kayıt silinecek."
+    },
+    {
+      "dosya": "src/genui/blocks/EventsView.tsx",
+      "sahip": "genui-blocks",
+      "neden": "Kapı kurulmadan önce yazılmış metin. Dosya kataloğa taşınınca kayıt silinecek."
+    },
+    {
+      "dosya": "src/genui/blocks/FormView.tsx",
+      "sahip": "genui-blocks",
+      "neden": "Kapı kurulmadan önce yazılmış metin. Dosya kataloğa taşınınca kayıt silinecek."
+    },
+    {
+      "dosya": "src/genui/blocks/QueueView.tsx",
+      "sahip": "genui-blocks",
+      "neden": "Kapı kurulmadan önce yazılmış metin. Dosya kataloğa taşınınca kayıt silinecek."
+    },
+    {
+      "dosya": "src/genui/blocks/ReviewView.tsx",
+      "sahip": "genui-blocks",
+      "neden": "Kapı kurulmadan önce yazılmış metin. Dosya kataloğa taşınınca kayıt silinecek."
+    },
+    {
+      "dosya": "src/genui/blocks/ScopeView.tsx",
+      "sahip": "genui-blocks",
+      "neden": "Kapı kurulmadan önce yazılmış metin. Dosya kataloğa taşınınca kayıt silinecek."
+    },
+    {
+      "dosya": "src/genui/blocks/SourceList.tsx",
+      "sahip": "genui-blocks",
+      "neden": "Kapı kurulmadan önce yazılmış metin. Dosya kataloğa taşınınca kayıt silinecek."
+    },
+    {
+      "dosya": "src/genui/demo/GenuiDemoPage.tsx",
+      "sahip": "genui-demo",
+      "neden": "Kapı kurulmadan önce yazılmış metin. Dosya kataloğa taşınınca kayıt silinecek."
+    },
+    {
+      "dosya": "src/shell/header/WorkspaceIdentity.tsx",
+      "sahip": "shell-header",
+      "neden": "Kapı kurulmadan önce yazılmış metin. Dosya kataloğa taşınınca kayıt silinecek."
+    },
+    {
+      "dosya": "src/shell/pages/RecordPage.tsx",
+      "sahip": "shell-pages",
+      "neden": "Kapı kurulmadan önce yazılmış metin. Dosya kataloğa taşınınca kayıt silinecek."
+    },
+    {
+      "dosya": "src/shell/sidebar/WorkspaceSwitcher.tsx",
+      "sahip": "shell-sidebar",
+      "neden": "Kapı kurulmadan önce yazılmış metin. Dosya kataloğa taşınınca kayıt silinecek."
+    },
+    {
+      "dosya": "src/views/collection/CollectionState.tsx",
+      "sahip": "views-collection",
+      "neden": "Kapı kurulmadan önce yazılmış metin. Dosya kataloğa taşınınca kayıt silinecek."
+    },
+    {
+      "dosya": "src/views/collection/CollectionView.tsx",
+      "sahip": "views-collection",
+      "neden": "Kapı kurulmadan önce yazılmış metin. Dosya kataloğa taşınınca kayıt silinecek."
+    },
+    {
+      "dosya": "src/views/collection/TableView.tsx",
+      "sahip": "views-collection",
+      "neden": "Kapı kurulmadan önce yazılmış metin. Dosya kataloğa taşınınca kayıt silinecek."
+    },
+    {
+      "dosya": "src/views/collection/views/GanttView.tsx",
+      "sahip": "views-collection",
+      "neden": "Kapı kurulmadan önce yazılmış metin. Dosya kataloğa taşınınca kayıt silinecek."
+    },
+    {
+      "dosya": "src/views/collection/views/KanbanView.tsx",
+      "sahip": "views-collection",
+      "neden": "Kapı kurulmadan önce yazılmış metin. Dosya kataloğa taşınınca kayıt silinecek."
+    },
+    {
+      "dosya": "src/views/collection/views/PivotView.tsx",
+      "sahip": "views-collection",
+      "neden": "Kapı kurulmadan önce yazılmış metin. Dosya kataloğa taşınınca kayıt silinecek."
+    },
+    {
+      "dosya": "src/views/collection/views/ReportView.tsx",
+      "sahip": "views-collection",
+      "neden": "Kapı kurulmadan önce yazılmış metin. Dosya kataloğa taşınınca kayıt silinecek."
+    },
+    {
+      "dosya": "src/views/collection/views/TimesheetView.tsx",
+      "sahip": "views-collection",
+      "neden": "Kapı kurulmadan önce yazılmış metin. Dosya kataloğa taşınınca kayıt silinecek."
+    }
+  ]
+}

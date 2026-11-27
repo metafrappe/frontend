@@ -1,13 +1,15 @@
 import { describe, expect, it } from 'vitest';
 
 import { CATALOGS, SOURCE_CATALOG, translate } from './index';
+import { enGB } from './en-GB';
 import { messageArguments } from './format-message';
 
-const source = CATALOGS[SOURCE_CATALOG];
+const source: Readonly<Record<string, string>> = enGB;
 
 describe('ürün kataloğu', () => {
   it('kaynak katalog en-GB kataloğudur', () => {
     expect(SOURCE_CATALOG).toBe('en-GB');
+    expect(CATALOGS[SOURCE_CATALOG]).toBe(enGB);
   });
 
   it('anahtarlar İngilizce ve ASCII yazılır', () => {
@@ -19,7 +21,7 @@ describe('ürün kataloğu', () => {
     for (const [id, catalog] of Object.entries(CATALOGS)) {
       for (const [key, message] of Object.entries(catalog)) {
         expect(key in source, `${id}: ${key} kaynakta yok`).toBe(true);
-        const expected = messageArguments(source[key as keyof typeof source]).sort();
+        const expected = messageArguments(source[key] ?? '').sort();
         expect(messageArguments(message as string).sort(), `${id}: ${key}`).toEqual(expected);
       }
     }
