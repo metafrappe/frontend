@@ -97,6 +97,60 @@ function applied(): DemoEvent[] {
 }
 
 /**
+ * Dar ekran testleri için uzun içerik örneği (AJA-1782).
+ * Almanca ve Fince bileşik sözcükler, uzun bir bağlantı, kod bloğu ve geniş tablo içerir.
+ */
+export const LONG_CONTENT_TRIGGER = /uzun içerik/i;
+
+function longContent(): DemoEvent[] {
+  const link =
+    'https://beispiel.example/handbuch/Betriebsumgebungstemperatur/Druckluftschlauch-mit-Schnellkupplung-10m-12mm?abschnitt=lentokonesuihkuturbiinimoottoriapumekaanikkoaliupseerioppilas';
+  const code = [
+    '```bash',
+    'curl --request GET "https://beispiel.example/api/v1/Betriebsumgebungstemperatur?einheit=celsius&bereich=-20..60&lentokonesuihkuturbiinimoottoriapumekaanikkoaliupseerioppilas=true"',
+    '```',
+  ].join('\n');
+  const text = [
+    'Örnek yanıt. Betriebsumgebungstemperatur ve lentokonesuihkuturbiinimoottoriapumekaanikkoaliupseerioppilas sözcükleri uzundur.',
+    `Kaynak: ${link}`,
+    code,
+    'Tablo aşağıdadır.',
+  ].join('\n');
+  const table = {
+    type: 'table',
+    title: 'Uzun içerik örneği',
+    rowKey: 'code',
+    columns: [
+      { key: 'code', title: 'Kod' },
+      { key: 'name', title: 'Bezeichnung' },
+      { key: 'fi', title: 'Nimike' },
+      { key: 'range', title: 'Betriebsumgebungstemperatur', kind: 'id' },
+      { key: 'unit', title: 'Verkaufseinheit', kind: 'id' },
+      { key: 'price', title: 'Stückpreis', kind: 'id' },
+    ],
+    rows: [
+      {
+        code: 'DS-10-12',
+        name: 'Druckluftschlauch mit Schnellkupplung, 10 m / 12 mm',
+        fi: 'lentokonesuihkuturbiinimoottoriapumekaanikkoaliupseerioppilas',
+        range: '−20 … +60 °C',
+        unit: 'Karton zu 10 Stück',
+        price: '24,90 €',
+      },
+      {
+        code: 'DS-10-16',
+        name: 'Druckluftschlauch mit Schnellkupplung, 10 m / 16 mm',
+        fi: 'Betriebsumgebungstemperatur',
+        range: '−20 … +60 °C',
+        unit: 'Karton zu 10 Stück',
+        price: '29,90 €',
+      },
+    ],
+  };
+  return [...words(text), { type: 'ui', blocks: [table] }, { type: 'done' }];
+}
+
+/**
  * Sahte sunucunun olay listesi. "İşlem yap" kipindeki yeni iş altı adımlı akışı izler.
  * Başka her istek mevcut sahte sunucuya gider.
  */
@@ -117,6 +171,9 @@ export function flowDemoEvents(
   }
   if (request.intent === 'message' && !action && modeOf(request) === 'act') {
     return proposal(request.message.text, newId) as AgentEvent[];
+  }
+  if (request.intent === 'message' && !action && LONG_CONTENT_TRIGGER.test(request.message.text)) {
+    return longContent() as AgentEvent[];
   }
   return planEvents(request, received, newId);
 }

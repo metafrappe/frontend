@@ -477,3 +477,32 @@ html[data-focus-mode='keyboard'] .ai-scope .ant-btn.ant-btn:focus-visible {
   max-width: var(--content-max-width);
   padding: var(--space-lg);
 }
+
+/*
+ * Reply text on a narrow phone (AJA-1782). Prose wraps between words.
+ * Only a long link may break anywhere. Code keeps its lines and scrolls in its own box.
+ */
+.ai-link {
+  overflow-wrap: anywhere;
+}
+
+.ai-code {
+  max-width: 100%;
+  margin: 0;
+  padding: var(--ai-gap-sm) var(--ai-gap);
+  overflow-x: auto;
+  background: var(--ai-bg);
+  border-radius: var(--radius);
+  font-family: var(--font-code);
+  font-size: var(--font-default);
+  line-height: calc(var(--font-default) + 8px);
+  white-space: pre;
+}
+
+.ai-code code {
+  font: inherit;
+}
+
+html[data-focus-mode='keyboard'] .ai-scope .ai-code:focus-visible {
+  border-radius: 0;
+}
