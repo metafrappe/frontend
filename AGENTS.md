@@ -114,18 +114,34 @@ Proje sahibinin genel kuralları bu depoda da geçerlidir. Orkestratör 26 Kası
 
 - Commit'in yazarı ve committer'ı şu kimliktir: `karacaismail <35493655+karacaismail@users.noreply.github.com>`.
 - Yapay zekâ ortak yazar satırı ve imzası eklenmez.
-- Pane panelinde commit şu önekle atılır: `env -u GIT_COMMITTER_NAME -u GIT_COMMITTER_EMAIL git commit`.
+- Ortam değişkeni committer kimliğini ezebilir. Bu durumda commit şu önekle atılır: `env -u GIT_COMMITTER_NAME -u GIT_COMMITTER_EMAIL git commit`.
 - `--no-verify` kullanılmaz. Yazar koruması atlatılmaz.
 - Secret, gerçek `.env` ve kişisel veri depoya girmez.
 - Depo herkese açıktır. Lisans sonraki iştir. Proje sahibi söylemeden lisans dosyası eklenmez ve lisans sorulmaz.
 
-## Trunk tabanlı akış
+## Standart akış
 
-- Ana dal `main` dalıdır. Bütün işler buraya sık ve küçük parçalarla birleşir.
-- Her iş kısa ömürlü bir dalda çalışır. Dal adı iş adıdır. Örnek: `foundation`.
-- İşçi push etmez. Orkestratör incelemeden ve kapılardan geçen işi `main` dalına birleştirir.
-- Orkestratör her birleşmeden sonra `main` dalını hemen GitHub'a gönderir.
-- Uzun süren iş de parça parça birleşir. Bitmemiş özellik varsayılan olarak kapalı bir ayarın arkasında durur.
+Bu akış müşterinin 27 Kasım 2026 Cuma günkü kararıdır. Commit, PR, birleştirme ve GitHub'a gönderme iki Scrum takımının işidir. Bu işler müşteriden beklenmez. Bu işler orkestratörden de beklenmez.
+
+1. Geliştirici işi yerel dalda yapar. Dal güncel `origin/main` ucundan açılır.
+2. Geliştirici önce düşen testi yazar. Sonra kodu yazar.
+3. Geliştirici dalı GitHub'a gönderir. Sonra `main` dalına PR açar.
+4. GitHub CI, PR üzerinde koşar.
+5. QA ve Committer ajanları PR'ı kural listesiyle inceler (AJA-1303).
+6. İnceleme ve birleştirme ProPR'da yürür. PR'ı ProPR birleştirir.
+7. Hiçbir ajan `main` dalına doğrudan push etmez. Hiçbir ajan PR'ı GitHub düğmesiyle birleştirmez. Hiçbir ajan `gh pr merge` komutunu kullanmaz.
+
+ProPR notu:
+
+- Takım isterse işi doğrudan ProPR'a verebilir.
+- ProPR'ın commit kimliği `karacaismail` olur (AJA-1489).
+- ProPR yerel dalları göremez. Bu yüzden geliştirici yerel dalı önce GitHub'a gönderir.
+
+### Dal kuralları
+
+- Ana dal `main` dalıdır. İşler buraya sık ve küçük parçalarla birleşir.
+- Her iş kısa ömürlü bir dalda yapılır. Dal adı iş adıdır. Örnek: `foundation`.
+- Uzun süren iş de parça parça birleşir. Bitmemiş özellik kapalı bir ayarın arkasında durur. Bu ayar varsayılan olarak kapalıdır.
 
 ## Türetilmiş kararlar
 
