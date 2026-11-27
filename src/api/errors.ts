@@ -68,6 +68,7 @@ const SESSION_CODES = new Set([
 ]);
 const CONFLICT_CODES = new Set([
   'TimestampMismatchError',
+  'VersionConflictError',
   'document_changed',
   'version_conflict',
   'operation_conflict',

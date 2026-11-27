@@ -142,6 +142,12 @@ export const lazyRoutes: RouteEntry[] = [
           icon: Flask,
           load: () => import('@/genui/demo/GenuiDemoPage'),
         },
+        {
+          path: '/_demo/idempotency',
+          label: 'İş anahtarı denemesi',
+          icon: Flask,
+          load: () => import('@/modules/demo/IdempotencyDemoPage'),
+        },
       ]
     : []),
 ];
