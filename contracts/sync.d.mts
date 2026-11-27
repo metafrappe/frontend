@@ -1,3 +1,5 @@
+export const REPOSITORY: 'metafrappe/backend';
+
 export interface CommitInfo {
   commit: string;
   dirty: boolean;
@@ -10,7 +12,7 @@ export interface ManifestFile {
 }
 
 export interface Manifest {
-  repository: string;
+  repository: typeof REPOSITORY;
   commit: string;
   dirty: boolean;
   commitSource: CommitInfo['origin'];

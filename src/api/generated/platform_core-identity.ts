@@ -60,7 +60,7 @@ export interface paths {
     get?: never;
     put?: never;
     /**
-     * Opens a paid AtonotA Login plan. The gate is closed until the price decision (G-166).
+     * Opens a paid identity product plan. The gate is closed until the price decision (G-166).
      * @description This endpoint is the example final step of an action (G-161).
      *     It judges the `open-paid-plan` action, collects the evidence again and calls `Policy.confirm` right before the write.
      *     The write runs only when the final check says `ready` again.
