@@ -42,6 +42,7 @@ export const MENU_GROUPS = {
   Hesap: '/account',
   Yönetim: '/administration',
   'Yapay zekâ sağlayıcıları': '/administration/ai-providers',
+  Özelleştirme: '/administration/customization',
   'İzin talepleri': '/hr',
   'Site ve plan': '/site-plan',
   'Yapay zekâ işlemleri': '/ai-operations',
