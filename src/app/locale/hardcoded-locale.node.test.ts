@@ -111,4 +111,43 @@ describe('sabit dil yalnız eşleme dosyasındadır', () => {
     expect(HARDCODED_FORMAT_LOCALE.test('text.toLocaleLowerCase(format.intl)')).toBe(false);
     expect(HARDCODED_FORMAT_LOCALE.test("timeZone: 'Europe/Istanbul'")).toBe(false);
   });
+
+  it('dile bakmayan arama ve sıralama ortak yardımcıdan geçer (GILT 10)', () => {
+    const offenders = sourceFiles(SRC)
+      .map((path) => relative(SRC, path))
+      .filter((path) => !path.startsWith('app/locale/'))
+      .filter((path) => !SAMPLE_DATA.some((dir) => path.startsWith(dir)))
+      .filter((path) => !CASE_ALLOWED.has(path))
+      .filter((path) => BARE_CASE_OR_SORT.test(readFileSync(join(SRC, path), 'utf8')));
+    expect(offenders).toEqual([]);
+  });
+
+  it('ortak yardımcı denetimi örnek yazımları yakalar (olumsuz örnek)', () => {
+    for (const sample of [
+      'label.toLowerCase().includes(txt)',
+      'name.toUpperCase()',
+      'a.name.localeCompare(b.name)',
+      'new Intl.Collator(intl)',
+    ]) {
+      expect(BARE_CASE_OR_SORT.test(sample), sample).toBe(true);
+    }
+    expect(BARE_CASE_OR_SORT.test('textMatches(item.label, txt, format.intl)')).toBe(false);
+    expect(BARE_CASE_OR_SORT.test('foldCode(name)')).toBe(false);
+  });
 });
+
+/**
+ * Bare case conversion or sorting (GILT 10). Search and sort go through `app/locale/text.ts`.
+ * Product codes and URL segments go through `app/locale/code.ts`.
+ */
+const BARE_CASE_OR_SORT = /\.(?:toLowerCase|toUpperCase|localeCompare)\(|new\s+Intl\.Collator\b/;
+
+/** Files that change case for a reason other than search or sort. Each entry gives the reason. */
+const CASE_ALLOWED = new Set([
+  // HTML tag names are ASCII and case-insensitive by the HTML standard.
+  'design/csp-nonce.ts',
+  // HTML entity names are ASCII. The map key is lower case.
+  'views/record/adapter.ts',
+  // The sample record name prefix is built from the DocType name. This is sample data.
+  'shell/sampleData.ts',
+]);
