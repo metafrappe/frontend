@@ -57,6 +57,15 @@ describe('sabit dil yalnız eşleme dosyasındadır', () => {
     expect(map).toMatch(/dayjs\/locale\/en-gb/);
   });
 
+  it('eşleme dosyası antd dilini ES modülünden alır (AJA-1971)', () => {
+    // `antd/locale/tr_TR` CommonJS biçimindedir. Vite derlemesinde dil nesnesi `{ default }`
+    // kabına sarılı gelir. antd o zaman İngilizceye düşer: takvimde "Nov" yazar.
+    const map = readFileSync(join(SRC, LOCALE_MAP), 'utf8');
+    expect(map).not.toMatch(/from\s+['"]antd\/(?:lib\/)?locale\/\w+['"]/);
+    expect(map).toMatch(/from\s+['"]antd\/es\/locale\/tr_TR['"]/);
+    expect(map).toMatch(/from\s+['"]antd\/es\/locale\/en_GB['"]/);
+  });
+
   it('oturum açılınca modül ortamına sabit dil verilmez', () => {
     const root = readFileSync(join(SRC, 'app/Root.tsx'), 'utf8');
     expect(root).not.toMatch(/locale:\s*['"](?:tr|en)['"]/);

@@ -32,7 +32,8 @@ async function focusStyle(control: Locator) {
   return control.evaluate(async (el) => {
     const root = el.closest('.rv-root');
     if (!root) throw new Error('Missing record root');
-    const surface = el.closest('.ant-input-affix-wrapper') ?? el;
+    // Tarih alanı markalı seçicidir (panel sorunu 3). Kutusu `.ant-picker` öğesidir.
+    const surface = el.closest('.ant-picker, .ant-input-affix-wrapper') ?? el;
     surface.getBoundingClientRect();
     await Promise.all(surface.getAnimations().map((animation) => animation.finished));
     const style = getComputedStyle(surface);
@@ -90,7 +91,7 @@ test('date field shows one underline on Tab focus and no surrounding ring', asyn
   expect(added[0]).toContain(probe);
   // WebKit draws a native rounded ring around the focused date segment. The pixel probe counts
   // the system accent blue that this ring uses; tokens never produce it.
-  const wrapper = date.locator('xpath=ancestor::*[contains(@class,"ant-input-affix-wrapper")][1]');
+  const wrapper = date.locator('xpath=ancestor::*[contains(@class,"ant-picker")][1]');
   const png = (await wrapper.screenshot({ animations: 'disabled' })).toString('base64');
   const nativeRing = await page.evaluate(async (data) => {
     const img = new Image();
