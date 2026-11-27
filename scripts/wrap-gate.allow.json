@@ -1,0 +1,11 @@
+{
+  "_aciklama": "Kırma kapısı izinleri. overflow-wrap: anywhere yalnız uzun bağlantıda serbesttir. Başlık ve tablo hücresi izin alamaz. Her kayıt dosya, seçici, sahip iş ve neden içerir.",
+  "izinler": [
+    {
+      "dosya": "src/ai/studio/studio.css",
+      "secici": ".ai-files",
+      "sahip": "AJA-1747",
+      "neden": "Liste, kullanıcının eklediği dosya adlarını gösterir. Dosya adı boşluksuz uzun bir dizgi olabilir ve dar yan panele sığmalıdır. Kural başlık ya da tablo hücresi değildir."
+    }
+  ]
+}

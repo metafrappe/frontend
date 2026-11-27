@@ -6,6 +6,23 @@ const CODE = 'AB-120/XL';
 /** Invisible direction marks and isolates: LRM, RLM, ALM, LRE..RLO, LRI..PDI. */
 const DIRECTION_MARKS = /[‎‏؜‪-‮⁦-⁩]/;
 
+/** Left edge of every character in the element's single text node, in logical order. */
+function charLefts(el: Element): number[] {
+  const node = el.firstChild;
+  if (!node || node.nodeType !== Node.TEXT_NODE) return [];
+  return Array.from(node.textContent ?? '', (_, i) => {
+    const range = document.createRange();
+    range.setStart(node, i);
+    range.setEnd(node, i + 1);
+    return range.getBoundingClientRect().left;
+  });
+}
+
+/** True when each value is larger than the one before: the characters run left to right. */
+function isAscending(values: number[]): boolean {
+  return values.every((v, i) => i === 0 || v > (values[i - 1] ?? Number.POSITIVE_INFINITY));
+}
+
 test.beforeEach(async ({ page }) => {
   await page.goto(demo);
   await expect(page.getByTestId('rtl-sentence')).toBeVisible();
@@ -22,32 +39,16 @@ test('the commercial code reads left to right inside a right-to-left sentence', 
   expect(await code.evaluate((el) => el.tagName)).toBe('BDI');
 
   // Visual order: the x position of every character grows from left to right.
-  const lefts = await code.evaluate((el) => {
-    const node = el.firstChild;
-    if (!node || node.nodeType !== Node.TEXT_NODE) return [];
-    return Array.from(node.textContent ?? '', (_, i) => {
-      const range = document.createRange();
-      range.setStart(node, i);
-      range.setEnd(node, i + 1);
-      return range.getBoundingClientRect().left;
-    });
-  });
+  const lefts = await code.evaluate(charLefts);
   expect(lefts).toHaveLength(CODE.length);
-  for (let i = 1; i < lefts.length; i += 1) expect(lefts[i]!).toBeGreaterThan(lefts[i - 1]!);
+  expect(isAscending(lefts)).toBe(true);
 
   // The negative value keeps its sign in front of the digits.
   const value = sentence.getByTestId('negative-value');
   expect(await value.evaluate((el) => el.tagName)).toBe('BDI');
-  const [minus, digit] = await value.evaluate((el) => {
-    const node = el.firstChild!;
-    return [0, 1].map((i) => {
-      const range = document.createRange();
-      range.setStart(node, i);
-      range.setEnd(node, i + 1);
-      return range.getBoundingClientRect().left;
-    });
-  });
-  expect(digit!).toBeGreaterThan(minus!);
+  const valueLefts = await value.evaluate(charLefts);
+  expect(valueLefts).toHaveLength(2);
+  expect(isAscending(valueLefts)).toBe(true);
 
   // The sentence stays inside the viewport at every width.
   const overflow = await page.evaluate(
@@ -70,7 +71,8 @@ test('a copied commercial code is byte-for-byte the same, without direction mark
   const selected = await code.evaluate((el) => {
     const range = document.createRange();
     range.selectNodeContents(el);
-    const selection = window.getSelection()!;
+    const selection = window.getSelection();
+    if (!selection) return null;
     selection.removeAllRanges();
     selection.addRange(range);
     return selection.toString();
