@@ -1,5 +1,6 @@
 import type { Page } from '@playwright/test';
 
+import { SAMPLE_REGIONS } from '../../../mocks/regions';
 import { expect, test } from '../../../../tests/setup/playwright-fixtures';
 
 /**
@@ -8,13 +9,13 @@ import { expect, test } from '../../../../tests/setup/playwright-fixtures';
  */
 const FORM = '/src/views/record/harness/?scenario=number';
 
-const amount = (page: Page) =>
-  page.getByRole('textbox', { name: /Amount/ });
+const amount = (page: Page) => page.getByRole('textbox', { name: /Amount/ });
 
 test('fr-FR: 1 234,56 is saved as 1234.56 and reopens as the same text', async ({ page }) => {
-  await page.goto(`${FORM}&region=fr-FR`);
-  const typed = await page.evaluate(() =>
-    new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 2 }).format(1234.56),
+  await page.goto(`${FORM}&region=${SAMPLE_REGIONS.france}`);
+  const typed = await page.evaluate(
+    (region) => new Intl.NumberFormat(region, { minimumFractionDigits: 2 }).format(1234.56),
+    SAMPLE_REGIONS.france,
   );
   await amount(page).fill(typed);
   await amount(page).blur();
@@ -23,7 +24,7 @@ test('fr-FR: 1 234,56 is saved as 1234.56 and reopens as the same text', async (
     .poll(() => page.evaluate(() => window.sessionStorage.getItem('atonota-harness-number')))
     .toContain('"amount":1234.56');
 
-  await page.goto(`${FORM}&region=fr-FR&open=1`);
+  await page.goto(`${FORM}&region=${SAMPLE_REGIONS.france}&open=1`);
   await expect(amount(page)).toHaveValue(typed);
   // The field fits the narrow screen. The page does not scroll sideways.
   const overflow = await page.evaluate(
@@ -33,7 +34,7 @@ test('fr-FR: 1 234,56 is saved as 1234.56 and reopens as the same text', async (
 });
 
 test('de-DE: 1.234,56 gives the same value', async ({ page }) => {
-  await page.goto(`${FORM}&region=de-DE`);
+  await page.goto(`${FORM}&region=${SAMPLE_REGIONS.germany}`);
   await amount(page).fill('1.234,56');
   await page.getByRole('button', { name: 'Save' }).click();
   await expect
@@ -42,7 +43,7 @@ test('de-DE: 1.234,56 gives the same value', async ({ page }) => {
 });
 
 test('an ambiguous value is not saved and the screen asks the user', async ({ page }) => {
-  await page.goto(`${FORM}&region=de-DE`);
+  await page.goto(`${FORM}&region=${SAMPLE_REGIONS.germany}`);
   await amount(page).fill('1.234');
   await amount(page).blur();
   const question = page.getByRole('group', { name: 'Which number did you mean?' });
@@ -69,7 +70,7 @@ test('an ambiguous value is not saved and the screen asks the user', async ({ pa
 });
 
 test('keeps the draft after a save error', async ({ page }) => {
-  await page.goto(`${FORM}&region=fr-FR&fail=1`);
+  await page.goto(`${FORM}&region=${SAMPLE_REGIONS.france}&fail=1`);
   await amount(page).fill('1 234,56');
   await amount(page).blur();
   const shown = await amount(page).inputValue();

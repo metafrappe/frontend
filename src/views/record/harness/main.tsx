@@ -11,6 +11,7 @@ import { StrictMode, useState } from 'react';
 
 import { resolveLanguage } from '@/app/locale';
 import { sampleBootstrap } from '@/mocks/fixtures';
+import { SAMPLE_REGIONS } from '@/mocks/regions';
 
 import { createRoot } from 'react-dom/client';
 import { EMPTY_LEAVE_CONTEXT, LEAVE_CONTEXT, LEAVE_META } from './leaveFixture';
@@ -277,7 +278,7 @@ const NUMBER_META: DocTypeMeta = {
 const NUMBER_STORE = 'atonota-harness-number';
 
 function NumberHarness({ params }: { params: URLSearchParams }) {
-  const region = params.get('region') ?? 'fr-FR';
+  const region = params.get('region') ?? SAMPLE_REGIONS.france;
   const reopen = params.get('open') === '1';
   const adapter: RecordDataAdapter = {
     getDocTypeMeta: async () => NUMBER_META,
