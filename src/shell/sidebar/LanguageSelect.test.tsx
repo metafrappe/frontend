@@ -37,9 +37,12 @@ function expectPageKept() {
   expect(screen.getByLabelText('Süzgeç')).toHaveValue('vida');
 }
 
+/** The label follows the UI language: Turkish "Dil", English "Language". */
+const LANGUAGE = /^(Dil|Language)$/;
+
 /** Opens the branded list and picks an option. */
 async function choose(option: string) {
-  fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Dil' }));
+  fireEvent.mouseDown(screen.getByRole('combobox', { name: LANGUAGE }));
   const items = await screen.findAllByText(option, {
     selector: '.ant-select-item-option-content *, .ant-select-item-option-content',
   });

@@ -9,6 +9,9 @@ const SRC = join(import.meta.dirname, '..', '..');
 /** Dil eşleme dosyası. Ant Design ve Day.js dil nesneleri yalnız burada içe aktarılır. */
 const LOCALE_MAP = 'app/locale/locale-map.ts';
 
+/** Sunulan dillerin listesi (AJA-1772). Tam dil etiketleri yalnız burada ve eşleme dosyasında yazılır. */
+const LOCALE_LIST = 'app/locale/language.ts';
+
 /** Sabit dil nesnesi aktarımı. Örnek: `antd/locale/tr_TR`, `antd/es/locale/en_US`, `dayjs/locale/tr`. */
 const HARDCODED_LOCALE =
   /from\s+['"](?:antd\/(?:es\/|lib\/)?locale\/\w+|dayjs\/locale\/[\w-]+)['"]|import\s+['"]dayjs\/locale\//;
@@ -36,7 +39,8 @@ function sourceFiles(dir: string): string[] {
   return readdirSync(dir).flatMap((name) => {
     const path = join(dir, name);
     if (statSync(path).isDirectory()) return sourceFiles(path);
-    return /\.(ts|tsx)$/.test(name) && !/\.test\.(ts|tsx)$/.test(name) ? [path] : [];
+    // Unit tests and browser tests are not runtime code; they may name a locale to check it.
+    return /\.(ts|tsx)$/.test(name) && !/\.(test|spec)\.(ts|tsx)$/.test(name) ? [path] : [];
   });
 }
 
@@ -90,7 +94,7 @@ describe('sabit dil yalnız eşleme dosyasındadır', () => {
   it('tarih, sayı ve harf dönüşümünde dil sabit yazılmaz (IC-13)', () => {
     const offenders = sourceFiles(SRC)
       .map((path) => relative(SRC, path))
-      .filter((path) => path !== LOCALE_MAP)
+      .filter((path) => path !== LOCALE_MAP && path !== LOCALE_LIST)
       .filter((path) => !SAMPLE_DATA.some((dir) => path.startsWith(dir)))
       .filter((path) => HARDCODED_FORMAT_LOCALE.test(readFileSync(join(SRC, path), 'utf8')));
     expect(offenders).toEqual([]);

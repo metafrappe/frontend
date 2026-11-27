@@ -3,6 +3,7 @@ import type { ComponentType } from 'react';
 
 import type { AgentSource, AgentTransport } from '@/ai/agent/types';
 import type { ModuleEnvironment } from '@/modules';
+import type { SaveLanguage } from '@/app/locale';
 import type { CollectionDefinition, CollectionSource } from '@/views/collection';
 
 import type { ShellHomeData } from './home-data';
@@ -141,6 +142,11 @@ export interface ShellViewData {
    * Yoksa kabuk çıkış düğmesini çizmez (deneme sayfaları).
    */
   signOut?: () => Promise<void>;
+  /**
+   * Seçilen dili kullanıcı profiline yazar (AJA-1772). Sunucu reddederse hata verir.
+   * Yoksa kabuk dil düğmesini çizmez. Örnek: oturumsuz test sayfaları.
+   */
+  saveLanguage?: SaveLanguage;
   /** Modül sayfalarının ortamı. Kabuk bunu `ModuleProvider` ile verir. */
   modules?: ModuleEnvironment;
   /**

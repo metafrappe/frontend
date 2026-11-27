@@ -29,9 +29,14 @@ async function languageSelect(page: Page) {
   return select;
 }
 
+/** Opens the list by its visible box. The selected text sits over the search input. */
+async function openList(page: Page) {
+  await languageSelect(page);
+  await page.locator('.shell-lang .ant-select-selector').click();
+}
+
 async function choose(page: Page, name: string) {
-  const select = await languageSelect(page);
-  await select.click();
+  await openList(page);
   await page.locator('.ant-select-item-option', { hasText: name }).click();
 }
 
@@ -91,10 +96,10 @@ test.describe('dil seçimi (AJA-1772)', () => {
   });
 
   test('profil kaydı reddedilirse eski dil ve neden görünür, form korunur', async ({ page }) => {
-    await page.addInitScript(
-      ([key, value]) => sessionStorage.setItem(key!, value!),
-      [SCENARIO_KEY, 'dil-kaydi-red'],
-    );
+    await page.addInitScript(({ key, value }) => sessionStorage.setItem(key, value), {
+      key: SCENARIO_KEY,
+      value: 'dil-kaydi-red',
+    });
     await page.goto(DEMO);
     await expect(page.locator('html')).toHaveAttribute('lang', 'tr-TR');
     await fillPage(page);
@@ -117,10 +122,10 @@ test.describe('tarayıcı dili kayıtlı seçimi ezmez', () => {
   test.use({ locale: 'tr-TR' });
 
   test('profil de-DE, tarayıcı tr-TR ise arayüz Almanca açılır', async ({ page }) => {
-    await page.addInitScript(
-      ([key, value]) => sessionStorage.setItem(key!, value!),
-      [STORED_LANGUAGE_KEY, 'de-DE'],
-    );
+    await page.addInitScript(({ key, value }) => sessionStorage.setItem(key, value), {
+      key: STORED_LANGUAGE_KEY,
+      value: 'de-DE',
+    });
     await page.goto(DEMO);
     expect(await page.evaluate(() => navigator.language)).toBe('tr-TR');
     await expect(page.locator('html')).toHaveAttribute('lang', 'de-DE');
@@ -132,8 +137,7 @@ test.describe('tarayıcı dili kayıtlı seçimi ezmez', () => {
 test.describe('dil listesi telefonda', () => {
   test('liste markalıdır, yerel select yoktur ve sayfa yatay taşmaz', async ({ page }) => {
     await page.goto(DEMO);
-    const select = await languageSelect(page);
-    await select.click();
+    await openList(page);
     for (const name of ['English (UK)', 'Türkçe', 'Deutsch']) {
       await expect(page.locator('.ant-select-item-option', { hasText: name })).toBeVisible();
     }

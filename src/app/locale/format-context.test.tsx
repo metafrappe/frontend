@@ -59,7 +59,7 @@ describe('useFormat: biçim dil bağlamından gelir', () => {
 
   it.each([
     ['boşsa', ''],
-    ['desteklenmiyorsa', 'de'],
+    ['desteklenmiyorsa', 'fr'],
   ])('dil %s biçim yedek dil en-GB ile yapılır', (_case, raw) => {
     render(
       <AppProviders

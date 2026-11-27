@@ -2031,3 +2031,40 @@ html:has(.shell[data-layout='compact']) {
     outline: var(--shell-focus-line) solid CanvasText;
   }
 }
+
+/* Kenar çubuğu altındaki dil düğmesi (AJA-1772). Liste alt alanın genişliğini doldurur. */
+.shell-lang {
+  display: flex;
+  flex-direction: column;
+  gap: var(--shell-space-sm);
+  min-width: 0;
+}
+
+.shell-lang-label {
+  font-size: var(--shell-fs);
+}
+
+.shell-lang .atonota-select {
+  width: 100%;
+}
+
+.shell-lang-error {
+  margin: 0;
+  font-size: var(--shell-fs);
+}
+
+/* Dil seçimi deneme sayfası (AJA-1772). Yalnız e2e derlemesinde vardır. */
+.shell-demo-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--shell-space-md);
+  max-width: var(--form-max-width);
+}
+
+.shell-demo-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--shell-space-sm);
+  max-width: var(--form-max-width);
+  margin-block-end: var(--shell-space-md);
+}

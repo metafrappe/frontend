@@ -85,6 +85,17 @@ export const MOCK_START_LINK_KEY = 'atonota.mock-start-link';
  */
 export type LogoutOutcome = 'ok' | 'failure' | 'foreign_url';
 
+/** Örnek kullanıcının kayıtlı dilinin oturum deposu anahtarı. Tarayıcı testleri bunu sayfa açılmadan yazabilir. */
+export const MOCK_LANGUAGE_KEY = 'atonota.mock-dil';
+
+function storedUserLanguage(): string {
+  try {
+    return globalThis.sessionStorage?.getItem(MOCK_LANGUAGE_KEY) ?? sampleBootstrap.user.language;
+  } catch {
+    return sampleBootstrap.user.language;
+  }
+}
+
 export const mockState: {
   signedIn: boolean;
   proposals: Map<string, ReturnType<typeof sampleProposal>>;
@@ -122,7 +133,16 @@ export const mockState: {
   readableDocTypes: Set<string>;
   /** Gönderilen yeni müşteri istekleri (G-169). */
   customerRequests: { name: string; customer_name: string; contact_email: string }[];
+  /**
+   * Örnek kullanıcının profil dili (AJA-1772). Açılış verisi bu dili döner.
+   * Kayıtlı seçim oturum deposunda tutulur. Böylece gerçek profil gibi sayfa yenilemesinden sonra kalır.
+   */
+  userLanguage: string;
+  /** Değer `true` ise profil kaydı reddedilir (403 `PermissionError`). */
+  languageSaveRejected: boolean;
 } = {
+  userLanguage: storedUserLanguage(),
+  languageSaveRejected: false,
   roles: [...sampleBootstrap.user.roles],
   readableDocTypes: new Set(MENU_READABLE_DOCTYPES),
   customerRequests: [],
@@ -241,6 +261,8 @@ export function resetMockState(): void {
   mockState.roles = [...sampleBootstrap.user.roles];
   mockState.readableDocTypes = new Set(MENU_READABLE_DOCTYPES);
   mockState.customerRequests = [];
+  mockState.userLanguage = sampleBootstrap.user.language;
+  mockState.languageSaveRejected = false;
   resetUserAdminState();
   connectionSecrets.clear();
   gatewayCalls.save = [];
@@ -849,8 +871,32 @@ export const handlers = [
   http.get('*/api/method/platform_core.api.shell.get_bootstrap', ({ request }) => {
     return (
       guard(request, { write: false }) ??
-      message({ ...sampleBootstrap, user: { ...sampleBootstrap.user, roles: mockState.roles } })
+      message({
+        ...sampleBootstrap,
+        user: { ...sampleBootstrap.user, roles: mockState.roles, language: mockState.userLanguage },
+      })
     );
+  }),
+
+  // Profil dili kaydı (AJA-1772). Yalnız oturumdaki kullanıcının `language` alanı yazılır.
+  // İstek hedef durumdur: aynı değer iki kez gelirse profil aynı kalır.
+  http.put('*/api/v2/document/User/:name', async ({ request, params }) => {
+    const denied = guard(request, { write: true });
+    if (denied) return denied;
+    if (params['name'] !== sampleBootstrap.user.name || mockState.languageSaveRejected) {
+      return frappeError(403, 'PermissionError');
+    }
+    const body = (await request.json().catch(() => null)) as { language?: unknown } | null;
+    if (!body || typeof body.language !== 'string' || Object.keys(body).length !== 1) {
+      return frappeError(417, 'ValidationError');
+    }
+    mockState.userLanguage = body.language;
+    try {
+      globalThis.sessionStorage?.setItem(MOCK_LANGUAGE_KEY, body.language);
+    } catch {
+      /* Depo yoksa seçim sayfa kapanana kadar kalır. */
+    }
+    return HttpResponse.json({ data: { name: params['name'], language: body.language } });
   }),
 
   http.get('*/api/method/platform_core.api.meta.get_doctype', ({ request }) => {

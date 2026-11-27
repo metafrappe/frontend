@@ -9,6 +9,8 @@ import { sampleUser } from '../sampleData';
 import type { ShellAccount, ShellCredit } from '../view-data';
 import { useViewData } from '../view-data';
 
+import { LanguageSelect } from './LanguageSelect';
+
 interface SidebarFooterProps {
   rail: boolean;
   /** AI kredisi. Yoksa sayaç çizilmez. */
@@ -112,6 +114,8 @@ export function SidebarFooter({ rail, credit = null }: SidebarFooterProps) {
           </span>
         )}
       </div>
+      {/* Dar şeritte listeye yer yoktur. Geniş kenar çubuğu ve telefon çekmecesi listeyi gösterir. */}
+      {viewData?.saveLanguage && !rail ? <LanguageSelect save={viewData.saveLanguage} /> : null}
       {viewData?.signOut ? <SignOutButton rail={rail} signOut={viewData.signOut} /> : null}
     </div>
   );

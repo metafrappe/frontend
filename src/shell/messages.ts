@@ -88,6 +88,15 @@ export const t = {
       save: 'Kaydet',
     },
   },
+  /** Dil seçimi deneme sayfası (AJA-1772). Yalnız e2e derlemesinde vardır. */
+  languageDemo: {
+    title: 'Dil denemesi',
+    intro: 'Formu doldurun. Sonra menüden dili değiştirin. Yazdıklarınız kalır.',
+    form: 'Talep',
+    subject: 'Konu',
+    draft: 'Taslak',
+    filter: 'Süzgeç',
+  },
   demo: {
     title: 'Kabuk denemesi',
     linkBefore: 'Sorunuz varsa',
