@@ -79,6 +79,113 @@ describe('gömülü metin kapısı', () => {
     ]);
   });
 
+  it('JSX ifadesindeki koşullu metni ve değişkenli metnin sabit parçasını yakalar', () => {
+    const hits = findEmbeddedText(
+      [
+        'export function A({ x, n }: { x: boolean; n: number }) {',
+        '  return (',
+        '    <div>',
+        "      {x ? 'Aç' : 'Kapat'}",
+        "      {x && 'Açık'}",
+        "      {x || 'Boş'}",
+        "      {(x as unknown as string) ?? 'Yok'}",
+        '      {`Toplam ${n}`}',
+        "      {x ? <b>Kalın</b> : 'Düz'}",
+        '    </div>',
+        '  );',
+        '}',
+      ].join('\n'),
+      'src/x/A.tsx',
+    );
+    expect(hits.map((h: { text: string }) => h.text)).toEqual([
+      'Aç',
+      'Kapat',
+      'Açık',
+      'Boş',
+      'Yok',
+      'Toplam',
+      'Kalın',
+      'Düz',
+    ]);
+  });
+
+  it('metin özniteliğindeki koşullu ve değişkenli metni yakalar', () => {
+    const hits = findEmbeddedText(
+      [
+        'export function A({ x, n }: { x: boolean; n: number }) {',
+        '  return (',
+        "    <button aria-label={x ? 'Aç' : 'Kapat'} title={`Toplam ${n} kayıt`} placeholder={x && 'Ara'}>",
+        '      {n}',
+        '    </button>',
+        '  );',
+        '}',
+      ].join('\n'),
+      'src/x/A.tsx',
+    );
+    expect(hits.map((h: { text: string }) => h.text)).toEqual(['Aç', 'Kapat', 'Toplam kayıt', 'Ara']);
+  });
+
+  it('öznitelik içindeki JSX metnini yakalar', () => {
+    const hits = findEmbeddedText(
+      [
+        'export function A() {',
+        '  return <Card extra={<span>Ek bilgi</span>} render={() => <p>Satır</p>} />;',
+        '}',
+      ].join('\n'),
+      'src/x/A.tsx',
+    );
+    expect(hits.map((h: { text: string }) => h.text)).toEqual(['Ek bilgi', 'Satır']);
+  });
+
+  it('QA örneğindeki dört metni bulur', () => {
+    const hits = findEmbeddedText(
+      "export function A({ x }: { x: boolean }) { return <div aria-label=\"Deneme\"><p>Kayıt yok</p>{x ? 'Aç' : 'Kapat'}{`Toplam ${1}`}</div>; }",
+      'src/qa/QaDeneme.tsx',
+    );
+    expect(hits.map((h: { text: string }) => h.text)).toEqual([
+      'Deneme',
+      'Kayıt yok',
+      'Aç',
+      'Kapat',
+      'Toplam',
+    ]);
+  });
+
+  it('koşulun karşılaştırmasını, çağrıyı ve sınıf adını metin saymaz', () => {
+    const hits = findEmbeddedText(
+      [
+        "import { useMessage } from '@/app/locale';",
+        'export function A({ kind }: { kind: string }) {',
+        '  const m = useMessage();',
+        '  return (',
+        "    <p className={kind === 'wide' ? 'box wide' : 'box'} aria-label={kind === 'a' ? m('x.a') : m('x.b')}>",
+        "      {kind === 'empty' ? m('x.empty') : m('x.full')}",
+        "      {kind && m('x.kind', { kind: 'Ad' })}",
+        '      {`${kind}`}',
+        '    </p>',
+        '  );',
+        '}',
+      ].join('\n'),
+      'src/x/A.tsx',
+    );
+    expect(hits).toEqual([]);
+  });
+
+  it(
+    'koşullu metin eklenen yeni bileşende kapı başarısız olur',
+    () => {
+      const dir = project({
+        'src/new/Toggle.tsx':
+          "export const T = ({ x }: { x: boolean }) => <button>{x ? 'Aç' : 'Kapat'}</button>;\n",
+      });
+      const result = runGate(dir);
+      expect(result.code).not.toBe(0);
+      expect(result.output).toContain('src/new/Toggle.tsx');
+      expect(result.output).toContain('"Aç"');
+    },
+    SPAWN_TIMEOUT,
+  );
+
   it('katalogdan gelen metni, sınıf adını ve işaret karakterini yakalamaz', () => {
     const hits = findEmbeddedText(
       [
