@@ -19,6 +19,27 @@ interface Ticket {
 }
 
 const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+
+type DemoWindow = Window & {
+  __idempotencyDemoHold?: boolean;
+  __idempotencyDemoRelease?: () => void;
+};
+
+/**
+ * Sahte yanıtın ne zaman geleceğini belirler.
+ * Test `__idempotencyDemoHold` değerini açarsa yanıt `__idempotencyDemoRelease()` çağrısını bekler.
+ * Böylece test sonucu makinenin hızına bağlı kalmaz. Değer kapalıysa yanıt 800 milisaniye sonra gelir.
+ */
+const respond = () => {
+  const target = window as DemoWindow;
+  if (!target.__idempotencyDemoHold) return wait(800);
+  return new Promise<void>((resolve) => {
+    target.__idempotencyDemoRelease = () => {
+      delete target.__idempotencyDemoRelease;
+      resolve();
+    };
+  });
+};
 const team = 'example-site';
 
 function Demo() {
@@ -38,7 +59,7 @@ function Demo() {
 
   const create = async (key: string) => {
     count();
-    await wait(800);
+    await respond();
     return { name: 'TICKET-2', key };
   };
   const save = async () => {

@@ -12,9 +12,11 @@ test.beforeEach(async ({ page }) => {
 
 test('a double press sends one request and the button says it is processing', async ({ page }) => {
   // The fake request waits until the test lets it finish. No timer decides the result.
-  await page.evaluate(() => {
+  // An init script keeps the setting even if the page loads again.
+  await page.addInitScript(() => {
     (window as Window & { __idempotencyDemoHold?: boolean }).__idempotencyDemoHold = true;
   });
+  await page.reload();
   const button = page.getByRole('button', { name: 'Kayıt aç' });
   await button.dblclick();
   const busy = page.getByRole('button', { name: 'İşleniyor' });
