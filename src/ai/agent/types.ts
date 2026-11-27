@@ -24,6 +24,11 @@ export interface UserMessage {
    * Sorgu da koparsa yeniden deneme bu kimlikle yine durum sorar.
    */
   statusOf?: string;
+  /**
+   * Client ID of the message. Every stream chunk of its reply carries this ID.
+   * The UI sets it when the message is sent.
+   */
+  clientId?: string;
 }
 
 export type AssistantPhase = 'waiting' | 'streaming' | 'done' | 'cancelled' | 'error';
@@ -64,6 +69,12 @@ export interface AgentRequest {
   history: ChatMessage[];
   /** `status` isteğinde sorulan işlemin kimliği. Onay bloğunun kimliğidir. */
   actionId?: string;
+  /**
+   * Idempotency key of an approved operation (AJA-1749). Lower-case UUID 4.
+   * Only a new approval with `intent: 'message'` carries it. Regenerate and status requests do not.
+   * The HTTP adapter sends it in the `Idempotency-Key` header.
+   */
+  idempotencyKey?: string;
 }
 
 /**

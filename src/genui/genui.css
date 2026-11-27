@@ -159,10 +159,25 @@
   overflow-wrap: normal;
 }
 
+/*
+ * Antd's own cell rule allows breaking inside a word (break-word) and wins on specificity.
+ * This rule is stronger. A word in a cell is never split in the middle (AJA-1782).
+ */
+.genui-table-scroll .ant-table .ant-table-cell,
+.genui-table-scroll .ant-table .ant-table-measure-cell {
+  word-break: normal;
+  overflow-wrap: normal;
+}
+
+/*
+ * Description text wraps at the column limit. A single word longer than the limit
+ * widens the column instead of spilling into the next cell. The table scrolls in its box.
+ * fit-content(limit) never goes below the longest word.
+ */
 .genui-wrap {
-  display: block;
+  display: grid;
+  grid-template-columns: fit-content(var(--ai-cell-text-max));
   min-width: var(--ai-cell-text-min);
-  max-width: var(--ai-cell-text-max);
 }
 
 .genui-summary {

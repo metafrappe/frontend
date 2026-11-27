@@ -1,16 +1,22 @@
 import { useXAgent, useXChat } from '@ant-design/x';
-import { useCallback, useRef } from 'react';
+import { useCallback, useLayoutEffect, useRef } from 'react';
 
 import type { GenUIAction, GenUIActionResult, GenUIDecisions } from '@/genui';
 
 import { emptyAssistant, runAgent } from '../agent';
 import type { AgentIntent, AgentTransport, ChatMessage, UserMessage } from '../agent';
+import { acceptChunk, newIdempotencyKey } from './generation';
+import type { Generation } from './generation';
 
 interface AgentInput {
   message: ChatMessage;
   messages: ChatMessage[];
   intent?: AgentIntent;
   actionId?: string;
+  /** Bu yanıtın her parçasının taşıdığı kimlikler. */
+  generation: Generation;
+  controller: AbortController;
+  idempotencyKey?: string;
 }
 
 /** Yeniden üretme isteğinde görünen kullanıcı mesajı. Onay verisi taşımaz. */
@@ -69,26 +75,71 @@ function isFinished(message: ChatMessage): boolean {
   return message.role === 'user' || message.phase !== 'waiting';
 }
 
+/** Onaylanan onay ya da form kararı ticari bir işlemdir. Kendi iş anahtarını taşır. */
+function isApproval(message: UserMessage): boolean {
+  return (
+    (message.action?.kind === 'confirm' || message.action?.kind === 'form') &&
+    message.action.decision === 'approved'
+  );
+}
+
+interface StoredMessage {
+  id: string | number;
+  message: ChatMessage;
+  status: string;
+}
+
+/**
+ * Hâlâ yüklenen ya da akan yanıtları "durduruldu" olarak kapatır.
+ * Durdurulan yanıtın blokları gösterilmez (U5).
+ */
+function finalize<T extends StoredMessage>(list: readonly T[]): T[] {
+  return list.map((item) => {
+    if (item.status !== 'loading' && item.status !== 'updating') return item;
+    const { message } = item;
+    if (message.role !== 'assistant') return { ...item, status: 'success' };
+    const open = message.phase === 'waiting' || message.phase === 'streaming';
+    return {
+      ...item,
+      status: 'success',
+      message: open ? { ...message, phase: 'cancelled', ui: [] } : message,
+    };
+  });
+}
+
 /**
  * Sohbet durumu. useXAgent isteği çalıştırır, useXChat mesajları tutar.
  *
+ * Akış kuralları (AJA-1780):
+ * - Her parça konuşma, mesaj ve üretim kimliğini taşır.
+ * - Yalnız ekrandaki konuşmanın etkin üretimine ait parçalar yazılır.
+ * - Durdurma ve konuşma değişimi üretimi hemen bitirir. Geç gelen parçalar atılır.
+ * - Aynı anda tek istek çalışır. Gönder düğmesine ikinci basış mesaj oluşturmaz.
+ *
  * Onay kuralları (AX-6):
  * - Onay verisi tek kullanımlıktır. Aynı işlem kimliği ikinci kez gönderilmez.
+ * - Onaylanan işlem kendi iş anahtarını taşır (AJA-1749).
  * - "Yeniden üret" yalnız yanıt metnini ister. Onay verisini göndermez.
  * - Onaylı istek koparsa yeniden deneme işlemin durumunu sorar.
  */
-export function useStudioChat(transport: AgentTransport) {
-  const abortRef = useRef<AbortController | null>(null);
+export function useStudioChat(transport: AgentTransport, conversationId = 'default') {
+  const active = useRef<{ generation: Generation; controller: AbortController } | null>(null);
+  const conversation = useRef(conversationId);
+  const counter = useRef(0);
   const usedActions = useRef(new Set<string>());
+
+  useLayoutEffect(() => {
+    conversation.current = conversationId;
+  }, [conversationId]);
 
   const [agent] = useXAgent<ChatMessage, AgentInput, ChatMessage>({
     request: (
-      { message, messages, intent = 'message', actionId },
+      { message, messages, intent = 'message', actionId, generation, controller, idempotencyKey },
       { onUpdate, onSuccess, onStream },
     ) => {
-      const controller = new AbortController();
-      abortRef.current = controller;
       onStream?.(controller);
+      const current = () =>
+        acceptChunk(generation, active.current?.generation ?? null, conversation.current);
       void runAgent({
         transport,
         request: {
@@ -96,11 +147,16 @@ export function useStudioChat(transport: AgentTransport) {
           message: message as UserMessage,
           history: messages.filter((m) => m !== message && isFinished(m)).map(withoutAction),
           ...(actionId ? { actionId } : {}),
+          ...(idempotencyKey ? { idempotencyKey } : {}),
         },
         signal: controller.signal,
-        onUpdate: (update) => onUpdate(update),
+        onUpdate: (update) => {
+          if (current()) onUpdate(update);
+        },
       }).then((final) => {
-        if (abortRef.current === controller) abortRef.current = null;
+        // Durdurulan ya da konuşması değişen üretim hiçbir şey yazmaz. Son durumunu da yazmaz.
+        if (!current()) return;
+        active.current = null;
         onSuccess([final]);
       });
     },
@@ -121,34 +177,80 @@ export function useStudioChat(transport: AgentTransport) {
   const last = messages[messages.length - 1];
   const busy = last?.status === 'loading' || last?.status === 'updating';
 
+  /** Yeni bir üretim açar. Önceki üretim bitmiş olmalıdır. */
+  const begin = useCallback((messageId?: string) => {
+    counter.current += 1;
+    const generation: Generation = {
+      conversationId: conversation.current,
+      messageId: messageId ?? `m${counter.current}`,
+      generationId: `g${counter.current}`,
+    };
+    const controller = new AbortController();
+    active.current = { generation, controller };
+    return { generation, controller };
+  }, []);
+
+  /** Etkin üretimi bitirir. Sonra gelen parçaları atılır. */
+  const end = useCallback((): boolean => {
+    const running = active.current;
+    if (!running) return false;
+    active.current = null;
+    running.controller.abort();
+    return true;
+  }, []);
+
   /** Mesajı gönderir. Sonuç bloğa iletilir. */
   const send = useCallback(
     (message: UserMessage): GenUIActionResult => {
-      if (busy) return 'busy';
+      // Etkin üretim kilittir. Çizimi beklemeden hemen değişir.
+      // Art arda iki basış bir kez gönderir. Durdurmadan hemen sonra gönderme kabul edilir.
+      if (active.current) return 'busy';
       const actionId = actionIdOf(message);
       if (actionId) {
         if (usedActions.current.has(actionId)) return 'used';
         usedActions.current.add(actionId);
       }
-      onRequest({ message, intent: 'message' });
+      const { generation, controller } = begin();
+      onRequest({
+        message: { ...message, clientId: generation.messageId },
+        intent: 'message',
+        generation,
+        controller,
+        ...(isApproval(message) ? { idempotencyKey: newIdempotencyKey() } : {}),
+      });
       return 'accepted';
     },
-    [busy, onRequest],
+    [begin, onRequest],
   );
 
+  /** Yanıtı durdurur. Yanıt ekranda "durduruldu" olarak kalır. */
   const cancel = useCallback(() => {
-    abortRef.current?.abort();
-  }, []);
+    if (end()) setMessages((all) => finalize(all));
+  }, [end, setMessages]);
 
   /**
-   * Yanıtı yeniden ister.
+   * Konuşma değişmeden önce yanıtı durdurur.
+   * Kapanan mesaj listesini döndürür. Çağıran bu listeyi bu konuşma için saklar.
+   */
+  const detach = useCallback(() => {
+    end();
+    let snapshot = finalize(messages);
+    setMessages((all) => {
+      snapshot = finalize(all);
+      return snapshot;
+    });
+    return snapshot;
+  }, [end, messages, setMessages]);
+
+  /**
+   * Yanıtı yeniden ister. Her yeniden üretme yeni bir üretim açar.
    * - Önceki mesaj onay değilse: yanıtı ve soruyu kaldırır, soruyu yeniden sorar.
    * - Önceki mesaj onaysa: onay mesajı yerinde kalır. Onay yeniden gitmez.
    *   Yanıt hata ile bittiyse işlemin durumu sorulur. Aksi halde yalnız metin istenir.
    */
   const regenerate = useCallback(
     (assistantId: string | number) => {
-      if (busy) return;
+      if (active.current) return;
       const index = messages.findIndex((m) => m.id === assistantId);
       const answer = messages[index];
       const prompt = messages[index - 1];
@@ -158,23 +260,31 @@ export function useStudioChat(transport: AgentTransport) {
       if (actionId) {
         const failed = answer.message.role === 'assistant' && answer.message.phase === 'error';
         setMessages((all) => all.filter((m) => m.id !== assistantId));
-        onRequest(
-          failed
-            ? {
-                message: { role: 'user', text: STATUS_TEXT, statusOf: actionId },
-                intent: 'status',
-                actionId,
-              }
-            : { message: { role: 'user', text: REGENERATE_TEXT }, intent: 'regenerate' },
-        );
+        const { generation, controller } = begin();
+        const message: UserMessage = failed
+          ? { role: 'user', text: STATUS_TEXT, statusOf: actionId }
+          : { role: 'user', text: REGENERATE_TEXT };
+        onRequest({
+          message: { ...message, clientId: generation.messageId },
+          intent: failed ? 'status' : 'regenerate',
+          ...(failed ? { actionId } : {}),
+          generation,
+          controller,
+        });
         return;
       }
 
       const user = prompt.message;
       setMessages((all) => all.filter((m) => m.id !== assistantId && m.id !== prompt.id));
-      onRequest({ message: user, intent: 'regenerate' });
+      const { generation, controller } = begin(user.clientId);
+      onRequest({
+        message: { ...user, clientId: generation.messageId },
+        intent: 'regenerate',
+        generation,
+        controller,
+      });
     },
-    [busy, messages, onRequest, setMessages],
+    [begin, messages, onRequest, setMessages],
   );
 
   /** Yanıtın yeniden deneme düğmesi ne yapar: durum sorgusu ya da yeniden deneme. */
@@ -186,5 +296,5 @@ export function useStudioChat(transport: AgentTransport) {
     [messages],
   );
 
-  return { messages, setMessages, send, cancel, regenerate, retryKind, busy };
+  return { messages, setMessages, send, cancel, detach, regenerate, retryKind, busy };
 }

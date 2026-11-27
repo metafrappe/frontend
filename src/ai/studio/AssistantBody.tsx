@@ -6,6 +6,7 @@ import type { GenUIActionHandler, GenUIDecisions } from '@/genui';
 
 import type { AssistantMessage } from '../agent';
 import { groupBySteps, SIMULATED_TOOLS_NOTE, type StepGroup } from './chain';
+import { splitBlocks, splitLinks } from './richText';
 
 function StepSection({ group, children }: { group: StepGroup; children: ReactNode }) {
   const id = useId();
@@ -16,6 +17,47 @@ function StepSection({ group, children }: { group: StepGroup; children: ReactNod
       </h2>
       {children}
     </section>
+  );
+}
+
+/** Prose with links. A long address may break anywhere; the copied address is unchanged. */
+function Prose({ text, caret }: { text: string; caret: boolean }) {
+  return (
+    <p className="ai-text">
+      {splitLinks(text).map((part, index) =>
+        part.kind === 'link' ? (
+          <a key={index} className="ai-link" href={part.text} target="_blank" rel="noreferrer">
+            {part.text}
+          </a>
+        ) : (
+          part.text
+        ),
+      )}
+      {caret && <span className="ai-caret" aria-hidden />}
+    </p>
+  );
+}
+
+/**
+ * Reply text: prose and fenced code. Code scrolls sideways in its own box.
+ * The box can take focus so a keyboard user can scroll it too.
+ */
+function ReplyText({ text, streaming }: { text: string; streaming: boolean }) {
+  const blocks = splitBlocks(text).filter((block) => block.kind === 'code' || block.text.trim());
+  return (
+    <>
+      {blocks.map((block, index) => {
+        const caret = streaming && index === blocks.length - 1;
+        if (block.kind === 'text')
+          return <Prose key={index} text={block.text.trim()} caret={caret} />;
+        return (
+          // The scroll box takes focus so the keyboard can scroll it.
+          <pre key={index} className="ai-code" tabIndex={0} role="region" aria-label="Kod bloğu">
+            <code {...(block.lang ? { 'data-lang': block.lang } : {})}>{block.text}</code>
+          </pre>
+        );
+      })}
+    </>
   );
 }
 
@@ -56,12 +98,7 @@ export function AssistantBody({
           <GenUI blocks={group.blocks} onAction={onAction} busy={busy} decisions={decisions} />
         </StepSection>
       ))}
-      {message.text && (
-        <p className="ai-text">
-          {message.text}
-          {streaming && <span className="ai-caret" aria-hidden />}
-        </p>
-      )}
+      {message.text && <ReplyText text={message.text} streaming={streaming} />}
       {streaming && <GenUISkeleton />}
       {done && <GenUI blocks={rest} onAction={onAction} busy={busy} decisions={decisions} />}
       {message.phase === 'cancelled' && <p className="ai-note">Yanıt durduruldu.</p>}
