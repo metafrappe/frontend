@@ -1,8 +1,8 @@
 import messages from './error-messages.json';
 
 /**
- * Ortak hata türleri. Ekran bu türe göre karar verir.
- * Ham sunucu gövdesi ve hata izi hiçbir alana konmaz (SZ-8).
+ * Shared error types. The screen decides based on this type.
+ * The raw server body and stack trace are never put in any field (SZ-8).
  */
 export type ApiErrorKind =
   | 'session_expired'
@@ -31,19 +31,19 @@ export interface ApiErrorInit {
 
 export class ApiError extends Error {
   readonly kind: ApiErrorKind;
-  /** HTTP durum kodu. Ağ hatasında 0 olur. */
+  /** HTTP status code. 0 on a network error. */
   readonly status: number;
-  /** Sunucunun hata kodu. Örneğin `exc_type` ya da model geçidinin `error` değeri. */
+  /** The server's error code. For example `exc_type` or the model gateway's `error` value. */
   readonly code: string | undefined;
   readonly retryAfterSeconds: number | undefined;
   /**
-   * Sunucunun hatalı bulduğu alan adları. Model geçidinin `invalid_fields` yanıtında sağlayıcı istemcisi doldurur.
-   * Ekran bu alanları formda işaretler. Değerler ya da sunucu iletisi taşınmaz (SZ-8).
+   * Names of fields the server found invalid. The provider client fills this from the model gateway's `invalid_fields` response.
+   * The screen marks these fields in the form. No values or server message are carried (SZ-8).
    */
   readonly fields: readonly string[] | undefined;
   /**
-   * Belirsiz 403 yanıtında doğrudur. Oturum bitmiş olabilir.
-   * İstemci oturumu ayrı ve önbelleksiz bir istekle doğrular.
+   * True on an ambiguous 403 response. The session may have ended.
+   * The client verifies the session with a separate, uncached request.
    */
   readonly needsSessionCheck: boolean;
 
@@ -72,7 +72,7 @@ const CONFLICT_CODES = new Set([
   'version_conflict',
   'operation_conflict',
 ]);
-/** Bu kodlar kesin yetki reddidir. Oturum denetimi gerekmez. */
+/** These codes are definite permission denials. No session check is needed. */
 const DEFINITE_FORBIDDEN_CODES = new Set([
   'data_policy_denied',
   'DeskRoleNotAllowed',
@@ -84,7 +84,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-/** Gövdeden hata kodunu okur. API v1 `exc_type`, API v2 `errors[].type`, geçit `message.error`. */
+/** Reads the error code from the body. API v1 `exc_type`, API v2 `errors[].type`, gateway `message.error`. */
 function readCode(body: unknown): string | undefined {
   if (!isRecord(body)) return undefined;
   if (typeof body.exc_type === 'string' && body.exc_type.length > 0) return body.exc_type;
@@ -95,7 +95,7 @@ function readCode(body: unknown): string | undefined {
   }
   if (isRecord(body.message) && typeof body.message.error === 'string') return body.message.error;
   if (typeof body.error === 'string') return body.error;
-  // Mobil ve PWA uçları hata kodunu `code` alanında verir.
+  // Mobile and PWA endpoints give the error code in the `code` field.
   if (typeof body.code === 'string' && body.code.length > 0) return body.code;
   return undefined;
 }
@@ -107,15 +107,15 @@ function readRetryAfter(headers: Headers | undefined): number | undefined {
   return Number.isFinite(seconds) && seconds >= 0 ? seconds : undefined;
 }
 
-/** HTTP yanıtını ortak hata türüne çevirir. */
+/** Converts an HTTP response to the shared error type. */
 export function toApiError(status: number, body: unknown, headers?: Headers): ApiError {
   const code = readCode(body);
   const retryAfterSeconds = readRetryAfter(headers);
   const base = { status, code, retryAfterSeconds };
   const sessionFlag = isRecord(body) && body.session_expired === 1;
 
-  // Sunucu hatası her zaman önce gelir. Gövdedeki oturum işareti 5xx yanıtında yok sayılır.
-  // Böylece sunucu arızası kullanıcıyı girişe göndermez.
+  // A server error always takes precedence. A session marker in the body is ignored on a 5xx response.
+  // This way a server fault does not send the user to sign-in.
   if (status >= 500) {
     const kind = status === 502 || status === 503 || status === 504 ? 'unavailable' : 'unknown';
     return new ApiError({ ...base, kind });
@@ -148,7 +148,7 @@ export function toApiError(status: number, body: unknown, headers?: Headers): Ap
   }
 }
 
-/** Kullanıcıya gösterilecek metni verir. Metinler `error-messages.json` dosyasındadır. */
+/** Returns the text to show the user. The texts are in `error-messages.json`. */
 export function userMessage(error: ApiError, locale: MessageLocale = 'tr'): string {
   return messages[locale][error.kind];
 }

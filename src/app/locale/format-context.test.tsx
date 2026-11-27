@@ -16,7 +16,7 @@ import { Root } from '../Root';
 import { createFormatter } from './format';
 import { useFormat } from './index';
 
-/** Saat 06.05 UTC. İstanbul'da 09.05, New York'ta 01.05 olur. */
+/** 06:05 UTC. That is 09:05 in Istanbul and 01:05 in New York. */
 const INSTANT = new Date('2026-11-27T06:05:00Z');
 
 function FormatProbe() {

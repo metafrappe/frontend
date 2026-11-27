@@ -19,36 +19,36 @@ import {
 export interface RootProps {
   session: PlatformSession;
   initialThemeChoice?: ThemeModeChoice;
-  /** Testlerde motorları kapatmak için. Varsayılan açık. */
+  /** For turning the engines off in tests. Enabled by default. */
   engines?: boolean;
-  /** Oturum açıkken çizilecek içerik. Varsayılan kabuktur. */
+  /** Content rendered while the session is open. Defaults to the shell. */
   children?: ReactNode;
   /**
-   * Modül sayfalarının veri kipi. Sahte sunucu açıkken `example` verilir; sayfa "Örnek veri" yazar.
-   * Örnek veri canlı veri gibi gösterilmez. Varsayılan `live` olur.
+   * Data mode of the module pages. When the mock server is on, `example` is passed; the page shows a sample-data label.
+   * Sample data is not presented as live data. Defaults to `live`.
    */
   dataMode?: ModuleEnvironment['mode'];
   /**
-   * Açılan adresin yolu. Varsayılan `window.location.pathname` olur.
-   * Oturum istemeyen sayfalar (örnek: `/atonota-login`) AuthGate'e girmez.
+   * Path of the opened URL. Defaults to `window.location.pathname`.
+   * Pages that need no session (example: `/atonota-login`) do not go through AuthGate.
    */
   pathname?: string;
 }
 
 /**
- * Modül ortamının kurucusu ayrı parçadır. Giriş ekranı bu parçayı indirmez (telefon ilk yük bütçesi).
- * Parça oturum açılınca hemen istenir. Kabuk ve modül sayfası daha sonra iner; ortam o ana kadar hazır olur.
- * Ortam gelmeden modül sayfası açılırsa sayfa durum yazar ve ortam gelince kendiliğinden açılır.
+ * The module environment builder is a separate chunk. The login screen does not download it (phone initial-load budget).
+ * The chunk is requested as soon as the session opens. The shell and module page arrive later; the environment is ready by then.
+ * If a module page opens before the environment arrives, the page shows a status and opens by itself once it arrives.
  */
 const loadModuleEnvironment = () => import('@/shell/view-data/modules');
 
-/** Tanıtım sayfası ayrı parçadır. Parça yalnız bu adreste yüklenir. */
+/** The landing page is a separate chunk. The chunk loads only at this URL. */
 const ProductPage = lazy(() => import('@/auth/product/ProductPage'));
 
 /**
- * Oturum açılınca dili açılış verisindeki kullanıcı dilinden alır (IC-12).
- * Saat dilimi ve para birimi de açılış verisinden gelir (IC-13).
- * Veri gelene kadar ekran yedek dildedir. İstek başarısızsa dil ve biçim değişmez.
+ * Once the session opens, takes the language from the user language in the bootstrap data (IC-12).
+ * Time zone and currency also come from the bootstrap data (IC-13).
+ * Until the data arrives the screen is in the fallback language. If the request fails, language and formatting do not change.
  */
 function UserLanguage({
   session,
@@ -73,7 +73,7 @@ function UserLanguage({
   return children;
 }
 
-/** Oturum açıkken kabuğun veri bağlantısını kurar: koleksiyon kaynağı ve modül ortamı. */
+/** While the session is open, sets up the shell's data wiring: collection source and module environment. */
 function SignedIn({
   session,
   user,
@@ -92,7 +92,7 @@ function SignedIn({
     });
     return () => ctrl.abort();
   }, [session, user]);
-  // Ortam kurulduğu oturum, kullanıcı, kip ve dille saklanır. Biri değişince eski ortam kullanılmaz.
+  // The environment is stored with the session, user, mode and language it was built for. If any changes, the old one is not used.
   const [loaded, setLoaded] = useState<
     | {
         session: PlatformSession;
@@ -128,8 +128,8 @@ function SignedIn({
       active = false;
     };
   }, [session, user, dataMode, locale]);
-  // Veri bağlantısı yalnız oturum ya da kullanıcı değişince yeniden kurulur. Ad sonradan gelir.
-  // Çalışma alanı oturumun sitesidir. Adres çözülemezse alan eklenmez; seçici yalnız logoyu gösterir.
+  // Data wiring is rebuilt only when the session or user changes. The name arrives later.
+  // The workspace is the session's site. If the URL cannot be parsed, no workspace is added; the switcher shows only the logo.
   const base = useMemo(() => {
     const workspaces = workspaceFromSite(session.config.siteUrl);
     return { ...createShellViewData(session.api), ...(workspaces ? { workspaces } : {}) };
@@ -147,10 +147,10 @@ function SignedIn({
 }
 
 /**
- * Uygulamanın en dış kökü.
- * Tema ve tasarım sağlayıcıları AuthGate'in dışındadır. Böylece giriş, bekleme ve hata
- * ekranları da açık ve koyu temanın tokenlarını kullanır.
- * Oturum açılınca kabuk, oturumdaki kullanıcıyla ve ortak API istemcisiyle bağlanır.
+ * Outermost root of the application.
+ * Theme and design providers sit outside AuthGate. So the login, waiting and error
+ * screens also use the light and dark theme tokens.
+ * Once the session opens, the shell is wired to the session user and the shared API client.
  */
 export function Root({
   session,
@@ -160,9 +160,9 @@ export function Root({
   dataMode = 'live',
   pathname = typeof window === 'undefined' ? '/' : window.location.pathname,
 }: RootProps) {
-  // Canlıda adres `/panel/` ile başlar. Karşılaştırma uygulama içindeki yolla yapılır.
+  // In production the URL starts with `/panel/`. The comparison uses the in-app path.
   if (isPublicPath(appPathname(pathname))) {
-    // Tanıtım sayfası oturum sormaz (G-165). Tema ve tasarım sağlayıcıları yine kurulur.
+    // The landing page does not require a session (G-165). Theme and design providers are still set up.
     return (
       <AppProviders {...(initialThemeChoice ? { initialThemeChoice } : {})} engines={engines}>
         <Suspense fallback={null}>

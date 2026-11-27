@@ -39,7 +39,7 @@ afterAll(() => mockServer.close());
 
 describe('AuthGate', () => {
   it('çıkış adresi denetimden geçmezse giriş ekranı kimlik oturumu notunu gösterir', async () => {
-    // Sahte sunucu başka kökenli bir çıkış adresi verir. Adres Keycloak kökünden gelmez.
+    // The mock server returns a logout URL from another origin. The URL does not come from the Keycloak root.
     mockState.logoutOutcome = 'foreign_url';
     const { session, navigate } = setup();
     expect(await screen.findByText('Panel içeriği')).toBeInTheDocument();

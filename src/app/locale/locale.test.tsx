@@ -15,10 +15,10 @@ import { Root } from '../Root';
 import { FALLBACK_LANGUAGE, localeBundle, resolveLanguage, useFormat, useLanguage } from './index';
 import { LocalizedXProvider } from './LocalizedXProvider';
 
-/** Görünen metin. Görseldeki SVG `title` öğesi sayılmaz. */
+/** Visible text. The SVG `title` element inside the image is not counted. */
 const VISIBLE = { ignore: 'title, script, style' };
 
-/** 27 Kasım 2026 bir Cuma günüdür. Beklenen ad takvimden gelir, koddan kopyalanmaz. */
+/** 27 November 2026 is a Friday. The expected name comes from the calendar, not copied from the code. */
 const FRIDAY = '2026-11-27';
 
 function LanguageProbe() {

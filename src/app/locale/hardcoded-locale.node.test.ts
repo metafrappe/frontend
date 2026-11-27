@@ -6,29 +6,29 @@ import { describe, expect, it } from 'vitest';
 
 const SRC = join(import.meta.dirname, '..', '..');
 
-/** Dil eşleme dosyası. Ant Design ve Day.js dil nesneleri yalnız burada içe aktarılır. */
+/** The locale map file. Ant Design and Day.js locale objects are imported only here. */
 const LOCALE_MAP = 'app/locale/locale-map.ts';
 
-/** Sabit dil nesnesi aktarımı. Örnek: `antd/locale/tr_TR`, `antd/es/locale/en_US`, `dayjs/locale/tr`. */
+/** Hard-coded locale object import. Example: `antd/locale/tr_TR`, `antd/es/locale/en_US`, `dayjs/locale/tr`. */
 const HARDCODED_LOCALE =
   /from\s+['"](?:antd\/(?:es\/|lib\/)?locale\/\w+|dayjs\/locale\/[\w-]+)['"]|import\s+['"]dayjs\/locale\//;
 
 /**
- * Dil değerinin sabit yazımı. Örnek: `locale: 'tr'`, `locale="tr"`, `language: 'tr'`.
- * Varsayılan değer (`props.locale ?? 'tr'`, `{ locale = 'tr' }`) bu kurala girmez; o yazım bileşenin yedeğidir.
+ * Hard-coded language value. Example: `locale: 'tr'`, `locale="tr"`, `language: 'tr'`.
+ * A default value (`props.locale ?? 'tr'`, `{ locale = 'tr' }`) is not covered by this rule; that form is the component's fallback.
  */
 const HARDCODED_LOCALE_VALUE = /\b(?:locale|language)(?:\s*:\s*|=\{?\s*)['"](?:tr|en)['"]/;
 
 /**
- * Biçimde sabit dil (IC-13). Örnek: `new Intl.NumberFormat('tr-TR')`, `'en-US'`,
- * `toLocaleString('tr')`, `toLocaleLowerCase('tr')`. Biçim dili dil bağlamından gelir.
+ * Hard-coded locale in formatting (IC-13). Example: `new Intl.NumberFormat('tr-TR')`, `'en-US'`,
+ * `toLocaleString('tr')`, `toLocaleLowerCase('tr')`. The format locale comes from the language context.
  */
 const HARDCODED_FORMAT_LOCALE =
   /['"][a-z]{2}-[A-Z]{2}['"]|new\s+Intl\.\w+\(\s*['"]|\.toLocale\w*\(\s*['"]/;
 
 /**
- * Örnek sunucunun açılış verisi. Kullanıcı dili orada veridir, arayüz ayarı değildir.
- * Sahte asistan sunucusu da örnek sunucudur. Türkçe anahtar sözcükleri Türkçe harf kuralıyla arar.
+ * Boot data of the sample server. The user language there is data, not a UI setting.
+ * The mock assistant server is also a sample server. It matches Turkish keywords using Turkish case rules.
  */
 const SAMPLE_DATA = ['mocks/', 'ai/agent/mockTransport.ts'];
 
@@ -52,7 +52,7 @@ describe('sabit dil yalnız eşleme dosyasındadır', () => {
   it('eşleme dosyası iki dili de içe aktarır', () => {
     const map = readFileSync(join(SRC, LOCALE_MAP), 'utf8');
     expect(map).toMatch(/antd\/(?:es\/)?locale\/tr_TR/);
-    // Arayüzün İngilizcesi İngiliz İngilizcesidir (AJA-1407).
+    // The UI's English is British English (AJA-1407).
     expect(map).toMatch(/antd\/(?:es\/)?locale\/en_GB/);
     expect(map).toMatch(/dayjs\/locale\/en-gb/);
   });

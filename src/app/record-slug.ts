@@ -1,13 +1,13 @@
 import { doctypeFromSlug } from './view-data';
 
-// Yalnız kayıt rotası kullanır; kayıt parçasıyla tembel iner.
+// Used only by the record route; lazy-loaded with the record chunk.
 
 /**
- * DocType adını adres parçasına çevirir. Örnek: `Örnek Kayıt` -> `örnek-kayıt`.
- * Parça aynı ada geri çevrilemiyorsa `undefined` döner; o zaman bağlantı çizilmez.
+ * Converts a DocType name to a URL segment. Non-ASCII letters are kept. Example: `Exemple Été` -> `exemple-été`.
+ * Returns `undefined` if the segment cannot be converted back to the same name; no link is rendered then.
  */
 export function slugFromDoctype(doctype: string): string | undefined {
-  // `toLowerCase` dile bakmaz. Adres parçası kullanıcının diline göre değişmez (G-132).
+  // `toLowerCase` is locale-independent. The URL segment does not vary with the user's language (G-132).
   const slug = doctype.trim().toLowerCase().split(/\s+/).filter(Boolean).join('-');
   return slug !== '' && doctypeFromSlug(slug) === doctype ? slug : undefined;
 }

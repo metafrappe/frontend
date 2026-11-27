@@ -2,8 +2,8 @@ import type { Page } from '@playwright/test';
 import { expect, test } from '../../../tests/setup/playwright-fixtures';
 
 /**
- * Kayıt sayfasındaki bağlantı alanları ve CSP nonce. Kayıt sahte sunucudan gelir.
- * Arka uç bağlantı alanı için `link-select` bileşen adını yollar. Sahte sunucunun tanımı da öyledir.
+ * Link fields on the record page and the CSP nonce. The record comes from the mock server.
+ * The backend sends the `link-select` component name for a link field. The mock server's definition does the same.
  */
 const LIST = `/ornek/${encodeURIComponent('örnek-kayıt')}`;
 const RECORD = `${LIST}/ORNEK-0003`;
@@ -46,7 +46,7 @@ test.describe('kayıt sayfası: bağlantı alanı', () => {
     await page.keyboard.type('veri 5');
     const dropdown = page.locator('.ant-select-dropdown:not(.ant-select-dropdown-hidden)');
     await expect(dropdown.getByText('Örnek veri 5', { exact: true })).toBeVisible();
-    // Süzülmüş sonuç gelmeden Enter basılmaz. İlk liste de "Örnek veri 5" kaydını içerir.
+    // Enter is not pressed until the filtered result arrives. The initial list also contains sample record 5.
     await expect(dropdown.getByText('Örnek veri 1', { exact: true })).toHaveCount(0);
     await page.keyboard.press('Enter');
     await expect(
@@ -71,7 +71,7 @@ test.describe('CSP nonce', () => {
     page,
   }) => {
     const nonce = 'ornekNonce123';
-    // Arka ucun /panel kuralının stil ve betik kısmı (backend shell/headers.py, panel_csp).
+    // The style and script part of the backend's /panel policy (backend shell/headers.py, panel_csp).
     const policy = `script-src 'self'; style-src 'self' 'nonce-${nonce}'`;
     await page.route(
       (url) => url.pathname === RECORD || url.pathname === encodeURI(RECORD),
@@ -99,19 +99,19 @@ test.describe('CSP nonce', () => {
       });
     });
     await openRecord(page);
-    // Açılır liste çalışma anında yeni stil öğeleri ekler. Liste klavyeyle açılır.
+    // The dropdown adds new style elements at runtime. The dropdown is opened with the keyboard.
     await page.getByRole('combobox', { name: /İlgili kayıt/ }).focus();
     await page.keyboard.press('ArrowDown');
     await expect(
       page.locator('.ant-select-dropdown:not(.ant-select-dropdown-hidden)').first(),
     ).toBeVisible();
     const violations = await page.evaluate(() => (window as unknown as { __csp: string[] }).__csp);
-    // Bilinen tek açık: antd TextArea (rc-textarea) yükseklik ölçmek için gizli bir kutuya
-    // satır içi `style` özniteliği yazar. Arka ucun kuralı bunu engeller. Görünen kutunun
-    // yüksekliği yine verilir; ölçüm sapabilir. Karar arka uç işidir (durum raporunda yazılı).
+    // The only known gap: antd TextArea (rc-textarea) writes an inline `style` attribute to a hidden
+    // box to measure height. The backend policy blocks this. The visible box still gets
+    // its height; the measurement may drift. The decision is backend work (noted in the status report).
     const known = 'style-src-attr inline hiddenTextarea';
     expect(violations.filter((v) => v !== known)).toEqual([]);
-    // Stil gerçekten uygulandı: antd düğmesi kendi sınıfının stilini aldı.
+    // The style really was applied: the antd button received its own class's style.
     const unstyled = await page.evaluate(
       () => [...document.querySelectorAll('style')].filter((s) => !s.nonce).length,
     );

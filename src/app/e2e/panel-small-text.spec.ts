@@ -2,8 +2,8 @@ import type { Page } from '@playwright/test';
 import { expect, test } from '../../../tests/setup/playwright-fixtures';
 
 /**
- * Kayıt sayfasındaki çok satırlı metin alanı. Kayıt sahte sunucudan gelir.
- * Arka uç Small Text alanı için `text-area` bileşen adını yollar. Sahte sunucunun tanımı da öyledir.
+ * Multi-line text field on the record page. The record comes from the mock server.
+ * The backend sends the `text-area` component name for a Small Text field. The mock server's definition does the same.
  */
 const RECORD = `/ornek/${encodeURIComponent('örnek-kayıt')}/ORNEK-0003`;
 
@@ -25,7 +25,7 @@ test.describe('kayıt sayfası: Small Text alanı', () => {
     expect(await box.evaluate((el) => el.tagName)).toBe('TEXTAREA');
     await expect(box).toHaveValue('Örnek veri 3 için açıklama.\nİkinci satır.');
     await box.focus();
-    // İmleç metnin sonuna konur. End tuşu yalnız satırın sonuna gider.
+    // The caret is placed at the end of the text. The End key only goes to the end of the line.
     await box.evaluate((el: HTMLTextAreaElement) =>
       el.setSelectionRange(el.value.length, el.value.length),
     );

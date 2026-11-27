@@ -12,7 +12,7 @@ const sizeOptions = [
   { value: 'lg', label: 'Büyük' },
 ];
 
-/** Geniş tablo örneği: sütunlar sıkışmaz, tablo kendi kapsayıcısında kayar. */
+/** Wide table example: columns are not squeezed; the table scrolls inside its own container. */
 const tableColumns = [
   { title: 'Kayıt adı', dataIndex: 'name', key: 'name', minWidth: 'var(--table-col-min-title)' },
   {
@@ -49,7 +49,7 @@ const tableRows = [
   },
 ];
 
-/** Odak perdesini deneme düğmesi. Açan öğe perdenin üstünde kalır. */
+/** Button for trying the focus scrim. The element that opened it stays above the scrim. */
 function FocusDimDemo() {
   const [open, setOpen] = useState(false);
   useFocusDim(open, 'demo');
@@ -66,9 +66,9 @@ function FocusDimDemo() {
 }
 
 /**
- * Kart ve pencere içindeki birincil düğme. Koyu temada kart panel zemininde (#1F1F23), pencere
- * yükseltilmiş zeminde (#2A2A30) çizilir. Birincil düğme zemini düz renk olduğundan kontrast her
- * zeminde aynıdır; tarayıcı testi bunu ölçer.
+ * Primary button inside a card and a modal. In the dark theme the card renders on the panel surface (#1F1F23)
+ * and the modal on the elevated surface (#2A2A30). The primary button background is a solid colour, so
+ * contrast is the same on every surface; the browser test measures this.
  */
 function SurfaceButtonsDemo() {
   const [open, setOpen] = useState(false);
@@ -113,8 +113,8 @@ function SurfaceButtonsDemo() {
 }
 
 /**
- * Temel önizleme ve deneme sayfası. Yalnız e2e derlemesinde `/_demo/foundation` yolunda açılır.
- * Tasarım kararlarını ve motorları gösterir; tarayıcı kapıları bu sayfada koşar.
+ * Foundation preview and demo page. Opens at `/_demo/foundation` only in the e2e build.
+ * Shows the design decisions and engines; the browser gates run on this page.
  */
 export default function FoundationPage() {
   return (

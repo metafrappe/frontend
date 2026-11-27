@@ -17,7 +17,7 @@ import { ApiError } from './errors';
 
 const SITE = 'https://kiraci.example.test';
 
-/** Başlığı ve ilk parçayı gönderir, gövdeyi hiç bitirmez. */
+/** Sends the headers and the first chunk, and never finishes the body. */
 function partialBody(): ReadableStream<Uint8Array> {
   return new ReadableStream({
     start(controller) {
@@ -351,7 +351,7 @@ describe('API istemcisi', () => {
   });
 
   it('zaman aşımını timeout türüne çevirir', async () => {
-    // MSW soketi iptalde Node içinde ayrı bir hata atar. Bu yüzden ağı fetch taklidiyle kurarız.
+    // On abort, the MSW socket throws a separate error inside Node, so we set up the network with a fetch mock.
     const spy = vi.spyOn(globalThis, 'fetch').mockImplementation(
       (input) =>
         new Promise<Response>((_resolve, reject) => {
@@ -395,7 +395,7 @@ describe('kayıt uçları (frappeDocument)', () => {
       }),
     );
     const { api, csrf } = setup();
-    // Belirteç sonradan yenilenir. İstek eski değeri değil depodaki güncel değeri taşır.
+    // The token is refreshed later. The request carries the current value in the store, not the old one.
     csrf.set('yenilenmis-belirtec');
 
     const result = await api.frappeDocument({
@@ -491,7 +491,7 @@ describe('kayıt uçları (frappeDocument)', () => {
     '/files/rapor.pdf',
     '/api/resource/../method/x',
     '/api/resource/User/x?baska=1',
-    // Tarayıcının adres ayrıştırıcısı kodlanmış noktaları `..` gibi çözer (inceleme 3, K1).
+    // The browser's URL parser decodes encoded dots as `..` (review 3, K1).
     '/api/resource/%2e%2e/%2e%2e/files/x',
     '/api/resource/%2E%2E/%2E%2E/files/x',
     '/api/resource/.%2e/.%2e/files/x',

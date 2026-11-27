@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import { createFormatter, parseFrappeDatetime } from './format';
 
-/** 27 Kasım 2026 bir Cuma günüdür. */
+/** 27 November 2026 is a Friday. */
 const FRIDAY = '2026-11-27';
 
 describe('createFormatter: biçim dili kullanıcının dilidir (IC-13)', () => {
@@ -74,7 +74,7 @@ describe('saat dilimi açılış verisinden gelir (IC-13)', () => {
     expect(parseFrappeDatetime('2026-11-27 09:05:00', 'America/New_York')?.toISOString()).toBe(
       '2026-11-27T14:05:00.000Z',
     );
-    // Yaz saati: New York UTC-4 olur.
+    // Daylight saving time: New York is UTC-4.
     expect(
       parseFrappeDatetime('2026-07-01 09:05:00.123456', 'America/New_York')?.toISOString(),
     ).toBe('2026-07-01T13:05:00.123Z');

@@ -1,7 +1,7 @@
 /**
- * Dil eşleme dosyası. Ant Design ve Day.js dil nesneleri yalnız burada içe aktarılır.
- * Bileşenler dili `useLanguage` ve `useLocaleBundle` kancalarından alır (IC-12).
- * Yeni dil eklenince yalnız bu dosya ve `language.ts` değişir.
+ * The locale map file. Ant Design and Day.js locale objects are imported only here.
+ * Components get the language from the `useLanguage` and `useLocaleBundle` hooks (IC-12).
+ * When a new language is added, only this file and `language.ts` change.
  */
 import enGB from 'antd/locale/en_GB';
 import trTR from 'antd/locale/tr_TR';
@@ -12,35 +12,35 @@ import 'dayjs/locale/tr';
 import type { AppLanguage } from './language';
 
 /**
- * Ant Design X dil nesnesi. X 1.6.1 sürümü kendi dil alanını taşımaz; bileşenleri antd dilini kullanır.
- * Bu yüzden X nesnesi aynı dildeki antd nesnesidir. X sürümü dil alanı getirirse alanlar buraya eklenir.
+ * Ant Design X locale object. X 1.6.1 has no locale fields of its own; its components use the antd locale.
+ * So the X object is the antd object for the same language. If an X release adds locale fields, add them here.
  */
 export type XLocale = AntdLocale;
 
 export interface LocaleBundle {
-  /** Ant Design `ConfigProvider` dil nesnesi. */
+  /** Ant Design `ConfigProvider` locale object. */
   antd: AntdLocale;
-  /** Ant Design X `XProvider` dil nesnesi. antd alanlarıyla birleşiktir. */
+  /** Ant Design X `XProvider` locale object. Merged with the antd fields. */
   x: XLocale;
-  /** Day.js dil adı. Dil dosyası bu modülde yüklenir. */
+  /** Day.js locale name. The locale file is loaded in this module. */
   dayjs: string;
-  /** `Intl` biçimlerinin dil etiketi. Tarih, sayı, para ve liste bu etiketle biçimlenir (IC-13). */
+  /** Language tag for `Intl` formats. Dates, numbers, currency and lists are formatted with this tag (IC-13). */
   intl: string;
 }
 
-/** Ant Design X'in kendi dil alanları. Bu sürümde boştur. */
+/** Ant Design X's own locale fields. Empty in this version. */
 const X_FIELDS: Record<AppLanguage, Partial<XLocale>> = { tr: {}, en: {} };
 
 /**
- * Arayüzün İngilizcesi İngiliz İngilizcesidir (AJA-1407). Bu yüzden `en` dili `en-GB` paketlerini kullanır.
- * Örnek: hafta pazartesi başlar, tarih `27/11/2026` yazılır, saat 24 saatliktir.
+ * The UI's English is British English (AJA-1407). So the `en` language uses the `en-GB` packages.
+ * Example: the week starts on Monday, dates are written `27/11/2026`, and time uses the 24-hour clock.
  */
 const ANTD: Record<AppLanguage, AntdLocale> = { tr: trTR, en: enGB };
 
-/** Day.js dil adları. İki dil de yukarıda yüklenir. */
+/** Day.js locale names. Both locales are loaded above. */
 const DAYJS: Record<AppLanguage, string> = { tr: 'tr', en: 'en-gb' };
 
-/** `Intl` dil etiketleri. Sabit biçim dili yalnız bu dosyada yazılır. */
+/** `Intl` language tags. A hard-coded format locale is written only in this file. */
 const INTL: Record<AppLanguage, string> = { tr: 'tr-TR', en: 'en-GB' };
 
 const BUNDLES = Object.fromEntries(
@@ -55,7 +55,7 @@ const BUNDLES = Object.fromEntries(
   ]),
 ) as Record<AppLanguage, LocaleBundle>;
 
-/** Bir dilin antd, Ant Design X, Day.js ve `Intl` nesneleri. */
+/** The antd, Ant Design X, Day.js and `Intl` objects for a language. */
 export function localeBundle(language: AppLanguage): LocaleBundle {
   return BUNDLES[language];
 }

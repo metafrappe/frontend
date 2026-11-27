@@ -1,5 +1,5 @@
-// Yanıtları ekrandan önce denetleyen işlevler (SZ-4, TS-5).
-// Dış veri `unknown` sayılır. Yalnız kullanılan alanlar denetlenir.
+// Functions that check responses before they reach the screen (SZ-4, TS-5).
+// External data is treated as `unknown`. Only the fields in use are checked.
 import type { components as HrmsComponents } from './generated/hrms_tr';
 import type { components as AccessComponents } from './generated/platform_core-access';
 import type { components as AiComponents } from './generated/platform_core-ai';
@@ -36,7 +36,7 @@ function isStringArray(value: unknown): value is string[] {
   return Array.isArray(value) && value.every(isString);
 }
 
-/** Frappe yanıt zarfını açar: `{ "message": ... }`. */
+/** Unwraps the Frappe response envelope: `{ "message": ... }`. */
 export function readMessage(body: unknown): unknown {
   return isRecord(body) ? body.message : undefined;
 }
@@ -135,7 +135,7 @@ function isFormatting(value: unknown): boolean {
   );
 }
 
-/** Açılış verisini liste öğeleriyle birlikte denetler. Menü bozuksa yanıt reddedilir. */
+/** Checks the boot data together with its list items. If the menu is malformed, the response is rejected. */
 export const isBootstrap: Guard<Bootstrap> = (value): value is Bootstrap => {
   if (!isRecord(value)) return false;
   const { user } = value;
@@ -262,7 +262,7 @@ export const isJsonRpcResponse: Guard<JsonRpcResponse> = (value): value is JsonR
       typeof value.error.code === 'number' &&
       isString(value.error.message)));
 
-// HRMS izin başvuruları (hrms_tr sözleşmesi).
+// HRMS leave applications (hrms_tr contract).
 export type LeaveApplication = HrmsComponents['schemas']['LeaveApplication'];
 export type LeaveName = HrmsComponents['schemas']['LeaveName'];
 
@@ -301,7 +301,7 @@ export const isLeaveList: Guard<LeaveApplication[]> = (value): value is LeaveApp
 export const isLeaveName: Guard<LeaveName> = (value): value is LeaveName =>
   isRecord(value) && isString(value.name) && value.name.length > 0;
 
-// Ana sayfa özeti (hrms_tr sözleşmesi, `get_home_summary`).
+// Home page summary (hrms_tr contract, `get_home_summary`).
 export type HomeSummary = HrmsComponents['schemas']['HomeSummary'];
 export type PendingApproval = HrmsComponents['schemas']['PendingApproval'];
 export type HomeProblem = HrmsComponents['schemas']['HomeProblem'];
@@ -400,7 +400,7 @@ function isHomeCounts(value: unknown): boolean {
   );
 }
 
-/** Ana sayfa özetini denetler. Dört parçanın hepsi zorunludur. Liste sınırları sözleşmeden gelir. */
+/** Checks the home page summary. All four parts are required. List limits come from the contract. */
 export const isHomeSummary: Guard<HomeSummary> = (value): value is HomeSummary =>
   isRecord(value) &&
   hasOnlyKeys(value, ['pending_approvals', 'problems', 'recent_changes', 'counts']) &&
@@ -409,7 +409,7 @@ export const isHomeSummary: Guard<HomeSummary> = (value): value is HomeSummary =
   isListOf(value.recent_changes, 5, isRecentChange) &&
   isHomeCounts(value.counts);
 
-// Erişim kuralı motoru (platform_core-access sözleşmesi).
+// Access rule engine (platform_core-access contract).
 export type AccessScope = AccessComponents['schemas']['Scope'];
 export type PermissionExplanation = AccessComponents['schemas']['Explanation'];
 export type AccessSummary = AccessComponents['schemas']['AccessSummary'];
@@ -473,7 +473,7 @@ export const isAccessSummary: Guard<AccessSummary> = (value): value is AccessSum
   );
 };
 
-// Cihaz kurulumları (platform_core-mobile sözleşmesi, PWA oturumu).
+// Device installations (platform_core-mobile contract, PWA session).
 export type Revoked = MobileComponents['schemas']['Revoked'];
 
 export interface Installation {
@@ -512,7 +512,7 @@ export const isRevoked: Guard<Revoked> = (value): value is Revoked =>
   Number.isInteger(value.revoked) &&
   value.revoked >= 0;
 
-// Frappe API v2 kayıt listesi (src/api/frappe-v2.ts).
+// Frappe API v2 record list (src/api/frappe-v2.ts).
 export interface RawDocumentPage {
   data: Record<string, unknown>[];
   has_next_page: boolean;
@@ -524,12 +524,12 @@ export const isRawDocumentPage: Guard<RawDocumentPage> = (value): value is RawDo
   value.data.every(isRecord) &&
   typeof value.has_next_page === 'boolean';
 
-// AtonotA Login: platform adı kuralı (G-159). Liste ve bağlı hesap denetimleri ayrı parçadadır:
-// `login-client.ts`. Bu kural küçüktür; giriş adresini kuran kod da kullanır.
+// AtonotA Login: platform name rule (G-159). The list and linked-account checks are in a separate chunk:
+// `login-client.ts`. This rule is small; the code that builds the sign-in URL also uses it.
 
 /**
- * Platform adı (Keycloak kimlik sağlayıcı takma adı). Örnek: `google`.
- * Ad adrese konmadan önce bu kuralla denetlenir (GV-3).
+ * Platform name (Keycloak identity provider alias). Example: `google`.
+ * The name is checked against this rule before it is put in a URL (GV-3).
  */
 export const PROVIDER_ALIAS_PATTERN = /^[a-z0-9][a-z0-9_-]{0,63}$/;
 

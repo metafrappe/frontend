@@ -1,5 +1,5 @@
-// AtonotA Login: giriş platformları, bağlı hesaplar ve tanıtım sayfası (G-159, G-160, G-165).
-// Testler bütün projelerde koşar: 320 px telefondan masaüstüne kadar. Firefox koşulmaz.
+// AtonotA Login: sign-in platforms, linked accounts and product page (G-159, G-160, G-165).
+// The tests run in every project, from a 320 px phone up to desktop. Firefox is not run.
 import AxeBuilder from '@axe-core/playwright';
 import type { Locator, Page } from '@playwright/test';
 
@@ -17,7 +17,7 @@ async function useScenario(page: Page, name: string) {
   ] as const);
 }
 
-/** Sayfa yatay taşıyor mu? Taşma piksel sayısını döner. 0 ya da eksi değer taşma yok demektir. */
+/** Does the page overflow horizontally? Returns the overflow in pixels. 0 or a negative value means no overflow. */
 async function pageOverflow(page: Page): Promise<number> {
   return page.evaluate(
     () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
@@ -25,16 +25,16 @@ async function pageOverflow(page: Page): Promise<number> {
 }
 
 /**
- * Sonraki öğeye geçen tuş. Safari'de Tab yalnız form alanlarına gider.
- * Bağlantı ve düğmeye Option+Tab gider. Bu yüzden WebKit'te `Alt+Tab` basılır.
+ * Key that moves to the next element. In Safari, Tab only reaches form fields.
+ * Links and buttons are reached with Option+Tab, so WebKit presses `Alt+Tab`.
  */
 function tabKey(page: Page): string {
   return page.context().browser()?.browserType().name() === 'webkit' ? 'Alt+Tab' : 'Tab';
 }
 
 /**
- * Tab tuşuyla hedefe gider. Fare kullanılmaz. En çok 40 adım dener.
- * İlk basış her tarayıcıda Tab olur: görünür odak kipini yalnız Tab açar (odak kuralı).
+ * Reaches the target with the Tab key, without the mouse. Tries at most 40 steps.
+ * The first press is Tab in every browser: only Tab turns on visible focus mode (focus rule).
  */
 async function tabTo(page: Page, target: Locator) {
   for (let step = 0; step < 40; step += 1) {
@@ -44,14 +44,14 @@ async function tabTo(page: Page, target: Locator) {
   throw new Error('Hedefe klavyeyle ulaşılamadı.');
 }
 
-/** Sahte sunucunun oturum deposuna yazdığı istek adresini okur. Sayfa kendi kökünde olmalıdır. */
+/** Reads the request URL the mock server wrote to session storage. The page must be on its own origin. */
 async function readMockUrl(page: Page, key: string): Promise<URL> {
   const value = await page.evaluate((name) => sessionStorage.getItem(name), key);
   expect(value).not.toBeNull();
   return new URL(value ?? '');
 }
 
-/** En küçük hesaplanmış yazı boyutu. Görünen metin öğelerine bakar. */
+/** Smallest computed font size. Checks visible text elements. */
 async function smallestFont(root: Locator): Promise<number> {
   return root.evaluate((node) =>
     Math.min(
@@ -84,7 +84,7 @@ test.describe('giriş ekranı platformları (G-159)', () => {
   });
 
   test('klavyeyle platform düğmesine basınca backend giriş yoluna gidilir', async ({ page }) => {
-    // Sahte sunucu `start_login` isteğine 302 verir. Hedef sahte Keycloak köküdür.
+    // The mock server answers `start_login` with 302. The target is the mock Keycloak root.
     await page.route(`${SAMPLE_KEYCLOAK_URL}/**`, (route) =>
       route.fulfill({
         status: 200,
@@ -101,7 +101,7 @@ test.describe('giriş ekranı platformları (G-159)', () => {
     await page.keyboard.press('Enter');
 
     await page.waitForURL((url) => url.origin === SAMPLE_KEYCLOAK_URL);
-    // Sahte sunucu isteğin adresini kaydetti. Panele dönüp kaydı okuyoruz.
+    // The mock server recorded the request URL. We return to the panel and read the record.
     await page.goBack();
     await expect(page.getByRole('heading', { name: 'Oturum açın' })).toBeVisible();
     const url = await readMockUrl(page, MOCK_START_LOGIN_KEY);
@@ -140,9 +140,9 @@ test.describe('bağlı hesaplar (G-160)', () => {
     await page.keyboard.press('Enter');
 
     await expect(region.getByRole('status')).toHaveText('LinkedIn bağı kaldırıldı.');
-    // Kaldırma düğmesi artık yoktur. Odak aynı satırın bağlama bağlantısına geçer.
+    // There is no remove button any more. Focus moves to the link action in the same row.
     await expect(region.getByRole('link', { name: 'LinkedIn hesabını bağla' })).toBeFocused();
-    // Google artık tek giriş yoludur. Kaldırma düğmesi yoktur, nedeni yazılıdır.
+    // Google is now the only sign-in method. There is no remove button, and the reason is shown.
     await expect(region.getByRole('button', { name: 'Google bağını kaldır' })).toHaveCount(0);
     await expect(
       region.getByText('Bu sizin son giriş yolunuz. Bu bağı kaldıramazsınız.'),
@@ -161,8 +161,8 @@ test.describe('bağlı hesaplar (G-160)', () => {
     const link = page.getByRole('link', { name: 'Facebook hesabını bağla' });
     await tabTo(page, link);
     await page.keyboard.press('Enter');
-    // Sahte sunucu adresi kaydeder ve tarayıcıyı hesap sayfasına geri gönderir.
-    // Geçiş sürerken sayfa okunamaz. Okuma hatası `null` sayılır ve yeniden denenir.
+    // The mock server records the URL and sends the browser back to the accounts page.
+    // The page cannot be read during navigation. A read error counts as `null` and is retried.
     await expect
       .poll(() =>
         page.evaluate((key) => sessionStorage.getItem(key), MOCK_START_LINK_KEY).catch(() => null),
@@ -184,7 +184,7 @@ test.describe('tanıtım sayfası (G-165)', () => {
       const url = request.url();
       if (!url.startsWith(baseURL ?? '') && !url.startsWith('data:')) foreign.push(url);
     });
-    // Oturum kapalıyken de sayfa açılır.
+    // The page opens when signed out too.
     await useScenario(page, 'oturum-kapali');
     await page.goto('/atonota-login');
     const main = page.getByRole('main', { name: 'AtonotA Login' });
@@ -195,7 +195,7 @@ test.describe('tanıtım sayfası (G-165)', () => {
     await expect(page.getByRole('heading', { name: 'Oturum açın' })).toHaveCount(0);
 
     expect(await pageOverflow(page)).toBeLessThanOrEqual(0);
-    // Herkese açık sayfada metin en az 16 px olur (G-165 ve genel gövde kuralı).
+    // On the public page, text is at least 16 px (G-165 and the general body rule).
     expect(await smallestFont(main)).toBeGreaterThanOrEqual(16);
     const results = await new AxeBuilder({ page }).include('main').withTags(AXE_TAGS).analyze();
     expect(results.violations).toEqual([]);
@@ -219,7 +219,7 @@ test.describe('tanıtım sayfası (G-165)', () => {
     page,
   }) => {
     await page.goto('/atonota-login');
-    // Tarayıcı ayarındaki 20 px yazı boyutunu taklit eder: 1rem = 20 px olur.
+    // Emulates a 20 px font size in browser settings: 1rem = 20 px.
     await page.addStyleTag({ content: 'html { font-size: 125% !important; }' });
     const main = page.getByRole('main', { name: 'AtonotA Login' });
     await expect(main.getByRole('heading', { level: 1 })).toBeVisible();

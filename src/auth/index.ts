@@ -1,6 +1,6 @@
-// Bu klasörün sahibi `api-client` işidir.
-// Web paneli erişim belirteci tutmaz. Giriş arka ucun Keycloak akışından geçer.
-// Panele nasıl takılacağı README.md dosyasında yazar.
+// This folder is owned by the `api-client` task.
+// The web panel holds no access token. Sign-in goes through the backend Keycloak flow.
+// README.md explains how to plug it into the panel.
 export { createAuth, isSafeLogoutUrl, isSafeRedirect, startLoginUrl } from './auth';
 export type { Auth, AuthDeps, AuthState, SignedOutNotice } from './auth';
 export { AuthGate } from './AuthGate';

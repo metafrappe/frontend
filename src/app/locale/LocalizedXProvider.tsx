@@ -4,8 +4,8 @@ import type { ReactNode } from 'react';
 import { useLocaleBundle } from './LanguageProvider';
 
 /**
- * Ant Design X sağlayıcısı. Dil, uygulama dilinin birleşik X nesnesidir.
- * Ayrı dosyadadır: dil bağlamı ilk açılışta iner, X paketi yalnız X kullanan ekranla iner.
+ * Ant Design X provider. Its locale is the merged X object for the application language.
+ * It lives in a separate file: the language context loads on first load, the X package loads only with screens that use X.
  */
 export function LocalizedXProvider({ children }: { children: ReactNode }) {
   const { x } = useLocaleBundle();

@@ -1,6 +1,6 @@
 /*
- * Tanıtım sayfası. Telefon önce kurulur: 320 px genişlikte kenar boşluğu vardır.
- * Geniş ekranda içerik okuma genişliğinde ortalanır. Bütün ölçüler CSS değişkenlerindendir.
+ * Product page. Built phone-first: there is side padding at 320 px wide.
+ * On wide screens the content is centred at reading width. All sizes come from CSS variables.
  */
 .product-page {
   box-sizing: border-box;
@@ -14,17 +14,17 @@
   gap: var(--space-xl);
   font-family: var(--font-ui);
   /*
-   * Tanıtım sayfası herkese açık bir sayfadır. G-165 ve genel kural gövde metnini en az 16 px ister.
-   * Panelin 14 px gövde kuralı bu sayfaya uygulanmaz. Değer orta buton yazısından gelir (16 px).
-   * Kullanıcı tarayıcının yazı boyutunu büyütürse metin 1rem altına düşmez (inceleme 2, bulgu 3).
+   * The product page is public. G-165 and the general rule require body text of at least 16 px.
+   * The panel's 14 px body rule does not apply here. The value comes from the medium button text (16 px).
+   * If the user enlarges the browser font size, text does not drop below 1rem (review 2, finding 3).
    */
   font-size: max(var(--btn-fs-md), 1rem);
   line-height: 1.5;
 }
 
 /*
- * Başlık boyutları büyük buton yazısından (18 px) türetilir: 36, 24 ve 18 px.
- * antd teması bu sayfada kullanılmaz; böylece sayfa ilk yükü büyütmez. Renk `.ant-app` öğesinden gelir.
+ * Heading sizes derive from the large button text (18 px): 36, 24 and 18 px.
+ * The antd theme is not used on this page, so the page does not enlarge the initial load. Colour comes from the `.ant-app` element.
  */
 .product-page h1 {
   font-size: max(calc(var(--btn-fs-lg) * 2), 2.25rem);
@@ -60,7 +60,7 @@
   margin: 0;
   padding: 0;
   display: grid;
-  /* Sütun genişliği içerikten gelir: dar form sütununun yarısı. Telefonda tek sütun kalır. */
+  /* Column width comes from the content: half the narrow form column. Phones keep a single column. */
   grid-template-columns: repeat(auto-fit, minmax(min(100%, calc(var(--form-max-width) / 2)), 1fr));
   gap: var(--space-lg);
 }

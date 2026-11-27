@@ -45,7 +45,7 @@ beforeAll(() => {
   });
 });
 afterEach(() => {
-  // Panel Press ucunu hiçbir testte çağırmaz. Press'e yalnız tam sayfa yönlendirme yapılır.
+  // The panel calls no Press endpoint in any test. Press is reached only through a full-page redirect.
   expect(requests.filter((item) => item.url.origin === SAMPLE_PRESS_URL)).toEqual([]);
   mockServer.resetHandlers();
   resetMockState();
@@ -95,7 +95,7 @@ describe('HRMS izin başvuruları', () => {
 
   it('sahte sunucu yalnız izin başvurusu kayıtlarını karşılar', async () => {
     const response = await fetch(`${SITE}/api/resource/Customer`).catch(() => undefined);
-    // Başka kayıt türü için sahte uç yoktur. İstek işlenmez ve 403 almaz.
+    // There is no mock endpoint for another DocType. The request is not handled and does not get 403.
     expect(response?.status).not.toBe(403);
   });
 

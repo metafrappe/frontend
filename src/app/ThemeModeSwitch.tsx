@@ -9,7 +9,7 @@ const OPTIONS: { label: string; value: ThemeModeChoice; icon: JSX.Element }[] = 
   { label: 'Sistem', value: 'system', icon: <Desktop weight="regular" aria-hidden="true" /> },
 ];
 
-/** Tema düğmesi: açık, koyu ve sistem. Seçim hemen uygulanır ve saklanır. */
+/** Theme switch: light, dark and system. The choice is applied immediately and saved. */
 export function ThemeModeSwitch() {
   const { choice, setChoice } = useThemeMode();
   return (

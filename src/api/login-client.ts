@@ -1,10 +1,10 @@
-// AtonotA Login istemcisi: giriş platformları ve bağlı hesaplar (G-159, G-160).
+// AtonotA Login client: sign-in platforms and linked accounts (G-159, G-160).
 //
-// Bu dosya ilk yüke girmez. Giriş ekranı ve hesap sayfası onu `import()` ile yükler.
-// İstekler yine ortak istemciden geçer (SZ-5): `frappeDocument` site kökünü, CSRF başlığını,
-// zaman aşımını ve oturum süresi işini üstlenir. Sözleşme `src/auth/README.md` içindedir.
+// This file is not part of the initial load. The sign-in screen and the account page load it with `import()`.
+// Requests still go through the shared client (SZ-5): `frappeDocument` handles the site origin, CSRF header,
+// timeout and session expiry. The contract is in `src/auth/README.md`.
 //
-// Değerler yalnız `./index` dosyasından alınır. Böylece ortak kod ilk yükteki parçada kalır.
+// Values are imported only from `./index`. This keeps the shared code in the initial-load chunk.
 import type { ApiClient, RequestOptions } from './client';
 import type { Guard } from './guards';
 import { ApiError, isProviderAlias } from './index';
@@ -27,7 +27,7 @@ export interface LinkedProvider extends LoginProvider {
 
 export interface LinkedAccounts {
   providers: LinkedProvider[];
-  /** Platform dışı giriş yollarının sayısı. Örnek: parola ya da geçiş anahtarı. */
+  /** Number of non-platform sign-in methods. Example: password or passkey. */
   local_sign_in_methods: number;
 }
 
@@ -68,14 +68,14 @@ export const isLinkedAccounts: Guard<LinkedAccounts> = (value): value is LinkedA
 
 const METHOD = '/api/method/platform_core.api.auth.';
 
-/** Bağlamadan sonra dönülecek yol kuralı: küçük harfli, aynı kökte basit bir yol (GV-3). */
+/** Rule for the return path after linking: a simple lowercase path on the same origin (GV-3). */
 const RETURN_PATH_PATTERN = /^\/[a-z0-9-]+(?:\/[a-z0-9-]+)*$/;
 
 /**
- * Hesap bağlama adresini kurar (G-160). Tarayıcı bu adrese sayfa geçişiyle gider.
- * Sunucu oturumu denetler ve Keycloak'ın bağlama akışını başlatır. Tarayıcı belirteç tutmaz.
- * Dönüş yolunu çağıran sayfa verir. Örnek: `/account`.
- * Platform adı ya da dönüş yolu kurala uymazsa adres kurulmaz ve `undefined` döner.
+ * Builds the account linking URL (G-160). The browser goes to this URL with a page navigation.
+ * The server checks the session and starts Keycloak's linking flow. The browser holds no token.
+ * The calling page supplies the return path. Example: `/account`.
+ * If the platform name or return path breaks the rule, no URL is built and `undefined` is returned.
  */
 export function startLinkUrl(
   siteUrl: string,
@@ -111,8 +111,8 @@ export function createLoginClient(api: Pick<ApiClient, 'frappeDocument'>) {
 
   return {
     /**
-     * Giriş ekranının platform listesini okur (G-159). Oturum istemez.
-     * Sunucu yalnız açık platformları döner. Sıra sunucunun sırasıdır.
+     * Reads the sign-in screen's platform list (G-159). Needs no session.
+     * The server returns only enabled platforms, in the server's order.
      */
     async listLoginProviders(options: RequestOptions = {}): Promise<LoginProvider[]> {
       const list = await call(
@@ -125,14 +125,14 @@ export function createLoginClient(api: Pick<ApiClient, 'frappeDocument'>) {
       return list.providers;
     },
 
-    /** Oturumdaki kullanıcının bağlı platformlarını okur (G-160). */
+    /** Reads the signed-in user's linked platforms (G-160). */
     listLinkedAccounts(options: RequestOptions = {}): Promise<LinkedAccounts> {
       return call('GET', 'list_linked_accounts', undefined, isLinkedAccounts, options);
     },
 
     /**
-     * Bir platform bağını kaldırır. Yeni listeyi döner.
-     * Son giriş yolu kaldırılamaz: sunucu 409 ve `LastSignInMethod` döner.
+     * Removes a platform link. Returns the new list.
+     * The last sign-in method cannot be removed: the server returns 409 and `LastSignInMethod`.
      */
     unlinkAccount(provider: string, options: RequestOptions = {}): Promise<LinkedAccounts> {
       if (!isProviderAlias(provider)) {

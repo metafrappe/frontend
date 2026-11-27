@@ -3,15 +3,15 @@ import type { ReactNode } from 'react';
 
 export interface AuthLayoutProps {
   children: ReactNode;
-  /** Bölümün başlığının kimliği. Verilirse bölüm bu başlıkla adlanır. */
+  /** ID of the section heading. If given, the section is labelled by this heading. */
   labelledBy?: string;
 }
 
 /**
- * Giriş, bekleme ve hata ekranlarının ortak yerleşimi. Dış öğe sayfanın ana bölgesidir (`main`).
- * Telefon önce kurulur: 320 px genişlikte kenar boşluğu vardır.
- * Geniş ekranda içerik dar form sütununda (`--form-max-width`) ortalanır.
- * Bütün ölçüler projenin CSS değişkenlerinden gelir (`src/design/css-variables.ts`).
+ * Shared layout for the sign-in, waiting and error screens. The outer element is the page's main region (`main`).
+ * Built phone-first: there is side padding at 320 px wide.
+ * On wide screens the content is centred in a narrow form column (`--form-max-width`).
+ * All sizes come from the project's CSS variables (`src/design/css-variables.ts`).
  */
 export function AuthLayout({ children, labelledBy }: AuthLayoutProps) {
   return (

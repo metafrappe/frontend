@@ -1,4 +1,4 @@
-// AtonotA Login tanıtım sayfası (G-165, G-166, G-167, G-157).
+// AtonotA Login product page (G-165, G-166, G-167, G-157).
 import { render, screen, within } from '@testing-library/react';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
@@ -53,12 +53,12 @@ describe('ProductPage', () => {
   });
 
   it('giriş metni kurulmamış yeteneği bugün varmış gibi anlatmaz (inceleme 2, bulgu 1)', () => {
-    // Giriş metni ürünün tanımıdır. Yetenek iddiası yalnız "Bugün neler var?" bölümünde durur.
+    // The intro text describes the product. Capability claims appear only in the "What's available today?" section (`ready_title`).
     const intro = [messages.tr.lead, messages.tr.lead_more].join(' ');
     for (const claim of ['girer', 'eklenir', 'desteklenir', 'bağlar', 'durur', 'yapılır']) {
       expect(intro).not.toMatch(new RegExp(`\\b${claim}\\b`));
     }
-    // "Yakında" önerilerinin şimdiki zamanlı hali giriş metninde geçmez.
+    // Present-tense forms of the "Coming soon" (`soon_title`) items do not appear in the intro text.
     expect(intro).not.toContain('tek hesapla birçok uygulamaya girer');
   });
 

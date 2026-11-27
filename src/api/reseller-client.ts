@@ -1,14 +1,14 @@
-// Bayi istemcisi: bağlı müşteriler, site durumu ve yeni müşteri isteği (G-169, G-170).
+// Reseller client: linked customers, site status and new customer requests (G-169, G-170).
 //
-// Bu dosya ilk yüke girmez. "Müşteriler" sayfası onu `import()` ile yükler.
-// İstekler ortak istemciden geçer: `frappeDocument` site kökünü, CSRF başlığını,
-// zaman aşımını ve oturum süresi işini üstlenir.
+// This file is not part of the initial load. The Customers page loads it with `import()`.
+// Requests go through the shared client: `frappeDocument` handles the site origin, CSRF header,
+// timeout and session expiry.
 //
-// Uçlar `platform_core.api.reseller` modülündedir. Yanıt biçimi AJA-831 testlerinin sözleşmesidir:
-// - `list_customers` (GET): satır listesi. Her satırda `customer_tenant` vardır.
-// - `customer_status` (GET, `customer_tenant`): `customer_tenant` ve `status`.
-// - `request_customer` (POST, `customer_name`, `contact_email`): isteğin `name` değeri.
-// Yetkiyi sunucu denetler. Örnek: "Reseller Assistant" isteği gönderirse sunucu 403 verir.
+// The endpoints are in the `platform_core.api.reseller` module. The response shape is the contract of the AJA-831 tests:
+// - `list_customers` (GET): a list of rows. Each row has `customer_tenant`.
+// - `customer_status` (GET, `customer_tenant`): `customer_tenant` and `status`.
+// - `request_customer` (POST, `customer_name`, `contact_email`): the request's `name` value.
+// The server checks permissions. Example: if a "Reseller Assistant" sends a request, the server returns 403.
 import type { ApiClient, RequestOptions } from './client';
 import type { Guard } from './guards';
 import { ApiError } from './index';
@@ -23,13 +23,13 @@ const isText = (value: unknown): value is string =>
   typeof value === 'string' && value.trim().length > 0 && value.length <= MAX_TEXT;
 
 export interface ResellerCustomer {
-  /** Müşteri kiracısının site adı. Örnek: `musteri-a.example.test`. */
+  /** Site name of the customer tenant. Example: `musteri-a.example.test`. */
   customer_tenant: string;
 }
 
 export interface CustomerStatus {
   customer_tenant: string;
-  /** Sitenin durumu. Örnek: `active`. Sayfa bilinmeyen değeri olduğu gibi yazar. */
+  /** Site status. Example: `active`. The page shows an unknown value as is. */
   status: string;
 }
 
@@ -39,7 +39,7 @@ export interface CustomerRequestInput {
 }
 
 export interface CustomerRequest {
-  /** Açılan isteğin kimliği. */
+  /** ID of the created request. */
   name: string;
 }
 
@@ -85,12 +85,12 @@ export function createResellerClient(api: Pick<ApiClient, 'frappeDocument'>) {
   }
 
   return {
-    /** Bayinin bağlı müşterileri. Sunucu yalnız bu bayiye bağlı kiracıları döner. */
+    /** The reseller's linked customers. The server returns only tenants linked to this reseller. */
     listCustomers(options: RequestOptions = {}): Promise<ResellerCustomer[]> {
       return call({ method: 'GET', name: 'list_customers' }, isCustomerList, options);
     },
 
-    /** Bir müşterinin site durumu. Başka bayinin müşterisinde sunucu 403 verir. */
+    /** A customer's site status. For another reseller's customer the server returns 403. */
     async customerStatus(tenant: string, options: RequestOptions = {}): Promise<CustomerStatus> {
       const status = await call(
         { method: 'GET', name: 'customer_status', query: { customer_tenant: tenant } },
@@ -102,7 +102,7 @@ export function createResellerClient(api: Pick<ApiClient, 'frappeDocument'>) {
       return status;
     },
 
-    /** Yeni müşteri isteği açar. İsteği "Platform Operator" onaylar. */
+    /** Opens a new customer request. A "Platform Operator" approves the request. */
     requestCustomer(
       input: CustomerRequestInput,
       options: RequestOptions = {},

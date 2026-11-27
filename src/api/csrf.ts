@@ -1,6 +1,6 @@
 /**
- * CSRF belirteci yalnız bellekte durur (SZ-7, GV-4).
- * Tarayıcı deposuna, adrese ve günlüğe yazılmaz.
+ * The CSRF token is kept in memory only (SZ-7, GV-4).
+ * It is never written to browser storage, the URL or logs.
  */
 export interface CsrfStore {
   get(): string | undefined;
@@ -22,8 +22,8 @@ export function createCsrfStore(initial?: string): CsrfStore {
 }
 
 /**
- * Sunucunun `/panel` sayfasına koyduğu belirteci okur.
- * Belirteç `meta` öğesinin `content` alanındadır.
+ * Reads the token the server puts on the `/panel` page.
+ * The token is in the `content` attribute of the `meta` element.
  */
 export function readCsrfFromDocument(doc: Document, metaName: string): string | undefined {
   const meta = doc.querySelector<HTMLMetaElement>(`meta[name="${CSS.escape(metaName)}"]`);

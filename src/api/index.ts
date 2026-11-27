@@ -1,4 +1,4 @@
-// Bu klasörün sahibi `api-client` işidir.
+// This folder is owned by the `api-client` task.
 export { createApiClient } from './client';
 export type {
   ApiClient,
@@ -79,7 +79,7 @@ export type {
   AiConnectionListing,
   ProviderClient,
 } from './provider-client';
-// Bayi istemcisinin tipleri. Kod ayrı parçadadır: `reseller-client.ts` yalnız "Müşteriler" sayfasında iner.
+// Reseller client types. The code is in a separate chunk: `reseller-client.ts` is downloaded only on the Customers page.
 export type {
   CustomerRequest,
   CustomerRequestInput,

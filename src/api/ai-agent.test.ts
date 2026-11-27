@@ -30,7 +30,7 @@ const config: ApiConfig = {
 function setup() {
   const api = createApiClient({ config, csrf: createCsrfStore(SAMPLE_CSRF_TOKEN) });
   const request = createAgentRequest({ api, route: config.aiRoute });
-  // Tür denetimi: bağdaştırıcı `useXAgent` ayarına doğrudan verilebilir.
+  // Type check: the adapter can be passed straight to the `useXAgent` config.
   const agentConfig: Parameters<typeof useXAgent<ChatMessage, AgentInput, AssistantReply>>[0] = {
     request,
   };

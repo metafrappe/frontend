@@ -7,7 +7,7 @@ import { ensureDesignStyles } from '@/design/css-variables';
 import { AppProviders } from './AppProviders';
 import { readCspNonce } from '@/design/csp-nonce';
 
-/** Sunucu nonce değerini `<meta property="csp-nonce" nonce="...">` öğesine yazar (backend panel.html). */
+/** The server writes the nonce value into the `<meta property="csp-nonce" nonce="...">` element (backend panel.html). */
 function addNonceMeta(value: string): HTMLMetaElement {
   const meta = document.createElement('meta');
   meta.setAttribute('property', 'csp-nonce');

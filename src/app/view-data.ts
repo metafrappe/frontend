@@ -10,14 +10,14 @@ import type {
 } from '@/shell/view-data';
 import type { CollectionSource } from '@/views/collection/source';
 
-// Bu dosya ilk yük parçasındadır. Koleksiyon kaynağı ve tanım kurucusu ilk yükte olmamalıdır.
-// Zincir yalnız liste rotası ilk isteği yapınca `import()` ile iner (orkestratör eki: ilk yük).
-// Kayıt bağdaştırıcısı da yalnız kayıt rotasıyla iner (`RecordRoute` tembel parçası).
+// This file is in the initial-load chunk. The collection source and definition builder must not be in the initial load.
+// The chain is fetched via `import()` only when the list route makes its first request (orchestrator addendum: initial load).
+// The record adapter is likewise fetched only with the record route (`RecordRoute` lazy chunk).
 const loadCollectionSource = () => import('@/views/collection/source');
 
 /**
- * Adres parçasını Frappe DocType adına çevirir.
- * Örnek: `sales-invoice` -> `Sales Invoice`.
+ * Converts a URL segment to a Frappe DocType name.
+ * Example: `sales-invoice` -> `Sales Invoice`.
  */
 export function doctypeFromSlug(slug: string): string {
   return decodeURIComponent(slug)
@@ -31,21 +31,21 @@ type Bootstrap = Awaited<ReturnType<ApiClient['getBootstrap']>>;
 type BootstrapSidebar = Bootstrap['sidebars'][number];
 
 /**
- * Modül adını adres parçasına çevirir. Örnek: `Selling` -> `selling`, `Site Plan` -> `site-plan`.
- * Menü grubu ve kayıt bağlantısı aynı çeviriyi kullanır; böylece adres menüdeki grupla eşleşir.
+ * Converts a module name to a URL segment. Example: `Selling` -> `selling`, `Site Plan` -> `site-plan`.
+ * The menu group and record link use the same conversion, so the URL matches the group in the menu.
  */
 export function moduleSlug(name: string): string {
-  // Dilden bağımsız küçültme (G-132): Türkçe kural `Integrations` adını `ıntegrations` yapardı.
-  // `toLowerCase` dile bakmaz. Adres parçası kullanıcının diline göre değişmez.
+  // Locale-independent lowercasing (G-132): the Turkish rule would turn the leading `I` of `Integrations` into a dotless i (U+0131).
+  // `toLowerCase` is locale-independent. The URL segment does not vary with the user's language.
   return name.trim().toLowerCase().split(/\s+/).filter(Boolean).join('-');
 }
 
 const truthy = (v: number | boolean | null | undefined) => v === true || v === 1;
 
 /**
- * Açılış verisindeki sidebar satırlarını menü grubuna çevirir.
- * Yalnız DocType bağlantıları alınır; liste rotası yalnız bunları açar. Gizli satır alınmaz.
- * Adresten aynı ada geri çevrilemeyen tür alınmaz; bağlantı başka türe giderdi.
+ * Converts the sidebar rows in the bootstrap data into menu groups.
+ * Only DocType links are taken; the list route opens only those. Hidden rows are skipped.
+ * A type that cannot be converted back from the URL to the same name is skipped; its link would open another type.
  */
 function toShellSidebar(sidebar: BootstrapSidebar): ShellSidebar | null {
   const data = sidebar.data;
@@ -60,15 +60,15 @@ function toShellSidebar(sidebar: BootstrapSidebar): ShellSidebar | null {
   return { id: sidebar.name, label: data.label?.trim() || sidebar.name, module, links };
 }
 
-/** Bayinin bağlı müşteri listesi. Uç yalnız bayi rollerine 200 döner (G-169, G-170). */
+/** The reseller's list of linked customers. The endpoint returns 200 only for reseller roles (G-169, G-170). */
 const RESELLER_PROBE_PATH = '/api/method/platform_core.api.reseller.list_customers';
 
-// Kayıt görünümü kendi parçasında iner; yalnız kayıt rotası açılınca yüklenir.
+// The record view is fetched in its own chunk; it loads only when the record route opens.
 const RecordRoute = lazy(() => import('./RecordRoute'));
 
 /**
- * Kabuğun liste ve kayıt rotalarını ortak API istemcisine bağlar. Kabuk kendi istemcisini kurmaz.
- * Kayıt rotası da aynı istemciyi kullanır: site kökü, CSRF deposu ve oturum süresi işi ortaktır.
+ * Wires the shell's list and record routes to the shared API client. The shell does not create its own client.
+ * The record route uses the same client: site root, CSRF store and session expiry handling are shared.
  */
 export function createShellViewData(
   api: Pick<ApiClient, 'getDocType' | 'listDocuments' | 'frappeDocument' | 'getBootstrap'>,
@@ -76,8 +76,8 @@ export function createShellViewData(
   function Record(address: RecordAddress) {
     return createElement(RecordRoute, { ...address, api });
   }
-  // Liste isteklerini `views-collection` işinin ortak bağlantısı sunucuya iletir.
-  // Bağlantı ilk istekte bir kez kurulur.
+  // The shared wiring from the `views-collection` work forwards list requests to the server.
+  // The wiring is set up once, on the first request.
   let pending: Promise<CollectionSource> | undefined;
   const source: CollectionSource = {
     async list(request, signal) {
@@ -93,14 +93,14 @@ export function createShellViewData(
           loadCollectionSource(),
         ]);
         if (result.status !== 'fresh') throw new Error('DocType bilgisi alınamadı.');
-        // Liste başlığı DocType'ın görünen adıdır. Sözleşmede ayrı görünen ad yoktur; ad budur.
+        // The list title is the DocType's display name. The contract has no separate display name; the name is it.
         return module.createDefinition(result.meta, { label: result.meta.schema.name });
       },
       source,
       title: ({ doctype }) => doctypeFromSlug(doctype),
     },
     navigation: {
-      // Menü uydurma grup göstermez: veri yoksa ya da istek başarısızsa liste boştur.
+      // The menu never shows made-up groups: with no data or a failed request the list is empty.
       async loadSidebars(signal) {
         try {
           const bootstrap = await api.getBootstrap({ signal });
@@ -109,8 +109,8 @@ export function createShellViewData(
           return [];
         }
       },
-      // Tanım ucu, okuma yetkisi olmayan türde 403 verir (`platform_core.shell.metadata`).
-      // Yanıt gelen tür okunabilir sayılır. Hata ya da iptal okunamaz demektir.
+      // The definition endpoint returns 403 for a type without read permission (`platform_core.shell.metadata`).
+      // A type that gets a response counts as readable. An error or abort means not readable.
       async loadReadable(doctypes, signal) {
         const results = await Promise.all(
           doctypes.map((doctype) =>
@@ -122,8 +122,8 @@ export function createShellViewData(
         );
         return new Set(results.filter((d): d is string => d !== null));
       },
-      // Bayi hesabını müşteri listesi ucu tanır (AJA-945). Tanım ucu bağ türüne bayiye de 403 verir.
-      // 200 bayi demektir, boş liste de sayılır. 403 kiracı demektir. Başka hata iletilir.
+      // The customer list endpoint identifies a reseller account (AJA-945). The definition endpoint also returns 403 to resellers for the link type.
+      // 200 means reseller, an empty list included. 403 means tenant. Any other error is propagated.
       async loadAccountKind(signal) {
         const response = await api.frappeDocument({
           method: 'GET',
@@ -140,8 +140,8 @@ export function createShellViewData(
 }
 
 /**
- * Kullanıcı kartı için oturumdaki kişiyi okur. Görünen ad açılış verisinden gelir.
- * Açılış verisi başka kullanıcıya aitse ya da istek başarısızsa yalnız kimlik döner.
+ * Reads the session user for the user card. The display name comes from the bootstrap data.
+ * If the bootstrap data belongs to another user or the request fails, only the ID is returned.
  */
 export async function loadShellAccount(
   api: Pick<ApiClient, 'getBootstrap'>,
@@ -153,22 +153,22 @@ export async function loadShellAccount(
     const fullName = bootstrap.user.full_name?.trim();
     if (bootstrap.user.name === user && fullName) return { user, fullName };
   } catch {
-    /* Ad okunamazsa kart kimliği gösterir. */
+    /* If the name cannot be read, the card shows the ID. */
   }
   return { user };
 }
 
-/** Açılış verisindeki kullanıcı dili, saat dilimi ve para birimi. */
+/** User language, time zone and currency from the bootstrap data. */
 export interface UserLocale {
-  /** Ham dil. Çözümü dil bağlamı yapar. */
+  /** Raw language. The language context resolves it. */
   language: string;
   time_zone: string;
   currency: string | null;
 }
 
 /**
- * Oturumdaki kişinin dilini, sitenin saat dilimini ve para birimini açılış verisinden okur (IC-12, IC-13).
- * Açılış verisi başka kullanıcıya aitse ya da istek başarısızsa değer dönmez.
+ * Reads the session user's language and the site's time zone and currency from the bootstrap data (IC-12, IC-13).
+ * If the bootstrap data belongs to another user or the request fails, nothing is returned.
  */
 export async function loadUserLocale(
   api: Pick<ApiClient, 'getBootstrap'>,
@@ -185,16 +185,16 @@ export async function loadUserLocale(
       };
     }
   } catch {
-    /* Açılış verisi okunamazsa ekran yedek dilde ve tarayıcının saat diliminde kalır. */
+    /* If the bootstrap data cannot be read, the screen stays in the fallback language and the browser's time zone. */
   }
   return undefined;
 }
 
 /**
- * Çalışma alanı seçicinin verisi. Bu sürümde çalışma alanı oturumun kiracısıdır (Frappe sitesi).
- * Ad, site adresinin alan adıdır. Örnek: `https://acme.atonota.net` -> `acme.atonota.net`.
- * Sunucuda kullanıcının birden çok kiracısını veren uç yoktur; liste tek öğedir.
- * Adres çözülemezse veri dönmez; seçici yalnız logoyu gösterir.
+ * Data for the workspace switcher. In this version the workspace is the session's tenant (Frappe site).
+ * The name is the host name of the site URL. Example: `https://acme.atonota.net` -> `acme.atonota.net`.
+ * The server has no endpoint listing a user's multiple tenants; the list has a single item.
+ * If the URL cannot be parsed, no data is returned; the switcher shows only the logo.
  */
 export function workspaceFromSite(siteUrl: string): ShellWorkspaceData | undefined {
   let host: string;

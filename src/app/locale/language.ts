@@ -1,13 +1,13 @@
-/** Arayüzün desteklediği diller. Sıra önemsizdir. */
+/** Languages supported by the UI. Order does not matter. */
 export const SUPPORTED_LANGUAGES = ['tr', 'en'] as const;
 
 export type AppLanguage = (typeof SUPPORTED_LANGUAGES)[number];
 
 /**
- * Arayüzün tek yedek dili. Kullanıcı dili boşsa ya da desteklenmiyorsa bu dil kullanılır (IC-12).
- * Yedek dil İngiliz İngilizcesidir. Müşteri bu kararı 27 Kasım 2026 Cuma günü verdi (AJA-1407).
- * `en` dilinin biçim dili `en-GB` olur. Örnek: 27 Kasım 2026 tarihi `27/11/2026` görünür.
- * Biçim dili `locale-map.ts` dosyasında yazılır. Frappe sunucusunun yedek dili de İngilizcedir.
+ * The UI's single fallback language. Used when the user language is empty or unsupported (IC-12).
+ * The fallback language is British English. The customer made this decision on Friday 27 November 2026 (AJA-1407).
+ * The format locale of `en` is `en-GB`. Example: the date 27 November 2026 is shown as `27/11/2026`.
+ * The format locale is set in `locale-map.ts`. The Frappe server's fallback language is also English.
  */
 export const FALLBACK_LANGUAGE: AppLanguage = 'en';
 
@@ -16,8 +16,8 @@ function isSupported(value: string): value is AppLanguage {
 }
 
 /**
- * Açılış verisindeki kullanıcı dilini arayüz diline çevirir.
- * Örnek: `en-US` -> `en`. Boş ya da desteklenmeyen dil yedek dile düşer.
+ * Maps the user language from the boot data to a UI language.
+ * Example: `en-US` -> `en`. An empty or unsupported language falls back to the fallback language.
  */
 export function resolveLanguage(raw: string | null | undefined): AppLanguage {
   const code = (raw ?? '').trim().toLowerCase();

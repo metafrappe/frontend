@@ -1,7 +1,7 @@
-// AtonotA Login tanıtım sayfası (G-165). Sayfa oturum istemez ve ayrı parça olarak yüklenir.
-// Kurallar: var olan yetenek "Bugün neler var?" bölümündedir. Yapılmamış olan "Yakında" bölümündedir.
-// Fiyat yazılmaz (G-166). Dış adrese istek ya da ölçüm betiği yoktur (G-134).
-// Metinler `messages.json` dosyasındadır. Ölçüler projenin CSS değişkenlerinden gelir.
+// AtonotA Login product page (G-165). The page needs no session and loads as a separate chunk.
+// Rules: existing capabilities go in the "What's available today?" section (`ready_title`). Unbuilt ones go in "Coming soon" (`soon_title`).
+// No prices are shown (G-166). No requests to external URLs and no analytics scripts (G-134).
+// Texts live in `messages.json`. Sizes come from the project's CSS variables.
 import type { ReactNode } from 'react';
 
 import { valueProps, type ValueProp } from './content';
@@ -65,7 +65,7 @@ export default function ProductPage() {
         <p className="product-text">{text.license_keycloak}</p>
       </Part>
       <p className="product-text">
-        {/* Panelin ana sayfası: canlıda `/panel/`, yerelde `/`. */}
+        {/* Panel home page: `/panel/` in production, `/` locally. */}
         <a href={import.meta.env.BASE_URL}>{text.cta}</a>
       </p>
     </main>

@@ -8,7 +8,7 @@ function current(): boolean {
     : false;
 }
 
-/** Kullanıcı azaltılmış hareket istiyorsa `true` döner ve değişimi izler. */
+/** Returns `true` if the user prefers reduced motion, and tracks changes. */
 export function usePrefersReducedMotion(): boolean {
   const [reduced, setReduced] = useState<boolean>(current);
   useEffect(() => {

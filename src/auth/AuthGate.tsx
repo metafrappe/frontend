@@ -11,22 +11,22 @@ import { useAuthState } from './useAuthState';
 
 export interface AuthGateProps {
   session: PlatformSession;
-  /** Oturum açıksa çizilir. İşlev verilirse oturumdaki kullanıcının adını alır. */
+  /** Rendered when signed in. If a function is given, it receives the signed-in user's name. */
   children: ReactNode | ((user: string) => ReactNode);
-  /** Giriş düğmesindeki marka adı. */
+  /** Brand name on the sign-in button. */
   brandName?: string;
 }
 
 /**
- * Platform düğmeleri ayrı parçadır. Parça yalnız giriş ekranı açılınca yüklenir.
- * Oturumu açık kullanıcının ilk yüküne girmez.
+ * Platform buttons are a separate chunk. The chunk loads only when the sign-in screen opens.
+ * It is not part of the initial load for signed-in users.
  */
 const ProviderSignIn = lazy(() => import('./providers/ProviderSignIn'));
 
 /**
- * Paneli oturuma bağlar.
- * İlk açılışta oturumu sorar. Oturum yoksa giriş ekranını gösterir ve kendiliğinden yönlendirmez.
- * Sunucu hatasında yalın bir metin ve yeniden deneme düğmesi gösterir.
+ * Binds the panel to the session.
+ * Checks the session on first load. With no session it shows the sign-in screen and does not redirect on its own.
+ * On a server error it shows plain text and a retry button.
  */
 export function AuthGate({ session, children, brandName }: AuthGateProps) {
   const state = useAuthState(session.auth);

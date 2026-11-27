@@ -1,4 +1,4 @@
-// Sağlayıcı istemcisi (tembel parça). İstekler ortak istemcinin `frappeDocument` yolundan gider.
+// Provider client (lazy chunk). Requests go through the shared client's `frappeDocument` path.
 import { http, HttpResponse } from 'msw';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 

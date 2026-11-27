@@ -12,7 +12,7 @@ const isCompact = (page: Page) => {
 
 const SIGN_OUT_ERROR = 'Oturum kapatılamadı. Oturumunuz açık. Biraz sonra yeniden deneyin.';
 
-/** Sahte sunucu bu senaryoyla açılır. Ad sayfa açılmadan önce oturum deposuna yazılır. */
+/** The mock server starts with this scenario. The name is written to session storage before the page opens. */
 async function useScenario(page: Page, name: string) {
   await page.addInitScript(([key, value]) => sessionStorage.setItem(key, value), [
     MOCK_SCENARIO_KEY,
@@ -20,7 +20,7 @@ async function useScenario(page: Page, name: string) {
   ] as const);
 }
 
-/** Yan menüyü görünür yapar. Telefonda menü çekmecenin içindedir. */
+/** Makes the side menu visible. On phones the menu is inside the drawer. */
 async function openSidebar(page: Page) {
   await page.goto('/');
   await expect(page.locator('.shell')).toBeVisible();
@@ -41,7 +41,7 @@ test.describe('oturumu kapatma (B1)', () => {
   test('"Oturumu kapat" düğmesi sahte sunucunun Keycloak çıkış adresine gider', async ({
     page,
   }) => {
-    // Keycloak sahte bir köktür. Tarayıcı oraya gidince boş bir sayfa döner.
+    // Keycloak is a mock origin. When the browser goes there, a blank page is returned.
     await page.route(`${SAMPLE_KEYCLOAK_URL}/**`, (route) =>
       route.fulfill({ status: 200, contentType: 'text/html', body: '<title>Çıkış</title>' }),
     );
@@ -77,8 +77,8 @@ test.describe('oturumu kapatma (B1)', () => {
     await page.getByRole('button', { name: 'Oturumu kapat' }).click();
 
     await expect(page.locator('.ant-message').getByText(SIGN_OUT_ERROR)).toBeVisible();
-    // Uyarının simgesi ekran okuyucudan gizlidir. İngilizce simge adı okunmaz (inceleme 2, K-2).
-    // Uyarı 3 saniye sonra kapanır. Bu yüzden denetim beklemeden, tek seferde yapılır.
+    // The alert icon is hidden from screen readers. The English icon name is not read out (review 2, K-2).
+    // The alert closes after 3 seconds, so the check is done once, without waiting.
     const exposed = await page
       .locator('.ant-message-notice-content')
       .first()
@@ -88,7 +88,7 @@ test.describe('oturumu kapatma (B1)', () => {
           .map((el) => el.getAttribute('aria-label') ?? el.getAttribute('role')),
       );
     expect(exposed).toEqual([]);
-    // Ekran okuyucu metni yine bir kez duyar.
+    // The screen reader still hears the text once.
     await expect(page.getByRole('alert').filter({ hasText: SIGN_OUT_ERROR })).toHaveCount(1);
   });
 

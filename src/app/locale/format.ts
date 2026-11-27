@@ -1,16 +1,16 @@
 /**
- * Tarih, saat, sayı, para ve liste biçimleri (IC-13).
- * Biçim dili dil bağlamından gelir. Saat dilimi ve para birimi açılış verisinden gelir.
- * Bileşen `Intl` nesnesini sabit dille kurmaz; `useFormat()` kancasını kullanır.
+ * Date, time, number, currency and list formats (IC-13).
+ * The format locale comes from the language context. The time zone and currency come from the boot data.
+ * Components do not build `Intl` objects with a hard-coded locale; they use the `useFormat()` hook.
  */
 import type { AppLanguage } from './language';
 import { localeBundle } from './locale-map';
 
-/** Açılış verisinin biçim alanlarından arayüzün kullandıkları. */
+/** The boot data format fields that the UI uses. */
 export interface SiteFormatting {
-  /** Sitenin IANA saat dilimi. Örnek: `Europe/Istanbul`. Yoksa tarayıcının saat dilimi kullanılır. */
+  /** The site's IANA time zone. Example: `Europe/Istanbul`. If absent, the browser's time zone is used. */
   time_zone?: string | null | undefined;
-  /** Sitenin varsayılan para birimi. Örnek: `TRY`. Yoksa tutar düz sayı yazılır. */
+  /** The site's default currency. Example: `TRY`. If absent, the amount is written as a plain number. */
   currency?: string | null | undefined;
 }
 
@@ -24,28 +24,28 @@ export interface Formatter {
   language: AppLanguage;
   /** `Intl` dil etiketi. */
   intl: string;
-  /** Sitenin saat dilimi. Açılış verisi gelmediyse ya da tanınmazsa tanımsızdır. */
+  /** The site's time zone. Undefined if the boot data has not arrived or the zone is not recognised. */
   timeZone: string | undefined;
-  /** Sitenin para birimi. Seçilmediyse ya da tanınmazsa `null` olur. */
+  /** The site's currency. `null` if none is selected or it is not recognised. */
   currencyCode: string | null;
   number: (value: number, options?: Intl.NumberFormatOptions) => string;
-  /** Takvim günü. Örnek: `2026-11-27` -> "27 Kasım 2026 Cuma". Okunamayan değer olduğu gibi döner. */
+  /** Calendar day. Example: `2026-11-27` -> "Friday, 27 November 2026". An unparseable value is returned as is. */
   date: (value: string) => string;
-  /** Saat ve dakika, sitenin saat diliminde. */
+  /** Hour and minute, in the site's time zone. */
   time: (value: Date) => string;
-  /** Gün ve saat, sitenin saat diliminde. */
+  /** Day and time, in the site's time zone. */
   dateTime: (value: Date) => string;
-  /** Frappe tarih-saat değeri. Değer sitenin saat dilimiyle okunur. Okunamayan değer olduğu gibi döner. */
+  /** Frappe datetime value. The value is read in the site's time zone. An unparseable value is returned as is. */
   frappeDateTime: (value: string) => string;
-  /** Frappe tarih-saat değerini sitenin saat dilimiyle okur. */
+  /** Parses a Frappe datetime value in the site's time zone. */
   parseFrappeDatetime: (value: string) => Date | undefined;
-  /** Tutar. Para birimi verilmezse sitenin para birimi kullanılır. */
+  /** Amount. If no currency is given, the site's currency is used. */
   currency: (value: number, code?: string | null) => string;
-  /** Liste. Örnek: "a, b ve c". */
+  /** List. Example: "a, b and c". */
   list: (items: readonly string[]) => string;
-  /** Kullanıcının diline göre küçük harf. Türkçede `I` -> `ı` olur. */
+  /** Lower case according to the user's language. In Turkish `I` becomes dotless i (U+0131). */
   lower: (text: string) => string;
-  /** Kullanıcının diline göre büyük harf. Türkçede `i` -> `İ` olur. */
+  /** Upper case according to the user's language. In Turkish `i` becomes dotted capital I (U+0130). */
   upper: (text: string) => string;
 }
 
@@ -61,7 +61,7 @@ const DATE_ONLY = /^(\d{4})-(\d{2})-(\d{2})/;
 const ZONED_DATETIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:\d{2})$/;
 const FRAPPE_DATETIME = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{1,6}))?)?$/;
 
-/** Takvim gününü UTC gece yarısı olarak okur. Geçersiz gün sonuç vermez. */
+/** Parses a calendar day as UTC midnight. An invalid day yields no result. */
 function calendarDay(value: string): Date | undefined {
   const match = DATE_ONLY.exec(value);
   if (!match) return undefined;
@@ -72,7 +72,7 @@ function calendarDay(value: string): Date | undefined {
     : undefined;
 }
 
-/** `Intl` saat dilimini tanırsa adı döner. Tanımazsa sonuç vermez. Örnek: `Mars/Base`. */
+/** Returns the name if `Intl` recognises the time zone. Otherwise yields no result. Example: `Mars/Base`. */
 function validTimeZone(timeZone: string | null | undefined): string | undefined {
   if (!timeZone) return undefined;
   try {
@@ -83,7 +83,7 @@ function validTimeZone(timeZone: string | null | undefined): string | undefined 
   }
 }
 
-/** `Intl` para kodunu tanırsa kodu döner. Tanımazsa `null` döner. Örnek: `XX`. */
+/** Returns the code if `Intl` recognises the currency code. Otherwise returns `null`. Example: `XX`. */
 function validCurrency(code: string | null | undefined): string | null {
   if (!code) return null;
   try {
@@ -94,7 +94,7 @@ function validCurrency(code: string | null | undefined): string | null {
   }
 }
 
-/** Saat diliminin bir andaki farkı, milisaniye. Örnek: İstanbul için +3 saat. */
+/** The time zone's offset at a given instant, in milliseconds. Example: +3 hours for Istanbul. */
 function zoneOffset(instant: number, timeZone: string): number {
   const parts = new Intl.DateTimeFormat(undefined, {
     timeZone,
@@ -121,16 +121,16 @@ function zoneOffset(instant: number, timeZone: string): number {
 }
 
 /**
- * Frappe tarih-saat değerini sitenin saat dilimiyle okur.
- * Frappe değeri saat dilimi taşımaz. Örnek: `2026-11-27 09:05:00` İstanbul'da 06.05 UTC olur.
- * Saat dilimi verilmezse ya da tanınmazsa değer tarayıcının saat dilimiyle okunur.
+ * Parses a Frappe datetime value in the site's time zone.
+ * The Frappe value carries no time zone. Example: `2026-11-27 09:05:00` in Istanbul is 06:05 UTC.
+ * If no time zone is given or it is not recognised, the value is read in the browser's time zone.
  */
 export function parseFrappeDatetime(
   value: string,
   timeZone: string | null | undefined,
 ): Date | undefined {
   const text = value.trim();
-  // Saat farkı yazılı değer sunucudan kesin an olarak gelir. Örnek: `2026-11-27T06:05:00Z`.
+  // A value with a written offset comes from the server as an exact instant. Example: `2026-11-27T06:05:00Z`.
   if (ZONED_DATETIME.test(text)) {
     const instant = Date.parse(text);
     return Number.isFinite(instant) ? new Date(instant) : undefined;
@@ -160,16 +160,16 @@ export function parseFrappeDatetime(
   }
   const zone = validTimeZone(timeZone);
   if (!zone) return new Date(y, mo - 1, d, h, mi, s, ms);
-  // Fark yaz saatine göre değişir. İlk tahminin farkı ikinci kez denetlenir.
+  // The offset changes with daylight saving time. The offset of the first guess is checked a second time.
   const first = wall - zoneOffset(wall, zone);
   const second = wall - zoneOffset(first, zone);
   return new Date(second);
 }
 
-/** Dil, saat dilimi ve para birimiyle biçimleyici kurar. */
+/** Builds a formatter from the language, time zone and currency. */
 export function createFormatter(settings: FormatSettings): Formatter {
   const intl = localeBundle(settings.language).intl;
-  // Bozuk açılış verisi ekranı düşürmez. Tanınmayan saat dilimi ve para kodu yok sayılır.
+  // Broken boot data does not crash the screen. Unrecognised time zones and currency codes are ignored.
   const timeZone = validTimeZone(settings.timeZone);
   const currencyCode = validCurrency(settings.currency);
   const zone = timeZone ? { timeZone } : {};

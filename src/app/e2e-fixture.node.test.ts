@@ -17,7 +17,7 @@ function specFiles(dir: string): string[] {
   });
 }
 
-/** Tarayıcı testleri `test` ve `expect` değerlerini ortak fixture'dan alır. */
+/** Browser tests take `test` and `expect` from the shared fixture. */
 describe('tarayıcı testi gerçek sunucu koruması', () => {
   const specs = [...specFiles(join(ROOT, 'src')), ...specFiles(join(ROOT, 'tests', 'e2e'))];
 
@@ -49,7 +49,7 @@ describe('tarayıcı testi gerçek sunucu koruması', () => {
   });
 });
 
-/** Panel incelemesi 2, K-3: arama iki tırnak türünü tanır. Noktalı virgül isteğe bağlıdır. */
+/** Panel review 2, K-3: the search recognises both quote styles. The semicolon is optional. */
 describe('doğrudan @playwright/test içe aktarma araması', () => {
   it.each([
     ["import { test, expect } from '@playwright/test';"],
