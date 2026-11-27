@@ -10,6 +10,7 @@ import { devBackendPlugin, devBackendProxy, readDevBackend } from './vite/dev-ba
 import { e2eEnvPlugin } from './vite/e2e-env.ts';
 import { mockWorkerPlugin } from './vite/mock-worker-plugin.ts';
 import { runtimeDesignSource } from './vite/runtime-design-source.ts';
+import { SECURITY_HEADERS } from './vite/security-headers.ts';
 
 /**
  * e2e derlemesi (`vite build --mode e2e`): işlerin bağımsız deneme sayfaları da pakete girer.
@@ -87,12 +88,14 @@ export default defineConfig(({ mode }) => {
       host: '127.0.0.1',
       port: 5173,
       strictPort: true,
+      headers: { ...SECURITY_HEADERS },
       ...(backend ? { proxy: devBackendProxy(backend) } : {}),
     },
     preview: {
       host: '127.0.0.1',
       port: 4173,
       strictPort: true,
+      headers: { ...SECURITY_HEADERS },
     },
     test: {
       environment: 'jsdom',
