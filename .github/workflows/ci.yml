@@ -35,6 +35,9 @@ jobs:
       # Kopya frappesetup main dalındaki dosyayla bayt bayt aynı olmalı. Kaynak alınamazsa adım başarısız olur.
       - name: Kural kopyası frappesetup ile aynı mı
         run: node scripts/standards-gate.mjs
+      # Tarayıcı kurulum betiğinin testi (AJA-1715). Test backend deposundan taşındı.
+      - name: Tarayıcı kurulum betiği testi
+        run: python3 -I -m unittest discover -s tests/ci
       - name: Lint
         run: npm run lint
       - name: Typecheck

@@ -108,6 +108,7 @@ Proje sahibinin genel kuralları bu depoda da geçerlidir. Orkestratör 26 Kası
 - Yeni ve anlamlı davranışta önce test yazılır. Test önce başarısız olmalıdır.
 - Her bileşen 320, 360, 375, 390 px, yatay telefon, tablet ve masaüstünde denenir.
 - Teslimden önce şu dört kapı geçmelidir: `npm run lint`, `npm run typecheck`, `npm test` ve `npm run test:e2e`.
+- Tarayıcı kurulum betiğinin testi `tests/ci` klasöründedir. Test Linux'ta `python3 -I -m unittest discover -s tests/ci` komutuyla koşar.
 - Çalıştırılmayan denetim `not_run` diye raporlanır.
 
 ## Git
