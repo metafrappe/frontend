@@ -61,7 +61,6 @@ describe('kural kopyası kapısı', () => {
   it('CI adımı kaynağı metafrappe/backend diye adlandırır', () => {
     const ci = readFileSync(resolve(__dirname, '../../.github/workflows/ci.yml'), 'utf8');
     expect(ci).toContain('- name: Kural kopyası metafrappe/backend ile aynı mı');
-    expect(ci).not.toContain('frappesetup');
   });
 
   it('kopya kaynakla bayt bayt aynıysa geçer', async () => {

@@ -1,6 +1,6 @@
 # atonota-web: ajan talimatları
 
-Bu depo Atonota platformunun ayrı arayüzüdür. İngilizcesi "headless frontend" olarak geçer. Arayüz Frappe arka ucunu yalnız API ile kullanır. Arka uç ayrı bir depodadır: `frappesetup` deposunun `backend/` klasörü.
+Bu depo Atonota platformunun ayrı arayüzüdür. İngilizcesi "headless frontend" olarak geçer. Arayüz Frappe arka ucunu yalnız API ile kullanır. Arka uç ayrı bir depodadır: `metafrappe/backend` deposu.
 
 Bu dosya bütün ajanlar ve insanlar için geçerlidir. Kurallar kalıcıdır.
 
@@ -21,7 +21,7 @@ Bu üç dosya proje sahibinin kesin kararlarıdır:
 2. `design/source/design-system.json`: aynı kararların özeti ve bileşen envanteri.
 3. `design/source/control-size-engine.html`: kararların çalışan örneği.
 
-Mimari ve kod kuralları `docs/standards/headless-frontend-standartlari.md` dosyasındadır. Bu dosya `frappesetup` deposundaki proje standardının kopyasıdır. Görsel dil kaynak dosyalardan, mimari bu standarttan gelir.
+Mimari ve kod kuralları `docs/standards/headless-frontend-standartlari.md` dosyasındadır. Bu dosya `metafrappe/backend` deposundaki proje standardının kopyasıdır. Görsel dil kaynak dosyalardan, mimari bu standarttan gelir.
 
 Dosyalardaki "locked", "decision" ve "son karar" alanları değişmez. Bir karar bu dosyayla çelişirse kaynak dosya esas alınır. Bunun tek istisnası aşağıdaki "Ortak kurallarla ilişki" bölümüdür.
 
