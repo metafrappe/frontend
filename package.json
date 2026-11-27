@@ -17,6 +17,7 @@
     "perf:initial-load": "node scripts/initial-load.mjs",
     "lint": "eslint . && prettier --check . && npm run check:motion",
     "check:motion": "node scripts/motion-gate.mjs",
+    "check:tr-comments": "node scripts/tr-comments.mjs",
     "format": "prettier --write .",
     "typecheck": "npm run api:types:check && tsc -p tsconfig.json --noEmit && tsc -p tsconfig.node.json --noEmit",
     "api:types": "node contracts/generate-types.mjs",

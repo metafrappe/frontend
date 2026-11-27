@@ -40,6 +40,9 @@ describe('Türkçe yorumu tanıma', () => {
     // "I've", "var" ve "her" yanlış alarm vermez.
     expect(isTurkishComment("I've moved her var into the de facto file")).toBe(false);
     expect(isTurkishComment('eslint-disable-next-line no-console')).toBe(false);
+    // Kod adının içindeki Türkçe kelime sayılmaz.
+    expect(isTurkishComment('The `kimlik_yalniz_keycloak` setting is 1.')).toBe(false);
+    expect(isTurkishComment('Calls kimlik_yalniz_keycloak and api.kullanici.get')).toBe(false);
   });
 });
 
