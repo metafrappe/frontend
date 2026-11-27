@@ -94,6 +94,19 @@
   box-sizing: border-box;
 }
 
+/* B1: a long sign-out label wraps inside the button. antd keeps button text on one line. */
+.shell-signout .ant-btn {
+  height: auto;
+  min-height: var(--shell-hd-btn-h);
+  white-space: normal;
+  text-align: start;
+}
+
+.shell-signout .ant-btn > span:not(.ant-btn-icon) {
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+
 .shell-vh {
   position: absolute;
   width: var(--shell-hairline);
@@ -549,7 +562,8 @@ html:has(.shell[data-layout='compact']) {
 
 .shell-bar-item > span {
   max-width: 100%;
-  white-space: nowrap;
+  /* A long label wraps inside its own column. It does not run into the next item. */
+  overflow-wrap: break-word;
 }
 
 .shell-bar-item:hover {
@@ -692,7 +706,8 @@ html:has(.shell[data-layout='compact']) {
   align-items: center;
   gap: var(--shell-item-gap);
   width: 100%;
-  min-height: var(--shell-item-h);
+  /* Rows sit next to each other, so the row itself is the touch area (44 px, 48 px on touch). */
+  min-height: max(var(--shell-item-h), var(--hit-target));
   padding: 0 var(--shell-item-px);
   border-radius: var(--shell-radius);
   color: var(--shell-tx2);
@@ -750,9 +765,8 @@ html:has(.shell[data-layout='compact']) {
 .shell-lb {
   flex: 1 1 auto;
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  /* A long label wraps. It is never cut with an ellipsis. */
+  overflow-wrap: break-word;
 }
 
 .shell-lb2 {
@@ -764,10 +778,8 @@ html:has(.shell[data-layout='compact']) {
 }
 
 .shell-lb2 > span {
-  overflow: hidden;
   color: var(--shell-tx);
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: break-word;
 }
 
 .shell-lb2 > small {
@@ -910,7 +922,7 @@ html:has(.shell[data-layout='compact']) {
   align-items: center;
   gap: var(--shell-space-ml);
   min-width: 0;
-  height: var(--shell-hd-btn-h);
+  min-height: max(var(--shell-hd-btn-h), var(--hit-target));
   padding: 0 var(--shell-space-sm);
   border-radius: var(--shell-radius);
   color: var(--shell-tx);
@@ -955,18 +967,14 @@ html:has(.shell[data-layout='compact']) {
 }
 
 .shell-ws-t b {
-  overflow: hidden;
   font-weight: 600;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: break-word;
 }
 
 .shell-ws-t small {
-  overflow: hidden;
   color: var(--shell-tx2);
   font-size: var(--shell-fs-min);
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: break-word;
 }
 
 .shell-ws-i {
@@ -1025,6 +1033,16 @@ html:has(.shell[data-layout='compact']) {
 .shell-tg::after {
   left: var(--shell-space-md);
   right: var(--shell-space-md);
+}
+
+/* The toggle stays 36 px. Its touch layer is the central token (44 px, 48 px on touch). */
+.shell-tg::before {
+  content: '';
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: max(100%, var(--hit-target));
+  height: max(100%, var(--hit-target));
+  transform: translate(-50%, -50%);
 }
 
 .shell-tg:hover {
@@ -1539,6 +1557,19 @@ html:has(.shell[data-layout='compact']) {
   align-items: center;
   gap: var(--shell-space-md);
   min-width: 0;
+}
+
+/* A long filter label wraps inside the button. The button never grows past its row. */
+.shell-hd-filter.ant-btn {
+  max-width: 100%;
+  height: auto;
+  min-height: var(--shell-hd-btn-h);
+  white-space: normal;
+}
+
+.shell-hd-filter.ant-btn > span:not(.ant-btn-icon) {
+  min-width: 0;
+  overflow-wrap: break-word;
 }
 
 .shell-hd-find {

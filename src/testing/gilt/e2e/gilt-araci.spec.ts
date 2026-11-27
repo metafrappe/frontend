@@ -16,8 +16,8 @@ const DEMO = '/_demo/shell';
 async function openShell(page: Page) {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto(DEMO);
-  await expect(page.locator('.shell')).toBeVisible();
-  await expect(page.locator('.shell-page')).toBeVisible();
+  // The e2e build starts the mock server first. Under a full parallel run this can take a while.
+  await expect(page.locator('.shell-page')).toBeVisible({ timeout: 20_000 });
   await settle(page);
 }
 
@@ -28,7 +28,8 @@ async function addProbe(page: Page, html: string) {
     holder.id = 'gilt-probe';
     holder.style.padding = '48px';
     holder.innerHTML = markup;
-    document.querySelector('.shell-body')?.prepend(holder);
+    // Outside the React tree, so a re-render cannot remove it.
+    document.body.append(holder);
   }, html);
   await settle(page);
 }
@@ -172,8 +173,9 @@ const CONDITIONS = [
   {
     name: 'German compound in a 260 px container',
     apply: async (page: Page) => {
+      // The side panel case: only the narrowed component gets the long German noun.
       await openInNarrowContainer(page, '.shell-page');
-      await applyPseudoLocale(page, 'german');
+      await applyPseudoLocale(page, 'german', { scope: '.shell-page' });
     },
   },
 ] as const;
