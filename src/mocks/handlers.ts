@@ -6,6 +6,7 @@ import { TOOL_RESULT_PREFIX } from '@/api/ai-protocol';
 import { resetUserAdminState, userAdminHandlers } from './user-admin';
 import { GROUP_SUMMARY_PATH } from '@/api/group-summary';
 import { adminHandlers } from './admin';
+import { customizationHandlers, resetCustomizationState } from './customization';
 import type { components as CollectionComponents } from '@/api/generated/platform_core-collection';
 
 import {
@@ -242,6 +243,7 @@ export function resetMockState(): void {
   mockState.readableDocTypes = new Set(MENU_READABLE_DOCTYPES);
   mockState.customerRequests = [];
   resetUserAdminState();
+  resetCustomizationState();
   connectionSecrets.clear();
   gatewayCalls.save = [];
   gatewayCalls.check = [];
@@ -726,6 +728,14 @@ export const handlers = [
   }),
   // G-62 ve G-98 yönetim uçları (`./admin.ts`). Genel kayıt işleyicilerinden önce gelir.
   ...adminHandlers({ guard, message, frappeError }),
+  // G-97 parça 2 özelleştirme uçları (`./customization.ts`). Genel tanım ve kayıt uçlarından önce gelir.
+  ...customizationHandlers({
+    guard,
+    message,
+    frappeError,
+    listRows,
+    readable: () => mockState.readableDocTypes,
+  }),
   http.get('*/api/method/frappe.auth.get_logged_user', () =>
     mockState.signedIn
       ? message(SAMPLE_USER)

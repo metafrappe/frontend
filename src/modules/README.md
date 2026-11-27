@@ -43,6 +43,26 @@ Sayfa `/administration/ai-providers` adresindedir. Sayfa Yönetim bölümünün 
 - Sağlayıcı uçları `src/api/provider-client.ts` dosyasındadır. Bu dosya ilk yüke girmez. Modül istemcisi onu `aiProviders()` çağrısında yükler.
 - Ekran metinleri `ai-providers/messages.ts` dosyasındadır.
 
+## Özelleştirme
+
+Sayfa `/administration/customization` adresindedir. Sayfa Yönetim bölümünün alt sayfasıdır.
+
+- Kiracı yöneticisi bir belge türü seçer. Sayfa o türün alanlarını listeler.
+- "Alan ekle" düğmesi `Custom Field` formunu açar. Belge türü formda kilitlidir.
+- "Yeniden adlandır" düğmesi `Property Setter` formunu açar. Formda yalnız "Yeni ad" alanı görünür.
+- "Gizle" düğmesi alanı `Property Setter` kaydıyla gizler. "Göster" düğmesi alanı geri getirir.
+- Aynı alanın aynı özelliği için tek kayıt vardır. Kayıt varsa sayfa onu sürümüyle günceller.
+- Kenar menüsü bölümü `Workspace` kayıtlarını listeler. "Düzenle" düğmesi kaydın formunu açar.
+- Formları kayıt katmanı (`src/views/record`) türün tanımından çizer. Sayfada elle form yoktur.
+- Sistem alanı değiştirilemez. Sistem alanları iki gruptur:
+  - Frappe'nin sistem sütunları. Örnek: `owner` ve `modified`.
+  - Türün kendi zorunlu alanları. Örnek: `Örnek Kayıt` türündeki `title` alanı.
+- Kiracının eklediği özel alan zorunlu olsa da değiştirilebilir.
+- Sistem alanına giden istek sunucuya gitmez. Kural `customization/model.ts` dosyasındadır.
+- Sayfa `Custom Field`, `Property Setter` ve `Workspace` türlerini okuyabilen kişiye açılır.
+- Yetkiyi sunucu her istekte yine denetler.
+- İstemci `customization/client.ts` dosyasındadır. Bu dosya ilk yüke girmez.
+
 ## Eksik sözleşmeler
 
 Kaynak, `.pane/backend-ref/backend/contracts/` klasöründeki sözleşmelerdir.
