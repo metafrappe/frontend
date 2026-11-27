@@ -1,6 +1,6 @@
 import { expect, test } from '../../../../tests/setup/playwright-fixtures';
 import AxeBuilder from '@axe-core/playwright';
-import { openPhoneTools } from './phone-helpers';
+import { isPhone, openPhoneTools } from './phone-helpers';
 
 const preview = '/src/views/collection/preview/';
 const screenshotDir = process.env['AJA_SCREENSHOT_DIR'];
@@ -20,23 +20,40 @@ test('draws the four parts in order without horizontal overflow', async ({ page 
   expect([...tops].sort((a, b) => a - b)).toEqual(tops);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   // Süzgeç satırındaki alanlar içeriği kadar yüksektir. Tablo öncesinde boş alan kalmaz.
-  const slack = await page.locator('.collection-tools > label').evaluateAll((labels) =>
-    labels.map((label) => {
-      const select = label.querySelector('.collection-select');
-      return select
-        ? label.getBoundingClientRect().bottom - select.getBoundingClientRect().bottom
-        : 0;
+  const fields = page
+    .getByRole('group', { name: 'Sıralama' })
+    .or(page.getByRole('group', { name: 'Süzgeç alanları' }))
+    .getByRole('combobox');
+  // Telefonda alanlar kapalı başlar. Geniş ekranda en az bir alan ölçülür.
+  if (!isPhone(page)) await expect(fields.first()).toBeVisible();
+  const slack = await fields.evaluateAll((inputs) =>
+    inputs.map((input) => {
+      // Alanın etiketi içeriğinden uzun olmaz. İçeriğin en alt kenarı etiketin alt kenarıdır.
+      const label = input.closest('label');
+      if (!label) return 0;
+      const bottoms = [...label.querySelectorAll('*')].map(
+        (part) => part.getBoundingClientRect().bottom,
+      );
+      return label.getBoundingClientRect().bottom - Math.max(...bottoms);
     }),
   );
   for (const value of slack) expect(value).toBeLessThanOrEqual(1);
   // Kayıtlı görünüm seçenekleri dokunma alanı tokenını karşılar.
-  const sizes = await page.locator('.collection-saved-option').evaluateAll((labels) =>
-    labels.map((label) => ({
-      height: label.getBoundingClientRect().height,
-      target: parseFloat(getComputedStyle(label).minHeight),
-      font: parseFloat(getComputedStyle(label).fontSize),
-    })),
-  );
+  const sizes = await page
+    .getByRole('group', { name: 'Kayıtlı görünüm' })
+    .getByRole('radio')
+    .evaluateAll((inputs) =>
+      inputs.map((input) => {
+        // Dokunma alanı radyo düğmesini saran etikettir.
+        const label = input.closest('label') ?? input;
+        return {
+          height: label.getBoundingClientRect().height,
+          target: parseFloat(getComputedStyle(label).minHeight),
+          font: parseFloat(getComputedStyle(label).fontSize),
+        };
+      }),
+    );
+  expect(sizes.length).toBeGreaterThan(0);
   for (const size of sizes) {
     expect(size.height).toBeGreaterThanOrEqual(size.target);
     expect(size.target).toBeGreaterThanOrEqual(44);
@@ -73,9 +90,9 @@ test('saved views use one keyboard underline and arrow keys', async ({ page, bro
   // WebKit varsayılan ayarda Tab ile radyo düğmesine gitmez. Klavye kipi açıkken odağı taşırız.
   if (browserName === 'webkit') await all.focus();
   await expect(all).toBeFocused();
-  const option = page.locator('.collection-saved-option').filter({ has: all });
-  const style = await option.evaluate((element) => {
-    const computed = getComputedStyle(element);
+  const style = await all.evaluate((input) => {
+    // Odak çizgisi radyo düğmesini saran etikette görünür.
+    const computed = getComputedStyle(input.closest('label') ?? input);
     return {
       shadow: computed.boxShadow,
       outline: computed.outlineStyle,
@@ -103,11 +120,7 @@ test('a shared filtered link opens the same list in a new tab and search survive
   await expect(tab.getByRole('list', { name: 'Etkin süzgeçler' })).toContainText('Durum: Açık');
   // Sıralama "Bekleyenler" görünümünden farklıdır. Bu yüzden hiçbir kayıtlı görünüm seçili değildir.
   await expect(tab.getByRole('radio', { name: 'Bekleyenler' })).not.toBeChecked();
-  await expect(
-    tab.locator('.collection-select').filter({
-      has: tab.getByRole('combobox', { name: 'Sıralama alanı' }),
-    }),
-  ).toContainText('Tutar');
+  await expect(tab.getByRole('group', { name: 'Sıralama' })).toContainText('Tutar');
   await tab.close();
 
   await page.goto(preview + '?search=%C3%96rnek&gizli=1&filter=yok');

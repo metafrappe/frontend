@@ -1,9 +1,7 @@
 import { Checkbox } from 'antd';
 import { useId, useLayoutEffect, useRef, useState } from 'react';
 import { CollectionButton as Button } from './CollectionControls';
-
-/** Onay ucu bağlanana kadar sonuç alanı yalnız bu metni yazar. Sahte başarı gösterilmez. */
-export const BULK_NOT_CONNECTED = 'Kayıtlar değişmedi. Onay işlemi henüz bağlı değil.';
+import { useCollectionText } from './messages';
 
 /**
  * Toplu işlem satırı ve önizleme. Satır yalnız en az bir kayıt seçiliyken çizilir.
@@ -17,6 +15,7 @@ export function BulkActions({
   /** Seçimi kaldırır. Odak "Seç" düğmesine taşınır. */
   onClear: () => void;
 }) {
+  const text = useCollectionText();
   const id = useId();
   const openerId = id + '-approve';
   const previewId = id + '-preview';
@@ -38,8 +37,8 @@ export function BulkActions({
   }
   return (
     <>
-      <div role="region" aria-label="Toplu işlem" className="collection-bulk">
-        <strong>{selected.length} kayıt seçildi</strong>
+      <div role="region" aria-label={text('collection.bulk.region')} className="collection-bulk">
+        <strong>{text('collection.bulk.selectedCount', { count: selected.length })}</strong>
         <Button
           id={openerId}
           aria-expanded={Boolean(open)}
@@ -49,7 +48,7 @@ export function BulkActions({
             focusTarget.current = previewId + '-ack';
           }}
         >
-          Seçilenleri onayla
+          {text('collection.bulk.approveSelected')}
         </Button>
         <Button
           onClick={() => {
@@ -57,14 +56,14 @@ export function BulkActions({
             onClear();
           }}
         >
-          Seçimi kaldır
+          {text('collection.bulk.clearSelection')}
         </Button>
       </div>
       {open && (
         <div
           id={previewId}
           role="region"
-          aria-label="Toplu işlem önizlemesi"
+          aria-label={text('collection.bulk.previewRegion')}
           className="collection-preview"
           onKeyDown={(event) => {
             if (event.key === 'Escape') {
@@ -74,9 +73,10 @@ export function BulkActions({
           }}
         >
           <p>
-            <strong>Önizleme.</strong> {selected.length} kayıt onaylanır: {names}.
+            <strong>{text('collection.bulk.previewTitle')}</strong>{' '}
+            {text('collection.bulk.previewSummary', { count: selected.length, names })}
           </p>
-          <p>Risk düzeyi: R2 Orta. Çok kaydı değiştirir.</p>
+          <p>{text('collection.bulk.risk')}</p>
           <Checkbox
             id={previewId + '-ack'}
             className="collection-checkbox collection-hit"
@@ -85,7 +85,7 @@ export function BulkActions({
               setPreview({ ...open, read: event.target.checked });
             }}
           >
-            Önizlemeyi okudum.
+            {text('collection.bulk.previewAck')}
           </Checkbox>
           <div className="collection-preview-actions">
             <Button
@@ -94,11 +94,11 @@ export function BulkActions({
                 setPreview({ ...open, done: true });
               }}
             >
-              Onayla
+              {text('collection.bulk.approve')}
             </Button>
-            <Button onClick={close}>Vazgeç</Button>
+            <Button onClick={close}>{text('collection.bulk.cancel')}</Button>
           </div>
-          <p role="status">{open.done ? BULK_NOT_CONNECTED : ''}</p>
+          <p role="status">{open.done ? text('collection.bulk.notConnected') : ''}</p>
         </div>
       )}
     </>

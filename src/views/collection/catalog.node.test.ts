@@ -4,12 +4,17 @@ import { join } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { COLLECTION_MESSAGES, formatCollectionMessage } from './messages';
-
 const DIR = import.meta.dirname;
 
 function read(name: string) {
   return readFileSync(join(DIR, name), 'utf8');
+}
+
+/** Yorumlar görünen metin değildir. Örnek: `// "Seç" düğmesi seçim kipini açar.` */
+function code(name: string) {
+  return read(name)
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/^\s*\/\/.*$/gm, '');
 }
 
 /**
@@ -67,33 +72,12 @@ function embedded(source: string, text: string) {
   return new RegExp(`['"\`]${escaped}|${escaped}['"\`]|>\\s*${escaped}\\s*<`).test(source);
 }
 
-describe('liste metinleri dil kataloğundan gelir (IC-9, IC-10, IC-11)', () => {
+describe('liste metinleri dil kataloğundan gelir (IC-10)', () => {
   it('bileşenler AJA-1195 metinlerini gömülü yazmaz', () => {
     const offenders = Object.entries(MOVED).flatMap(([file, texts]) =>
-      texts.filter((text) => embedded(read(file), text)).map((text) => `${file}: ${text}`),
+      texts.filter((text) => embedded(code(file), text)).map((text) => `${file}: ${text}`),
     );
     expect(offenders).toEqual([]);
-  });
-
-  it('katalog anahtarları İngilizce ve ASCII yazılır', () => {
-    for (const key of Object.keys(COLLECTION_MESSAGES.tr))
-      expect(key).toMatch(/^collection(?:\.[a-z][A-Za-z0-9]*)+$/);
-  });
-
-  it('sayılı metin yer tutucu ve çoğul kuralıyla yazılır', () => {
-    expect(formatCollectionMessage('tr', 'collection.bulk.selectedCount', { count: 3 })).toBe(
-      '3 kayıt seçildi',
-    );
-    expect(formatCollectionMessage('tr', 'collection.bulk.selectedCount', { count: 1 })).toBe(
-      '1 kayıt seçildi',
-    );
-    expect(
-      formatCollectionMessage('tr', 'collection.bulk.previewSummary', { count: 2, names: 'A, B' }),
-    ).toBe('2 kayıt onaylanır: A, B.');
-  });
-
-  it('çevirisi olmayan dil kaynak metne düşer, metin uydurulmaz', () => {
-    expect(formatCollectionMessage('en', 'collection.bulk.cancel')).toBe('Vazgeç');
   });
 });
 

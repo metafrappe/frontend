@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 
 import { useFormat } from '@/app/locale';
 
+import { useCollectionText } from './messages';
 import { displayCell } from './presentation';
 import { isNumeric } from './model';
 import type { ViewProps } from './types';
@@ -21,6 +22,7 @@ export function TableView({
   /** Verilirse kayıt adı (`name` sütunu) kayda giden bağlantı olur. */
   recordHref?: ((name: string) => string) | undefined;
 }) {
+  const text = useCollectionText();
   const format = useFormat();
   return (
     <div
@@ -37,7 +39,7 @@ export function TableView({
               <th className="collection-selection">
                 <Checkbox
                   className="collection-checkbox collection-hit"
-                  aria-label="Bu sayfadaki tüm kayıtları seç"
+                  aria-label={text('collection.table.selectPage')}
                   checked={rows.length > 0 && selected.length === rows.length}
                   indeterminate={selected.length > 0 && selected.length < rows.length}
                   onChange={(event) => {
@@ -67,7 +69,7 @@ export function TableView({
                 <td className="collection-selection">
                   <Checkbox
                     className="collection-checkbox collection-hit"
-                    aria-label={row.name + ' seç'}
+                    aria-label={text('collection.row.select', { name: row.name })}
                     checked={selected.includes(row.name)}
                     onChange={(event) => {
                       onSelect(

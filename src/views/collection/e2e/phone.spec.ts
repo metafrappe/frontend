@@ -12,16 +12,14 @@ async function noPageOverflow(page: Page) {
 }
 /** Kayıt metninde harf arası bölme kuralı kullanılmaz. */
 async function forcedBreaks(page: Page) {
-  return page
-    .locator('.collection')
-    .evaluate(
-      (root) =>
-        [root, ...root.querySelectorAll<HTMLElement>('*')].filter(
-          (element) =>
-            getComputedStyle(element).wordBreak === 'break-all' ||
-            getComputedStyle(element).overflowWrap === 'anywhere',
-        ).length,
-    );
+  return page.evaluate(
+    () =>
+      [...document.body.querySelectorAll<HTMLElement>('*')].filter(
+        (element) =>
+          getComputedStyle(element).wordBreak === 'break-all' ||
+          getComputedStyle(element).overflowWrap === 'anywhere',
+      ).length,
+  );
 }
 
 test('row height has three token levels and coarse pointers get at least 48 px', async ({
@@ -34,7 +32,9 @@ test('row height has three token levels and coarse pointers get at least 48 px',
     if (isPhone(page)) await page.getByRole('button', { name: 'Tablo', exact: true }).click();
     const coarse = await page.evaluate(() => matchMedia('(any-pointer: coarse)').matches);
     const heights = await page
-      .locator('.collection-table tbody tr')
+      .getByRole('table')
+      .getByRole('row')
+      .filter({ has: page.getByRole('cell') })
       .evaluateAll((rows) => rows.map((row) => row.getBoundingClientRect().height));
     expect(heights.length).toBeGreaterThan(0);
     for (const height of heights) {

@@ -20,6 +20,7 @@ import {
 import type { ErrorInfo, ReactNode, RefObject } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { BulkActions } from './BulkActions';
+import { useCollectionText } from './messages';
 import { CardView } from './CardView';
 import { CollectionState } from './CollectionState';
 import { TableView } from './TableView';
@@ -43,8 +44,6 @@ import type {
 } from './types';
 import './collection.css';
 
-/** Kayıtlı görünüm verilmezse liste yalnız "Tümü" görünümünü sunar. */
-const allRecordsView: readonly SavedView[] = [{ id: 'tumu', label: 'Tümü', query: {} }];
 const heavyViews = {
   kanban: lazy(() => import('./views/KanbanView')),
   pivot: lazy(() => import('./views/PivotView')),
@@ -137,9 +136,16 @@ export function CollectionView({
   summarySource,
   enableExperimentalCollectionViews = false,
   recordHref,
-  savedViews = allRecordsView,
+  savedViews: givenSavedViews,
   rowHeight = 'md',
 }: CollectionViewProps) {
+  const text = useCollectionText();
+  // Kayıtlı görünüm verilmezse liste yalnız "Tümü" görünümünü sunar.
+  const allLabel = text('collection.savedView.all');
+  const savedViews = useMemo<readonly SavedView[]>(
+    () => givenSavedViews ?? [{ id: 'tumu', label: allLabel, query: {} }],
+    [givenSavedViews, allLabel],
+  );
   const rootRef = useRef<HTMLDivElement>(null);
   const narrow = useNarrow(rootRef);
   // Telefonda "Süzgeç" ve "Sırala" kendi alanlarını açar. Liste önce kart olarak görünür.
@@ -241,8 +247,8 @@ export function CollectionView({
       ? [
           {
             key: 'search',
-            label: 'Arama: ' + query.search,
-            remove: 'Aramayı kaldır',
+            label: text('collection.tags.search', { search: query.search }),
+            remove: text('collection.tags.removeSearch'),
             patch: { search: '' },
           },
         ]
@@ -251,8 +257,11 @@ export function CollectionView({
       ? [
           {
             key: 'filter',
-            label: activeFilter.label + ': ' + activeFilterValue,
-            remove: activeFilter.label + ' süzgecini kaldır',
+            label: text('collection.tags.filter', {
+              label: activeFilter.label,
+              value: activeFilterValue,
+            }),
+            remove: text('collection.tags.removeFilter', { label: activeFilter.label }),
             patch: { filter: '', value: '' },
           },
         ]
@@ -282,7 +291,7 @@ export function CollectionView({
         </header>
         <div className="collection-viewbar" data-collection-part="views">
           <fieldset className="collection-saved">
-            <legend className="collection-sr-only">Kayıtlı görünüm</legend>
+            <legend className="collection-sr-only">{text('collection.savedView.legend')}</legend>
             {savedViews.map((view) => (
               <label key={view.id} className="collection-saved-option">
                 <input
@@ -300,9 +309,9 @@ export function CollectionView({
           </fieldset>
           {(!narrow || enableExperimentalCollectionViews) && (
             <label className="collection-view-type">
-              <span>Görünüm</span>
+              <span>{text('collection.viewType.label')}</span>
               <Select
-                aria-label="Görünüm"
+                aria-label={text('collection.viewType.label')}
                 value={query.view}
                 options={
                   enableExperimentalCollectionViews
@@ -315,7 +324,11 @@ export function CollectionView({
               />
             </label>
           )}
-          <div className="collection-listbar" role="group" aria-label="Liste araçları">
+          <div
+            className="collection-listbar"
+            role="group"
+            aria-label={text('collection.toolbar.label')}
+          >
             {narrow && (
               <Button
                 icon={<Funnel aria-hidden />}
@@ -325,7 +338,9 @@ export function CollectionView({
                   setFilterOpen(!filterOpen);
                 }}
               >
-                {activeTags.length ? 'Süzgeç (' + activeTags.length + ')' : 'Süzgeç'}
+                {activeTags.length
+                  ? text('collection.toolbar.filterCount', { count: activeTags.length })
+                  : text('collection.toolbar.filter')}
               </Button>
             )}
             {narrow && (
@@ -337,7 +352,7 @@ export function CollectionView({
                   setSortOpen(!sortOpen);
                 }}
               >
-                Sırala
+                {text('collection.toolbar.sort')}
               </Button>
             )}
             {query.view === 'table' && (
@@ -350,7 +365,7 @@ export function CollectionView({
                   setSelecting(!selecting);
                 }}
               >
-                Seç
+                {text('collection.toolbar.select')}
               </Button>
             )}
             {narrow && query.view === 'table' && (
@@ -360,23 +375,25 @@ export function CollectionView({
                   setLayout(layout === 'table' ? 'cards' : 'table');
                 }}
               >
-                Tablo
+                {text('collection.toolbar.table')}
               </Button>
             )}
           </div>
           {!enableExperimentalCollectionViews && requestedQuery.view !== 'table' && (
-            <p role="status">İstenen görünüm şu anda kapalı. Tablo gösteriliyor.</p>
+            <p role="status">{text('collection.viewType.disabled')}</p>
           )}
         </div>
         <div className="collection-filterbar" data-collection-part="filters">
           <div id={filterPanelId} ref={filterPanelRef} hidden={filtersHidden}>
             <div className="collection-applied">
               <p role="status" className="collection-filter-count">
-                {activeTags.length ? activeTags.length + ' süzgeç etkin' : 'Etkin süzgeç yok.'}
+                {activeTags.length
+                  ? text('collection.filters.activeCount', { count: activeTags.length })
+                  : text('collection.filters.none')}
               </p>
               {activeTags.length > 0 && (
                 <>
-                  <ul aria-label="Etkin süzgeçler" className="collection-tags">
+                  <ul aria-label={text('collection.filters.listLabel')} className="collection-tags">
                     {activeTags.map((tag) => (
                       <li key={tag.key} className="collection-tag">
                         <span>{tag.label}</span>
@@ -386,7 +403,7 @@ export function CollectionView({
                             update(tag.patch);
                           }}
                         >
-                          Kaldır
+                          {text('collection.filters.remove')}
                         </Button>
                       </li>
                     ))}
@@ -396,7 +413,7 @@ export function CollectionView({
                       update({ search: '', filter: '', value: '' });
                     }}
                   >
-                    Süzgeçleri temizle
+                    {text('collection.filters.clear')}
                   </Button>
                 </>
               )}
@@ -410,9 +427,9 @@ export function CollectionView({
               }}
             >
               <label className="collection-grow">
-                <span>Kayıt ara</span>
+                <span>{text('collection.search.label')}</span>
                 <Input
-                  aria-label="Kayıt ara"
+                  aria-label={text('collection.search.label')}
                   value={search}
                   maxLength={200}
                   onChange={(event) => {
@@ -420,7 +437,7 @@ export function CollectionView({
                   }}
                 />
               </label>
-              <Button htmlType="submit">Ara</Button>
+              <Button htmlType="submit">{text('collection.search.submit')}</Button>
             </form>
           </div>
           <div className="collection-tools" hidden={filtersHidden && sortHidden}>
@@ -428,12 +445,14 @@ export function CollectionView({
               id={sortFieldsId}
               ref={sortFieldsRef}
               className="collection-tool-group"
+              role="group"
+              aria-label={text('collection.sort.label')}
               hidden={sortHidden}
             >
               <label>
-                <span>Sıralama alanı</span>
+                <span>{text('collection.sort.field')}</span>
                 <Select
-                  aria-label="Sıralama alanı"
+                  aria-label={text('collection.sort.field')}
                   value={query.sort}
                   options={definition.columns.map((field) => ({
                     value: field.fieldname,
@@ -445,13 +464,13 @@ export function CollectionView({
                 />
               </label>
               <label>
-                <span>Sıralama yönü</span>
+                <span>{text('collection.sort.direction')}</span>
                 <Select
-                  aria-label="Sıralama yönü"
+                  aria-label={text('collection.sort.direction')}
                   value={query.direction}
                   options={[
-                    { value: 'asc', label: 'Artan' },
-                    { value: 'desc', label: 'Azalan' },
+                    { value: 'asc', label: text('collection.sort.asc') },
+                    { value: 'desc', label: text('collection.sort.desc') },
                   ]}
                   onChange={(direction: 'asc' | 'desc') => {
                     update({ direction });
@@ -463,6 +482,8 @@ export function CollectionView({
               id={filterFieldsId}
               ref={filterFieldsRef}
               className="collection-tool-group"
+              role="group"
+              aria-label={text('collection.filters.fieldsLabel')}
               hidden={filtersHidden}
             >
               {filterFields.map((field) => (
@@ -471,7 +492,10 @@ export function CollectionView({
                   <Select
                     aria-label={field.label}
                     value={query.filter === field.fieldname ? query.value : ''}
-                    options={[{ value: '', label: 'Tümü' }, ...field.choices]}
+                    options={[
+                      { value: '', label: text('collection.filters.all') },
+                      ...field.choices,
+                    ]}
                     onChange={(value: string) => {
                       update({ filter: value ? field.fieldname : '', value });
                     }}
@@ -495,7 +519,7 @@ export function CollectionView({
         <div
           id={contentId}
           role="region"
-          aria-label="Koleksiyon içeriği"
+          aria-label={text('collection.content.label')}
           aria-busy={!current}
           data-collection-part="table"
         >

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 
 import { useFormat } from '@/app/locale';
 
+import { useCollectionText } from './messages';
 import { displayCell } from './presentation';
 import type { ViewProps } from './types';
 
@@ -25,10 +26,14 @@ export function CardView({
   recordHref?: ((name: string) => string) | undefined;
 }) {
   const format = useFormat();
+  const text = useCollectionText();
   const fields = definition.columns.filter((field) => field.fieldname !== 'name');
   const [lead, ...rest] = fields;
   return (
-    <ul className="collection-cards" aria-label={definition.label + ' kayıtları'}>
+    <ul
+      className="collection-cards"
+      aria-label={text('collection.cards.label', { label: definition.label })}
+    >
       {rows.map((row) => (
         <li
           key={row.name}
@@ -39,7 +44,7 @@ export function CardView({
           {selecting && (
             <Checkbox
               className="collection-checkbox collection-hit"
-              aria-label={row.name + ' seç'}
+              aria-label={text('collection.row.select', { name: row.name })}
               checked={selected.includes(row.name)}
               onChange={(event) => {
                 onSelect(

@@ -235,7 +235,9 @@ test('shows all data states, light theme and reduced motion', async ({ page }, t
     name: isPhone(page) ? 'Sıralama alanı' : 'Görünüm',
     exact: true,
   });
-  await page.locator('.collection-select').filter({ has: popupOwner }).click();
+  // Liste klavyeyle açılır. Seçili değer metni alanın üstünde durur ve tıklamayı kendisi alır.
+  await popupOwner.focus();
+  await page.keyboard.press('ArrowDown');
   expect(
     await page
       .locator('.collection-popup')
@@ -292,7 +294,8 @@ test('default gate prevents summary rendering and downloads from a shared URL', 
   // Telefonda tek seçenekli görünüm listesi gösterilmez.
   if (isPhone(page)) await expect(viewType).toHaveCount(0);
   else {
-    await page.locator('.collection-select').filter({ has: viewType }).click();
+    await viewType.focus();
+    await page.keyboard.press('ArrowDown');
     await expect(page.getByRole('option')).toHaveCount(1);
   }
   expect(scripts.some((url) => /(?:Kanban|Pivot|Report|Gantt|Timesheet)View-/.test(url))).toBe(
