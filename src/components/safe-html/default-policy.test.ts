@@ -39,9 +39,9 @@ describe('installDefaultTrustedTypesPolicy', () => {
   it('betik adresi listesi verilirse yalnız listedeki adrese izin verir', () => {
     const createPolicy = vi.fn();
     const target = { trustedTypes: { createPolicy } };
-    expect(installDefaultTrustedTypesPolicy(target, { scriptUrls: ['/mockServiceWorker.js'] })).toBe(
-      true,
-    );
+    expect(
+      installDefaultTrustedTypesPolicy(target, { scriptUrls: ['/mockServiceWorker.js'] }),
+    ).toBe(true);
     const rules = createPolicy.mock.calls[0]?.[1] as {
       createScriptURL: (input: string) => string | null;
     };

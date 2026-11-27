@@ -6,15 +6,29 @@ import { createRoot } from 'react-dom/client';
 
 import { Root } from '@/app/Root';
 import { createPlatformSession } from '@/auth';
+import {
+  installDefaultTrustedTypesPolicy,
+  type TrustedTypesTarget,
+} from '@/components/safe-html/default-policy';
 import { installCspNonce } from '@/design/csp-nonce';
 import { SampleDataNotice } from '@/mocks/SampleDataNotice';
 import { startApiMocks } from '@/mocks/start';
+import { mockWorkerOptions } from '@/mocks/worker-url';
 
 const container = document.getElementById('root');
 if (!container) {
   throw new Error('Kök öğe bulunamadı: #root');
 }
 const root = container;
+
+// Trusted Types varsayılan ilkesi ilk stil öğesinden önce kurulur (GV-2, AJA-2283).
+// Sahte sunucu açıksa yalnız onun işçi adresine izin verilir. Koşul `startApiMocks` ile aynıdır.
+const mocksOn =
+  import.meta.env.VITE_API_MOCKS !== 'off' &&
+  (import.meta.env.DEV || import.meta.env.VITE_API_MOCKS === 'on');
+installDefaultTrustedTypesPolicy(globalThis as TrustedTypesTarget, {
+  scriptUrls: mocksOn ? [mockWorkerOptions(import.meta.env.BASE_URL).url] : [],
+});
 
 // Sunucu CSP nonce verdiyse çalışma anında eklenen stil ve betik öğeleri onu taşır.
 installCspNonce();

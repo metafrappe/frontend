@@ -13,7 +13,9 @@ test('önizleme yanıtı Trusted Types başlığını rapor kipinde gönderir', 
  * Rapor kipi gerçek ihlali göstermelidir. antd stil yazımı ise ihlal sayılmaz.
  * antd, `<style>` öğesine CSS metnini `innerHTML` ile yazar. Varsayılan ilke bu düz metne izin verir.
  */
-test('antd stil yazımı Trusted Types ihlali üretmez; HTML yazımı ihlal üretir', async ({ page }) => {
+test('antd stil yazımı Trusted Types ihlali üretmez; HTML yazımı ihlal üretir', async ({
+  page,
+}) => {
   await page.addInitScript(() => {
     const list: string[] = [];
     (window as unknown as { __tt: string[] }).__tt = list;
