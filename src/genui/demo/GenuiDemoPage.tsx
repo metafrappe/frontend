@@ -9,7 +9,7 @@ import type { GenUIActionResult } from '../types';
 import { SURFACE_SAMPLES, SURFACE_STATES } from './samples';
 
 /** Kayıtta olmayan bir blok. Ekran bu bloğu çizmemelidir. */
-const UNREGISTERED = { type: 'kayitsiz_blok', body: 'kayitsiz_blok içeriği' };
+const UNREGISTERED = { type: 'kayitsiz_blok', body: 'kayitsiz_blok body' };
 
 const blocks = parseBlocks([...SURFACE_SAMPLES, UNREGISTERED]);
 const states = parseBlocks(SURFACE_STATES);
