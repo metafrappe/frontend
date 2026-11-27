@@ -12,7 +12,7 @@ export function WorkspaceIdentity({ tenant, environment, mode }: WorkspaceIdenti
   return (
     <>
       <span className="shell-brand">
-        <span className="shell-logo" aria-hidden="true">
+        <span className="shell-logo" aria-hidden="true" translate="no">
           A
         </span>
         <span>AtonotA</span>
