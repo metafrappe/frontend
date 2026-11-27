@@ -14,6 +14,15 @@ export type { ApiConfig, ApiEnv } from './config';
 export { createCsrfStore, readCsrfFromDocument } from './csrf';
 export type { CsrfStore } from './csrf';
 export { ApiError, toApiError, userMessage } from './errors';
+export {
+  IDEMPOTENCY_HEADER,
+  KEY_MAX_AGE_MS,
+  createIdempotentRunner,
+  createKeyStore,
+  idempotencyKeyName,
+  isNotOlder,
+} from './idempotency';
+export type { ActionOutcome, IdempotentRunner, KeyStore, StoredKey } from './idempotency';
 export type { ApiErrorKind, MessageLocale } from './errors';
 export type {
   ApprovalOutcome,
