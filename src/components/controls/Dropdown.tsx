@@ -6,7 +6,7 @@ import type { KeyboardEvent as ReactKeyboardEvent, ReactNode } from 'react';
 import { flushSync } from 'react-dom';
 
 import { useThemeMode } from '@/app';
-import { useFormat } from '@/app/locale';
+import { useFormat, useMessage } from '@/app/locale';
 import { danger as dangerTokens } from '@/design';
 
 import { groupDropdownItems } from './dropdown-items';
@@ -63,6 +63,7 @@ function ActionDropdown({
   const restoreFocus = useRef(false);
   const { resolved } = useThemeMode();
   const format = useFormat();
+  const m = useMessage();
   const menuItemSelector =
     ':is([role="menuitem"], [role="menuitemradio"]):not([aria-disabled="true"])';
 
@@ -231,7 +232,7 @@ function ActionDropdown({
               />
             )}
             {menu}
-            {menuItems.length === 0 && <p role="status">Sonuç yok.</p>}
+            {menuItems.length === 0 && <p role="status">{m('controls.dropdown.noResults')}</p>}
           </div>
         )}
       >
