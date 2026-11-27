@@ -382,6 +382,9 @@ export const MENU_READABLE_DOCTYPES: readonly string[] = [
   'PLT AI API',
   'PLT AI Account',
   'PLT AI Provider',
+  'Custom Field',
+  'Property Setter',
+  'Workspace',
   'Leave Application',
 ];
 

@@ -1,0 +1,18 @@
+/* Özelleştirme sayfası. Değerler ortak modül değişkenlerinden gelir. */
+.customization-label {
+  font-weight: 600;
+}
+.customization-meta {
+  color: var(--module-muted);
+}
+.customization-meta code {
+  font-family: var(--font-mono, monospace);
+  overflow-wrap: break-word;
+}
+.customization-picker .ant-select {
+  width: 100%;
+  max-width: 100%;
+}
+.customization-status:empty {
+  display: none;
+}

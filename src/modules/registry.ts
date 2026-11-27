@@ -52,6 +52,16 @@ export const moduleRegistrations: readonly ModuleRegistration[] = [
     load: () => import('./ai-providers/Page'),
   },
   {
+    // Yönetim bölümünün alt sayfası (G-97 parça 2). Kod yalnız bu sayfa açılınca iner.
+    id: 'customization',
+    path: '/administration/customization',
+    label: { en: 'Customisation', tr: 'Özelleştirme' },
+    // Sayfa bu üç türe yazar (`./customization/model.ts`, `CUSTOMIZATION_DOCTYPES`).
+    requires: ['Custom Field', 'Property Setter', 'Workspace'],
+    excludes: TENANT_ONLY,
+    load: () => import('./customization/Page'),
+  },
+  {
     id: 'hr',
     path: '/hr',
     label: { en: 'Leave requests', tr: 'İzin talepleri' },

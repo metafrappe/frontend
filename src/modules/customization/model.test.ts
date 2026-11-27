@@ -21,7 +21,7 @@ function meta(name: string, fields: { fieldname: string; fieldtype?: string }[])
     meta_hash: 'd'.repeat(64),
     perm_version: 'e'.repeat(64),
     mobile_cache_allowed: false,
-    truncated: false,
+
     schema: {
       name,
       module: 'Custom',

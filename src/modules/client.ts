@@ -116,5 +116,8 @@ export function createModuleClient(api: ApiClient): ModuleClient {
     // Kullanıcı yönetimi istemcisi ayrı parçadadır. Yalnız "Yönetim" sayfası açılınca yüklenir.
     userAdmin: () =>
       import('./administration/users-client').then((m) => m.createUserAdminClient(api)),
+    // Özelleştirme istemcisi ayrı parçadadır. Yalnız "Özelleştirme" sayfası açılınca yüklenir.
+    customization: () =>
+      import('./customization/client').then((m) => m.createCustomizationClient(api)),
   };
 }

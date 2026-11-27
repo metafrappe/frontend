@@ -1,3 +1,4 @@
+import type { CustomizationClient } from './customization/client';
 import { Fragment, type ReactNode } from 'react';
 import type {
   AiConnectionListing,
@@ -69,6 +70,11 @@ export interface ModuleClient {
    * İstemci kodu ilk yüke girmez; yalnız "Yönetim" sayfası çağırınca iner.
    */
   userAdmin?: () => Promise<UserAdminClient>;
+  /**
+   * Özelleştirme istemcisini yükler (G-97 parça 2): alan ekleme, gizleme, ad ve kenar menüsü.
+   * İstemci kodu ilk yüke girmez; yalnız "Özelleştirme" sayfası çağırınca iner.
+   */
+  customization?: () => Promise<CustomizationClient>;
 }
 /** Bayi uçları. Ortak istemci yanıtları sözleşmeyle denetler. Yetkiyi sunucu denetler. */
 export interface ResellerClient {

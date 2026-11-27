@@ -31,12 +31,12 @@ async function openDoctype(page: Page) {
   await page.goto(PATH);
   await expect(page.getByRole('heading', { name: TITLE, level: 1 })).toBeVisible();
   await chooseByKeyboard(page, 'Belge türü', DOCTYPE);
-  await expect(page.getByRole('list', { name: 'Alanlar' })).toBeVisible();
+  await expect(page.getByRole('list', { name: 'Alanlar', exact: true })).toBeVisible();
 }
 
 function fieldRow(page: Page, label: string) {
   return page
-    .getByRole('list', { name: 'Alanlar' })
+    .getByRole('list', { name: 'Alanlar', exact: true })
     .getByRole('listitem')
     .filter({ has: page.getByText(label, { exact: true }) });
 }
