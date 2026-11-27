@@ -13,6 +13,19 @@ import type { Page, TestInfo } from '@playwright/test';
 
 import { GERMAN_COMPOUND, isCode, pseudoLong, pseudoRtl } from './pseudo';
 
+/** Text nodes and attributes found by the first step of `applyPseudoLocale`. */
+interface GiltStore {
+  nodes: Text[];
+  attrs: [Element, string][];
+}
+
+declare global {
+  interface Window {
+    /** Lives only in the test page, between the two steps of `applyPseudoLocale`. */
+    __gilt?: GiltStore;
+  }
+}
+
 /** Width of the narrow container: a desktop side panel (AJA-1728). */
 export const NARROW_WIDTH = 260;
 /** Root text scale: 200 %. */
@@ -88,13 +101,13 @@ export async function applyPseudoLocale(
     if (!root) throw new Error(`Scope not found: ${scope}`);
     const skip =
       'script, style, code, pre, kbd, samp, textarea, svg, [translate="no"], .notranslate';
-    const store: { nodes: Text[]; attrs: [Element, string][] } = { nodes: [], attrs: [] };
-    (window as unknown as { __gilt: typeof store }).__gilt = store;
+    const store: GiltStore = { nodes: [], attrs: [] };
+    window.__gilt = store;
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
     for (let node = walker.nextNode(); node; node = walker.nextNode()) {
-      const text = node as Text;
-      if (!text.data.trim() || text.parentElement?.closest(skip)) continue;
-      store.nodes.push(text);
+      if (!(node instanceof Text)) continue;
+      if (!node.data.trim() || node.parentElement?.closest(skip)) continue;
+      store.nodes.push(node);
     }
     for (const el of Array.from(root.querySelectorAll('[aria-label], [title], [placeholder]'))) {
       if (el.closest(skip)) continue;
@@ -109,8 +122,8 @@ export async function applyPseudoLocale(
   }, options.scope);
   await page.evaluate(
     ({ nodes, attrs, rtl }) => {
-      const store = (window as unknown as { __gilt: { nodes: Text[]; attrs: [Element, string][] } })
-        .__gilt;
+      const store = window.__gilt;
+      if (!store) throw new Error('applyPseudoLocale: the first step did not run');
       store.nodes.forEach((node, i) => (node.data = nodes[i] ?? node.data));
       store.attrs.forEach(([el, name], i) => el.setAttribute(name, attrs[i] ?? ''));
       if (rtl) document.documentElement.dir = 'rtl';
@@ -178,7 +191,8 @@ async function describe(page: Page, raw: RawProblem[]): Promise<ButtonProblem[]>
     let name = '';
     if (match?.[1] !== undefined) {
       try {
-        name = JSON.parse(`"${match[1]}"`) as string;
+        const parsed: unknown = JSON.parse(`"${match[1]}"`);
+        name = typeof parsed === 'string' ? parsed : match[1];
       } catch {
         name = match[1];
       }
@@ -234,8 +248,8 @@ export async function findClippedButtons(
         }
         const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
         for (let node = walker.nextNode(); node; node = walker.nextNode()) {
-          if (!(node as Text).data.trim() || !node.parentElement || hidden(node.parentElement))
-            continue;
+          if (!(node instanceof Text) || !node.data.trim()) continue;
+          if (!node.parentElement || hidden(node.parentElement)) continue;
           const range = document.createRange();
           range.selectNodeContents(node);
           for (const rect of Array.from(range.getClientRects())) {
@@ -302,7 +316,7 @@ export async function findClippedButtons(
 /**
  * Finds buttons whose touch area is smaller than `MIN_TARGET` × `MIN_TARGET`.
  * The check taps nine points of a square around the button's centre with `elementFromPoint`.
- * Every point must reach the button itself (its box or its `::after` touch layer).
+ * Every point must reach the button itself: its box or a touch layer (`::before` or `::after`).
  * A point that reaches a neighbour fails too. Points outside the screen are skipped.
  * Disabled buttons and buttons inside another button are skipped.
  */

@@ -94,7 +94,12 @@
   box-sizing: border-box;
 }
 
-/* B1: a long sign-out label wraps inside the button. antd keeps button text on one line. */
+/*
+ * B1: a long sign-out label wraps inside the button. antd keeps button text on one line.
+ * Why here: in antd 5.29.3 the Button `classNames` prop only reaches the icon, not the label.
+ * Remove these two rules when antd gives Button a `classNames` slot for the label text
+ * (or `styles` for it); then pass the same values through that slot in the component.
+ */
 .shell-signout .ant-btn {
   height: auto;
   min-height: var(--shell-hd-btn-h);
@@ -1559,7 +1564,12 @@ html:has(.shell[data-layout='compact']) {
   min-width: 0;
 }
 
-/* A long filter label wraps inside the button. The button never grows past its row. */
+/*
+ * A long filter label wraps inside the button. The button never grows past its row.
+ * Why here: in antd 5.29.3 the Button `classNames` prop only reaches the icon, not the label.
+ * Remove these two rules when antd gives Button a `classNames` slot for the label text
+ * (or `styles` for it); then pass the same values through that slot in the component.
+ */
 .shell-hd-filter.ant-btn {
   max-width: 100%;
   height: auto;

@@ -43,4 +43,4 @@ await applyPseudoLocale(page, 'long');
 await expectNoProblems(page, test.info(), 'clipping', await findClippedButtons(page));
 ```
 
-Testler `src/testing/gilt/e2e/gilt-araci.spec.ts` dosyasındadır. Birim testleri `pseudo.test.ts` dosyasındadır.
+Testler `src/testing/gilt/e2e/gilt-tool.spec.ts` dosyasındadır. Birim testleri `pseudo.test.ts` dosyasındadır.
