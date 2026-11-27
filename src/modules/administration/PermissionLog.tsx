@@ -1,5 +1,6 @@
 import { Alert, Button } from 'antd';
 import { useCallback, useState } from 'react';
+import { appendUnique } from '../../api/request-order';
 import { useModule } from '../context';
 import { useRead } from '../data';
 import { useCopy } from '../messages';
@@ -16,13 +17,14 @@ function PermissionLogList({ admin }: { admin: AdminClient }) {
   // Sayfalar sırayla okunur. "Daha eski kayıtlar" bir sayfa daha ekler.
   const load = useCallback(
     async (signal: AbortSignal) => {
-      const logs: PermissionLogEntry[] = [];
+      let logs: PermissionLogEntry[] = [];
       let hasMore = false;
       for (let page = 0; page < pages; page += 1) {
         const result = parsePermissionLogs(
           await admin.listPermissionLogs({ start: page * PAGE, page_length: PAGE }, { signal }),
         );
-        logs.push(...result.logs);
+        // A new entry can shift the next page by one record. Each record still shows once.
+        logs = appendUnique(logs, result.logs);
         hasMore = result.hasMore;
         if (!hasMore) break;
       }

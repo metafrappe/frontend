@@ -21,7 +21,9 @@ type Loaded =
  */
 export default function CollectionRoute() {
   const { module = '', doctype = '' } = useParams();
-  const data = useViewData()?.collection;
+  const viewData = useViewData();
+  const data = viewData?.collection;
+  const workspace = viewData?.workspaces?.current;
   const { token } = theme.useToken();
   const [attempt, setAttempt] = useState(0);
   const [loaded, setLoaded] = useState<Loaded | null>(null);
@@ -96,6 +98,7 @@ export default function CollectionRoute() {
           source={data.source}
           mode={isDarkColor(token.colorBgLayout) ? 'dark' : 'light'}
           recordHref={(name) => routes.record(module, doctype, name)}
+          workspace={workspace}
         />
       </div>
     </div>

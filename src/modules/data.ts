@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ApiErrorKind } from '../api';
+import { createLatestRequest, scopedKey } from '../api/request-order';
+import { useModule } from './context';
 export type FailureKind =
   | 'forbidden'
   | 'expired'
@@ -41,25 +43,34 @@ export type Resource<T> =
   | { status: 'unavailable' }
   | { status: 'error'; error: FailureKind }
   | { status: 'ready'; data: T };
+/**
+ * Reads data for a module screen. Request order rules come from `api/request-order` (AJA-1773):
+ * the last request wins, an organisation or user change invalidates pending requests, and an
+ * old response or error never reaches the screen.
+ */
 export function useRead<T>(load: ((signal: AbortSignal) => Promise<T>) | null, key: string) {
+  const env = useModule();
   const [revision, setRevision] = useState(0);
-  const requestKey = `${key}:${revision}`;
+  const requestKey = scopedKey(
+    JSON.stringify([env?.tenant ?? '', env?.user ?? '']),
+    `${key}:${revision}`,
+  );
   const [result, setResult] = useState<{ key: string; state: Resource<T> }>();
+  const [gate] = useState(createLatestRequest);
   useEffect(() => {
     if (!load) return;
-    const controller = new AbortController();
+    const ticket = gate.begin(requestKey);
     void (async () => {
       try {
-        const data = await load(controller.signal);
-        if (!controller.signal.aborted)
-          setResult({ key: requestKey, state: { status: 'ready', data } });
+        const data = await load(ticket.signal);
+        if (ticket.isCurrent()) setResult({ key: requestKey, state: { status: 'ready', data } });
       } catch (error) {
-        if (!controller.signal.aborted)
+        if (ticket.isCurrent())
           setResult({ key: requestKey, state: { status: 'error', error: failureKind(error) } });
       }
     })();
-    return () => controller.abort();
-  }, [load, requestKey]);
+    return () => gate.cancel();
+  }, [gate, load, requestKey]);
   const state: Resource<T> = !load
     ? { status: 'unavailable' }
     : result?.key === requestKey
