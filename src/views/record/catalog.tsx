@@ -224,6 +224,7 @@ export function CatalogField(props: CatalogFieldProps): ReactNode {
           <Checkbox
             id={a11y.controlId}
             aria-describedby={a11y.ariaDescribedBy}
+            aria-invalid={a11y.ariaInvalid || undefined}
             checked={checked}
             disabled={state.readOnly}
             onChange={(e) => onChange(field.fieldname, e.target.checked ? 1 : 0)}
