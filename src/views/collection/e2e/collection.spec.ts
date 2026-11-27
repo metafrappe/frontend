@@ -92,18 +92,19 @@ test('table preserves readability, keyboard focus, selection and URL history', a
     );
   expect(Math.min(...fontSizes)).toBeGreaterThanOrEqual(14);
   // Görünüm satırı önce gelir: kayıtlı görünüm, görünüm türü ve "Seç", sonra arama.
-  // WebKit varsayılan ayarda Tab ile radyo düğmesine gitmez. Safari de böyle davranır.
+  // macOS WebKit varsayılan ayarda Tab ile radyo düğmesine ve düğmelere gitmez. Safari de böyle davranır.
+  // Linux WebKit bu ayarı kullanmaz. Orada Tab, Chromium gibi her denetime gider.
+  const tabSkipsControls = browserName === 'webkit' && process.platform === 'darwin';
   // Telefon düğmelerine basıldıysa Tab sırası başlıktan yeniden başlar.
   if (isPhone(page)) await page.getByRole('heading', { name: 'Örnek kayıtlar' }).click();
   await page.keyboard.press('Tab');
-  if (browserName !== 'webkit') {
+  if (!tabSkipsControls) {
     await expect(page.getByRole('radio', { name: 'Tümü' })).toBeFocused();
     await page.keyboard.press('Tab');
   }
   await expect(page.getByRole('combobox', { name: 'Görünüm', exact: true })).toBeFocused();
-  // WebKit varsayılan ayarda Tab ile düğmelere de gitmez.
   // Telefonda sıra "Süzgeç", "Sırala", "Seç" ve "Tablo" olur. Geniş ekranda yalnız "Seç" vardır.
-  if (browserName !== 'webkit') {
+  if (!tabSkipsControls) {
     const order = isPhone(page) ? [/^Süzgeç/, /^Sırala$/, /^Seç$/, /^Tablo$/] : [/^Seç$/];
     for (const name of order) {
       await page.keyboard.press('Tab');

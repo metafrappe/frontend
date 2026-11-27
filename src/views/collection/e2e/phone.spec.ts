@@ -151,17 +151,20 @@ test('phone shows record cards, one tool row and a table toggle', async ({ page 
       element.scrollLeft = 0;
     });
   }
-  // Dokunma ile kayar. Chromium dokunma hareketini CDP ile üretir.
+  // Dokunma ile kayar. Chromium gerçek dokunma olaylarını CDP ile üretir.
+  // Linux'ta `synthesizeScrollGesture` dokunma kipinde hiç kaydırmaz. Bu yüzden parmak adım adım sürüklenir.
   if (testInfo.project.name.startsWith('chromium')) {
     const area = await scroller.boundingBox();
     const cdp = await page.context().newCDPSession(page);
-    await cdp.send('Input.synthesizeScrollGesture', {
-      x: (area?.x ?? 0) + (area?.width ?? 0) / 2,
-      y: (area?.y ?? 0) + 20,
-      xDistance: -150,
-      yDistance: 0,
-      gestureSourceType: 'touch',
-    });
+    const x = (area?.x ?? 0) + (area?.width ?? 0) - 20;
+    const y = (area?.y ?? 0) + 20;
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y }] });
+    for (let step = 1; step <= 10; step++)
+      await cdp.send('Input.dispatchTouchEvent', {
+        type: 'touchMove',
+        touchPoints: [{ x: x - step * 15, y }],
+      });
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
     await expect.poll(() => scroller.evaluate((element) => element.scrollLeft)).toBeGreaterThan(0);
   }
   // Geri dönünce kartlar yeniden görünür.
