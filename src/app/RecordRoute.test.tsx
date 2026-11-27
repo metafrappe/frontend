@@ -140,7 +140,7 @@ describe('RecordRoute: tarih biçimi (panel sorunu 3)', () => {
     seen.formatting = undefined;
     render(<RecordRoute api={api} module="hr" doctype="leave-application" name="HR-LAP-2" />);
     await waitFor(() => expect(getBootstrap).toHaveBeenCalled());
-    expect(screen.getByText('Leave Application|HR-LAP-2|tr')).toBeInTheDocument();
+    expect(screen.getByText('Leave Application|HR-LAP-2|en')).toBeInTheDocument();
     expect(seen.formatting).toBeUndefined();
   });
 });

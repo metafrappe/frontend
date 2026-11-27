@@ -97,6 +97,13 @@ describe('Frappe tarih kalıbı çevirisi', () => {
     });
   });
 
+  it('ayar yoksa İngilizce arayüzde de gün önce gelir (en-GB, AJA-1407)', () => {
+    expect(resolveDateFormats(undefined, 'en')).toEqual({
+      date: 'DD/MM/YYYY',
+      time: 'HH:mm:ss',
+    });
+  });
+
   it('tanınmayan kalıpta dil varsayılanına döner', () => {
     expect(resolveDateFormats({ ...TR_FORMATTING, date_format: 'garip' }, 'tr').date).toBe(
       'DD.MM.YYYY',
