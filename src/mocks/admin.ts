@@ -1,6 +1,6 @@
-// G-62 ve G-98 sahte uçları: rol listesi, izin satırları, kullanıcı izinleri, erişim kuralları ve
-// Permission Log. Biçim `contracts/openapi/platform_core-access.openapi.yaml` dosyasındandır.
-// Veri sayfa her yüklendiğinde baştan kurulur. Kişi adları örnek etiketidir.
+// G-62 and G-98 mock endpoints: role list, permission rows, user permissions, access rules and
+// Permission Log. The shape comes from `contracts/openapi/platform_core-access.openapi.yaml`.
+// The data is rebuilt on every page load. Person names are sample labels.
 import { http, HttpResponse, type JsonBodyType } from 'msw';
 
 type Guard = (request: Request, options: { write: boolean }) => Response | undefined;
@@ -13,7 +13,7 @@ interface Helpers {
 const RIGHTS = ['read', 'write', 'create', 'delete', 'submit', 'cancel', 'amend'] as const;
 type Row = { role: string; permlevel: number; if_owner: 0 | 1 } & Record<string, number | string>;
 
-/** Sunucunun 403 verdiği roller (`tenant_admin.CLOSED_ROLES`). */
+/** Roles the server answers with 403 (`tenant_admin.CLOSED_ROLES`). */
 const CLOSED_ROLES = new Set([
   'Administrator',
   'System Manager',

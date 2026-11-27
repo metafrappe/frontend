@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { sampleRows } from './sampleData';
 
-// G-132: Örnek kayıt adı kayıt adresine girer. Türkçe kural "i" harfini "İ" yapardı.
+// G-132: the sample record name goes into the record address. The Turkish rule would turn "i" into a dotted capital I (U+0130).
 describe('sampleRows', () => {
   it('kayıt adı önekini dilden bağımsız büyütür', () => {
     expect(sampleRows('Price List', 1)[0]?.name).toBe('PRI-0001');

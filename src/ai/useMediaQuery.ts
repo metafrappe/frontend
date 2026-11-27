@@ -1,6 +1,6 @@
 import { useCallback, useSyncExternalStore } from 'react';
 
-/** CSS medya sorgusunu izler. Sunucu tarafında `false` döner. */
+/** Watches a CSS media query. Returns `false` on the server side. */
 export function useMediaQuery(query: string): boolean {
   const subscribe = useCallback(
     (onChange: () => void) => {

@@ -17,7 +17,7 @@ export const THEME_ATTR = 'data-theme';
 const DARK_QUERY = '(prefers-color-scheme: dark)';
 
 interface ThemeModeContextValue {
-  /** Kullanıcının seçimi: açık, koyu veya sistem. */
+  /** The user's choice: light, dark or system. */
   choice: ThemeModeChoice;
   /** Ekrana uygulanan tema. */
   resolved: ThemeMode;
@@ -58,7 +58,7 @@ export function resolveThemeMode(choice: ThemeModeChoice, prefersDark: boolean):
   return choice;
 }
 
-/** `<html data-theme>` ve `color-scheme` değerini yazar. Semantik güncelleme anında olur. */
+/** Writes `<html data-theme>` and the `color-scheme` value. The semantic update is immediate. */
 export function applyThemeToDocument(mode: ThemeMode, doc: Document = document): void {
   doc.documentElement.setAttribute(THEME_ATTR, mode);
   doc.documentElement.style.colorScheme = mode;
@@ -95,7 +95,7 @@ export function ThemeModeProvider({
     try {
       safeStorage()?.setItem(THEME_MODE_STORAGE_KEY, next);
     } catch {
-      // Depolama kapalıysa seçim yalnız oturumda kalır.
+      // If storage is unavailable, the choice lasts only for the session.
     }
   }, []);
 

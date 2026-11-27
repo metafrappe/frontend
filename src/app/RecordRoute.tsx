@@ -25,7 +25,7 @@ function decode(value: string): string {
 
 interface ModuleRecordLinkProps {
   adapter: Pick<RecordDataAdapter, 'getDocTypeMeta'>;
-  /** Hedef tür bu sayfanın türüyse modülü adresten bilinir; istek atılmaz. */
+  /** If the target type is this page's type, its module is known from the URL; no request is sent. */
   knownModule: string | undefined;
   doctype: string;
   slug: string;
@@ -34,9 +34,9 @@ interface ModuleRecordLinkProps {
 }
 
 /**
- * Hedef kayda, hedef türün kendi modül yolunda bağlantı çizer.
- * Modülü türün şeması verir. Şemayı bağdaştırıcı önbelleğe alır; aynı tür bir kez istenir.
- * Modül gelene kadar ve şema okunamazsa ad düz metin kalır. Yanlış modüle bağlantı çizilmez.
+ * Renders a link to the target record under the target type's own module path.
+ * The type's schema provides the module. The adapter caches the schema; each type is requested once.
+ * Until the module arrives, or if the schema cannot be read, the name stays plain text. No link to a wrong module is rendered.
  */
 function ModuleRecordLink({
   adapter,
@@ -69,17 +69,17 @@ function ModuleRecordLink({
 }
 
 export interface RecordRouteProps extends RecordAddress {
-  /** Oturumun ortak API istemcisi. Site kökü, CSRF deposu ve oturum süresi işi buradan gelir. */
+  /** The session's shared API client. Site root, CSRF store and session expiry handling come from here. */
   api: Pick<ApiClient, 'frappeDocument'>;
 }
 
 /**
- * Kayıt rotası. Kaydı `views-record` işinin `RecordView` bileşeni çizer.
- * İstekler ortak API istemcisinden geçer (SZ-5). Sayfa çerçevesini kabuk çizer; bu bileşen
- * yalnız içeriği verir.
- * Bağlantı alanındaki hedef kayıt, hedef türün kendi modül yolunda açılır. Örneğin izin
- * kaydındaki şirket `/setup/company/...` adresine gider. Yönlendirici panel yolunu (`/panel`)
- * kendisi ekler. Hedef sayfa kaydı sunucudan ister; izin orada denetlenir.
+ * Record route. The `RecordView` component from the `views-record` work renders the record.
+ * Requests go through the shared API client (SZ-5). The shell renders the page frame; this component
+ * supplies only the content.
+ * The target record in a link field opens under the target type's own module path. For example, the
+ * company on a permission record goes to `/setup/company/...`. The router adds the panel path (`/panel`)
+ * itself. The target page requests the record from the server; permission is checked there.
  */
 export default function RecordRoute({ api, module, doctype, name }: RecordRouteProps) {
   const locale = useLanguage();

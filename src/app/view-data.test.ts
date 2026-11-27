@@ -117,7 +117,7 @@ describe('menü verisi (navigation)', () => {
             { label: 'Rapor', link_type: 'Report', link_to: 'Sales Register' },
             { label: 'Gizli', link_type: 'DocType', link_to: 'Customer', hidden: 1 },
             { label: null, link_type: 'DocType', link_to: 'Sales Order' },
-            // Adresten geri çevrilemeyen ad menüye girmez: tıklanınca başka türe giderdi.
+            // A name that cannot be converted back from the URL is left out of the menu: clicking it would open another type.
             { label: 'Fiyat', link_type: 'DocType', link_to: 'Item-Price' },
             { label: 'Ayraç', type: 'Section Break' },
           ],
@@ -145,7 +145,7 @@ describe('menü verisi (navigation)', () => {
     expect(getBootstrap).toHaveBeenCalledWith({ signal });
   });
 
-  // G-132: Modül adı dilden bağımsız küçülür. Türkçe kural "I" harfini "ı" yapardı.
+  // G-132: The module name is lowercased independently of locale. The Turkish rule would turn "I" into a dotless i (U+0131).
   it('"I" ile başlayan modül adını "i" ile başlayan adrese çevirir', () => {
     expect(moduleSlug('Integrations')).toBe('integrations');
     expect(moduleSlug('Item Info')).toBe('item-info');
@@ -292,7 +292,7 @@ describe('loadShellAccount', () => {
   });
 });
 
-/** MVP denetimi: çalışma alanı seçici örnek şirket değil, oturumun sitesini gösterir. */
+/** MVP audit: the workspace switcher shows the session's site, not a sample company. */
 describe('workspaceFromSite', () => {
   it('site adresinin alan adını tek çalışma alanı yapar', async () => {
     const { workspaceFromSite } = await import('./view-data');

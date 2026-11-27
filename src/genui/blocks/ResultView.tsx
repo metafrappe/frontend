@@ -9,7 +9,7 @@ const ICON: Record<ResultOutcome, typeof CheckCircle> = {
   unknown: Question,
 };
 
-/** Sonuç kartı. Sonuç "başarılı", "başarısız" ya da "bilinmiyor" olur. */
+/** Result card. The outcome is succeeded, failed or unknown. */
 export function ResultView({ block }: { block: ResultBlock }) {
   const Icon = ICON[block.outcome];
   return (

@@ -5,15 +5,15 @@ import { t } from '../messages';
 
 const m = t.home;
 
-/** `YYYY-MM-DD` değerini gün adıyla, kullanıcının diliyle yazar. Okunamayan değer olduğu gibi döner. */
+/** Writes a `YYYY-MM-DD` value with the day name in the user's locale. An unreadable value is returned as is. */
 export function formatDay(value: string, format: Formatter): string {
   return format.date(value);
 }
 
 /**
- * Sunucu zamanını yazar: "22 Kasım 2026 Pazar günü, saat 09:05."
- * Frappe değeri sitenin saat dilimiyle okunur. Saat yine sitenin saat diliminde yazılır (IC-13).
- * Saat okunamazsa yalnız gün yazılır. Kabuk saat uydurmaz.
+ * Writes the server time, e.g. Sunday 22 November 2026 at 09:05 (Turkish UI example).
+ * The Frappe value is read in the site's time zone. The time is also written in the site's time zone (IC-13).
+ * If the time cannot be read, only the day is written. The shell does not make up a time.
  */
 export function formatMoment(value: string, format: Formatter): string {
   const day = formatDay(value, format);
@@ -21,12 +21,12 @@ export function formatMoment(value: string, format: Formatter): string {
   return instant ? m.moment(day, format.time(instant)) : m.single(day);
 }
 
-/** Talebin sahibi ve türü. Örnek: "Örnek Kişi 3: Örnek Yıllık İzin". */
+/** The request's owner and type. Example: "<person name>: <leave type name>" (sample person 3, sample annual leave). */
 export function pendingWho(item: PendingApproval): string {
   return m.who(item.employee_name ?? item.name, item.leave_type ?? m.leaveFallback);
 }
 
-/** Talebin tarihleri, gün sayısı ve kalan izni. Eksik bilgi yazılmaz, uydurulmaz. */
+/** The request's dates, number of days and remaining leave. Missing information is omitted, not made up. */
 export function pendingMeta(item: PendingApproval, format: Formatter): string {
   const parts: string[] = [];
   const { from_date: from, to_date: to } = item;
@@ -40,7 +40,7 @@ export function pendingMeta(item: PendingApproval, format: Formatter): string {
 
 export function problemText(problem: HomeProblem): { tag: string; text: string } {
   if (problem.kind === 'overlap') {
-    // Sözleşme iki talep verir. Önce erken başlayan gelir.
+    // The contract provides two requests. The one starting earlier comes first.
     const [a, b] = problem.leaves;
     return {
       tag: m.overlapTag,

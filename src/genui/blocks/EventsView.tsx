@@ -11,8 +11,8 @@ const ICON: Record<ToolEventStatus, typeof CheckCircle> = {
 };
 
 /**
- * Araç olayı listesi. Olaylar sunucunun gönderdiği sırayla görünür.
- * Sahte ilerleme yoktur: yüzde ya da tahmini süre yazılmaz.
+ * Tool event list. Events show in the order the server sent them.
+ * No fake progress: no percentage or estimated time is shown.
  */
 export function EventsView({ block }: { block: EventsBlock }) {
   const id = useId();

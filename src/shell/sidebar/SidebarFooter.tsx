@@ -11,11 +11,11 @@ import { useViewData } from '../view-data';
 
 interface SidebarFooterProps {
   rail: boolean;
-  /** AI kredisi. Yoksa sayaç çizilmez. */
+  /** AI credit. If absent, the meter is not rendered. */
   credit?: ShellCredit | null;
 }
 
-/** Adın ilk iki sözcüğünün baş harfleri. Örnek: "Deneme Kullanıcı" -> "DK". Harf kullanıcının diliyle büyür. */
+/** Initials of the first two words of the name. Example: "Test User" -> "TU". Letters are upper-cased using the user's locale. */
 function initialsOf(name: string, format: Formatter): string {
   return name
     .split(/[\s@.]+/)
@@ -25,11 +25,11 @@ function initialsOf(name: string, format: Formatter): string {
     .join('');
 }
 
-/** Oturumdaki kişi varsa onu, yoksa deneme sayfasının örnek kişisini gösterir. */
+/** Shows the signed-in person if there is one, otherwise the demo page's sample person. */
 function cardUser(account: ShellAccount | undefined, format: Formatter) {
   if (!account) return sampleUser;
   const name = account.fullName?.trim() || account.user;
-  // Ad varsa kimlik alt satırda görünür. Ad yoksa kimlik bir kez yazılır.
+  // With a name, the ID appears on the second line. Without a name, the ID is written once.
   return {
     name,
     role: name === account.user ? '' : account.user,
@@ -37,7 +37,7 @@ function cardUser(account: ShellAccount | undefined, format: Formatter) {
   };
 }
 
-/** Kredi geçerli mi? Toplam sıfırdan büyük, kullanılan sıfır ya da daha büyük olmalı. */
+/** Is the credit valid? Total must be greater than zero, used must be zero or greater. */
 function validCredit(credit: ShellCredit | null): credit is ShellCredit {
   return (
     credit !== null &&
@@ -48,7 +48,7 @@ function validCredit(credit: ShellCredit | null): credit is ShellCredit {
   );
 }
 
-/** AI kredisi halkası. Sayılar sunucudan gelir. */
+/** AI credit ring. The numbers come from the server. */
 function CreditRing({ rail, credit }: { rail: boolean; credit: ShellCredit }) {
   const format = useFormat();
   const percent = Math.min(100, Math.round((credit.used / credit.total) * 100));
@@ -89,8 +89,8 @@ function CreditRing({ rail, credit }: { rail: boolean; credit: ShellCredit }) {
 }
 
 /**
- * B1: AI kredisi ve kullanıcı. Sidebar'ın en koyu yüzeyidir.
- * Kredi verisi yoksa sayaç çizilmez. Uydurma sayı gösterilmez.
+ * B1: AI credit and user. The darkest surface of the sidebar.
+ * Without credit data the meter is not rendered. No made-up numbers are shown.
  */
 export function SidebarFooter({ rail, credit = null }: SidebarFooterProps) {
   const viewData = useViewData();
@@ -120,15 +120,15 @@ export function SidebarFooter({ rail, credit = null }: SidebarFooterProps) {
 type SignOutPhase = 'idle' | 'pending' | 'failed';
 
 /**
- * B1: oturumu kapatma düğmesi. İstek sürerken ikinci istek gönderilmez.
- * İstek başarısız olursa oturum açık kalır ve yalın bir hata metni görünür.
- * Dar kipte metne yer yoktur. Hata o zaman antd `message` ile kısa bir uyarı olarak görünür (Ö-2).
- * Ekran okuyucu metni her iki kipte de düğmenin yanındaki `alert` alanından bir kez duyar.
+ * B1: sign-out button. No second request is sent while one is in flight.
+ * If the request fails, the session stays open and a plain error text appears.
+ * In compact mode there is no room for text, so the error appears as a short antd `message` toast (Ö-2).
+ * In both modes the screen reader hears the text once, from the `alert` region next to the button.
  */
 function SignOutButton({ rail, signOut }: { rail: boolean; signOut: () => Promise<void> }) {
   const [phase, setPhase] = useState<SignOutPhase>('idle');
   const busy = useRef(false);
-  // Kendi tutucusuyla çalışır. Böylece antd `App` sarmalayıcısı olmadan da uyarı çıkar.
+  // Uses its own holder, so the toast appears even without the antd `App` wrapper.
   const [toast, toastHolder] = message.useMessage();
 
   const run = () => {
@@ -137,16 +137,16 @@ function SignOutButton({ rail, signOut }: { rail: boolean; signOut: () => Promis
     setPhase('pending');
     signOut().then(
       () => {
-        // Başarılı çıkışta tarayıcı sayfadan ayrılır ya da giriş ekranı açılır.
+        // On successful sign-out the browser leaves the page or the sign-in screen opens.
         busy.current = false;
       },
       () => {
         busy.current = false;
         setPhase('failed');
         if (rail) {
-          // Uyarı yalnız gözle görülür. Duyuru `alert` alanındadır. Metin iki kez okunmaz.
-          // Simge de gizlidir. antd simgesi İngilizce "close-circle" adını taşır (inceleme 2, K-2).
-          // `anticon` sınıfı antd'nin hata rengini ve aralığını simgeye verir.
+          // The toast is visual only. The announcement lives in the `alert` region, so the text is not read twice.
+          // The icon is hidden too: the antd icon carries the English name "close-circle" (review 2, K-2).
+          // The `anticon` class gives the icon antd's error colour and spacing.
           void toast.open({
             type: 'error',
             icon: (
@@ -170,7 +170,7 @@ function SignOutButton({ rail, signOut }: { rail: boolean; signOut: () => Promis
         icon={<SignOut aria-hidden="true" />}
         loading={phase === 'pending'}
         onClick={run}
-        // Yazı rengi alt kartın yüzeyinden gelir.
+        // Text colour comes from the footer card's surface.
         style={{ color: 'inherit', justifyContent: rail ? 'center' : 'flex-start' }}
         {...(rail ? { 'aria-label': t.footer.signOut } : {})}
       >

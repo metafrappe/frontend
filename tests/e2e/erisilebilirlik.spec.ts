@@ -4,10 +4,10 @@ import { expect, test, type Locator, type Page } from '../setup/playwright-fixtu
 
 const DEMO = '/_demo/foundation';
 
-/** Odak göstergesi rengi tokendan okunur (`--focus-indicator-color`); testte renk yazılmaz. */
+/** The focus indicator colour is read from the token (`--focus-indicator-color`); no colour is hard-coded in the test. */
 let FOCUS_RGB = '';
 
-/** Klavye durakları: odaklanan öğe ve göstergeyi taşıması gereken görünür kontrol. */
+/** Keyboard stops: the focused element and the visible control that must carry the indicator. */
 function stops(
   page: Page,
 ): { name: string; focus: Locator; indicator: Locator; inner?: Locator }[] {
@@ -30,7 +30,7 @@ function stops(
   ];
 }
 
-/** Odak renginde tek alt çizgi mi? Ortak denetim: `tests/setup/odak-gostergesi.ts`. */
+/** A single bottom line in the focus colour? Shared check: `tests/setup/odak-gostergesi.ts`. */
 function isBottomBarOnly(shadow: string): boolean {
   return isBottomBar(shadow, FOCUS_RGB);
 }
@@ -41,9 +41,9 @@ async function openKeyboardMode(page: Page) {
 }
 
 /**
- * Uygulama hazır olana kadar bekler: yazı tipleri yüklendi, açılış hareketleri bitti ve dokunma
- * alanı motoru düğmeyi işledi (`data-hit`). Yük altında odak bu adımlar bitmeden verilince
- * sayfa yerleşirken odak kayboluyordu.
+ * Waits until the app is ready: fonts have loaded, opening animations have finished and the touch
+ * target engine has processed the button (`data-hit`). Under load, when focus was given before these steps
+ * finished, focus was lost while the page settled.
  */
 async function appReady(page: Page) {
   await expect(page.getByRole('heading', { level: 1, name: 'Atonota' })).toBeVisible();
@@ -57,8 +57,8 @@ async function appReady(page: Page) {
 }
 
 /**
- * Deneme sayfasını açar. Azaltılmış hareket sayfa yüklenmeden önce ayarlanır. Sayfa açıkken
- * ayarlanırsa tema yeniden kurulur; o sırada verilen odak yük altında kaybolabiliyordu.
+ * Opens the test page. Reduced motion is set before the page loads. If it is set while the page
+ * is open, the theme is rebuilt; focus given at that moment could be lost under load.
  */
 async function openDemo(page: Page) {
   await page.emulateMedia({ reducedMotion: 'reduce' });
@@ -67,11 +67,11 @@ async function openDemo(page: Page) {
 }
 
 /**
- * Dokunmatik profilde (`hover: none`, örneğin `iphone-13`) üzerine gelme durumu yoktur.
- * O profilde üzerine gelme zemininin ya da yazısının değişmesi beklenmez.
- * Kontrast ölçümü yine yapılır. Masaüstü profillerinde renk değişimi zorunludur.
- * Daraltma test adında "dokunmatikte renk değişimi beklenmez" diye yazılıdır.
- * Koşu raporuna da not düşülür (inceleme 2, K1).
+ * The touch profile (`hover: none`, for example `iphone-13`) has no hover state.
+ * In that profile, the hover background or text is not expected to change.
+ * Contrast is still measured. On desktop profiles a colour change is required.
+ * This narrowing is stated in the test title (no colour change expected on touch).
+ * A note is also added to the run report (review 2, K1).
  */
 async function canHover(page: Page): Promise<boolean> {
   const hoverable = await page.evaluate(() => window.matchMedia('(hover: hover)').matches);
@@ -112,13 +112,13 @@ test.describe('odak göstergesi: üç durak', () => {
     await expect(link).toBeFocused();
     const focused = await look();
     expect(focused.line).toBe('underline');
-    // Açık temada vurgu rengi #00aacc değildir (AJA-997); değer tokendan gelir.
+    // In the light theme the accent colour is not #00aacc (AJA-997); the value comes from the token.
     expect(FOCUS_RGB, 'açık temada odak rengi birincil renk değildir').not.toBe(
       await tokenColor(page, '--color-primary'),
     );
     expect(focused.color, 'odak çizgisi vurgu rengi').toBe(FOCUS_RGB);
     expect(focused.thickness, 'odak çizgisi 2 px').toBe('2px');
-    // Bağlantı ve odak aynı vurgu rengini kullanır (AJA-997). Gösterge çizgiyi kalınlaştırır.
+    // Links and focus use the same accent colour (AJA-997). The indicator thickens the line.
     expect(
       focused.thickness !== rest.thickness || focused.color !== rest.color,
       'odak görünümü dinlenmeden farklı',
@@ -177,14 +177,14 @@ test.describe('odak göstergesi: üç durak', () => {
         await expect(stop.inner, `${stop.name}: iç öğe`).toHaveCSS('outline-style', 'none');
       }
     }
-    // Not: Chromium yüksek kontrastta odaklanan öğeye her zaman sistem halkası çizer.
-    // Bu tarayıcı güvencesidir; mod kapalıyken yalnız bizim 2 px kuralımız uygulanmaz.
+    // Note: in high contrast, Chromium always draws a system ring on the focused element.
+    // This is a browser safeguard; only our 2 px rule is not applied while the mode is off.
   });
 });
 
 /**
- * Düğmenin kontrastını tarayıcıda ölçer. Zemin, düğmenin altındaki ilk saydam olmayan atanın
- * (kart, pencere ya da sayfa) hesaplanmış arka planıdır; yarı saydam katmanlar sırayla bindirilir.
+ * Measures the button's contrast in the browser. The background is the computed background of the first
+ * opaque ancestor (card, modal or page) under the button; semi-transparent layers are composited in order.
  */
 async function measureContrast(btn: Locator): Promise<number> {
   return btn.evaluate((el) => {
@@ -206,7 +206,7 @@ async function measureContrast(btn: Locator): Promise<number> {
       };
       return 0.2126 * ch(c.r) + 0.7152 * ch(c.g) + 0.0722 * ch(c.b);
     };
-    // Atalardan aşağı doğru: en alttaki saydam olmayan zeminden başlayıp katmanları bindir.
+    // Down through the ancestors: start from the lowest opaque background and composite the layers.
     const layers: Rgba[] = [];
     for (let node = el.parentElement; node; node = node.parentElement) {
       const c = parse(getComputedStyle(node).backgroundColor);
@@ -229,9 +229,9 @@ async function switchToDark(page: Page) {
 }
 
 /**
- * Tehlikeli birincil düğme (`type="primary" danger`). antd bu düğmeye de `ant-btn-primary` sınıfını
- * verir. Projenin birincil düğme kuralları onu dışarıda bırakır: zemin kırmızı kalır, metin beyazdır,
- * kontrast iki temada ve üç durumda en az 4.5:1 olur.
+ * Danger primary button (`type="primary" danger`). antd gives this button the `ant-btn-primary` class
+ * too. The project's primary button rules exclude it: the background stays red, the text is white,
+ * and contrast is at least 4.5:1 in both themes and all three states.
  */
 test.describe('tehlikeli birincil düğme', () => {
   for (const theme of ['açık', 'koyu'] as const) {
@@ -281,9 +281,9 @@ test.describe('tehlikeli birincil düğme', () => {
 });
 
 /**
- * Kenarlıklı, metin ve bağlantı türü tehlike düğmesi. antd bu türlerde tehlike rengini yazı rengi
- * yapar. Yazı rengi düz düğmenin zemininden ayrı türetilir: yerleşim, panel ve yükseltilmiş zeminde,
- * dinlenme, üzerine gelme ve basılı durumda en az 4.5:1 verir. Düz düğmenin zemini değişmez.
+ * Default (bordered), text and link type danger button. In these types antd makes the danger colour the text
+ * colour. The text colour is derived separately from the solid button's background: on layout, panel and elevated
+ * backgrounds, in rest, hover and pressed states, it gives at least 4.5:1. The solid button's background does not change.
  */
 test.describe('tehlike düğmesi türleri: kenarlıklı, metin ve bağlantı', () => {
   const kinds = [
@@ -330,7 +330,7 @@ test.describe('tehlike düğmesi türleri: kenarlıklı, metin ve bağlantı', (
         await page.mouse.up();
         await page.mouse.move(0, 0);
       }
-      // Pencere (yükseltilmiş zemin) içindeki metin türü tehlike düğmesi.
+      // Text type danger button inside a modal (elevated background).
       await page.getByTestId('modal-open').click();
       const dialog = page.getByRole('dialog');
       await expect(dialog).toBeVisible();
@@ -361,7 +361,7 @@ test.describe('koyu birincil düğme kontrastı', () => {
     const btn = page.getByTestId('btn-md');
     const bgOf = () => btn.evaluate((el) => getComputedStyle(el).backgroundColor);
     const restBg = await bgOf();
-    // Zemin düz renktir: saydamlık yok.
+    // The background is a solid colour: no transparency.
     expect(restBg, 'zemin saydam değil').toMatch(/^rgb\(/);
     expect(await measureContrast(btn), 'normal').toBeGreaterThanOrEqual(4.5);
     const hoverable = await canHover(page);
@@ -395,7 +395,7 @@ test.describe('koyu birincil düğme kontrastı', () => {
     await btn.focus();
     await expect(btn).toBeFocused();
     const restBg = await btn.evaluate((el) => getComputedStyle(el).backgroundColor);
-    // Koyu temada basılı birincil düğme metni %100 birincil renktir (`--primary-text-hover`).
+    // In the dark theme, pressed primary button text is 100% primary colour (`--primary-text-hover`).
     const pressedText = await tokenColor(page, '--primary-text-hover');
     await page.keyboard.down('Space');
     try {
@@ -506,7 +506,7 @@ test.describe('yer tutucu ve açık seçim metni', () => {
           },
           [fg, bg] as const,
         );
-      // Giriş alanı yer tutucusu
+      // Input placeholder
       const input = page.getByTestId('input-md');
       const wrapper = page.locator('.ant-input-affix-wrapper').first();
       const placeholderColor = await input.evaluate(
@@ -514,7 +514,7 @@ test.describe('yer tutucu ve açık seçim metni', () => {
       );
       const inputBg = await wrapper.evaluate((el) => getComputedStyle(el).backgroundColor);
       expect(await contrast(placeholderColor, inputBg), 'yer tutucu').toBeGreaterThanOrEqual(4.5);
-      // Select yer tutucusu
+      // Select placeholder
       const select = page.getByTestId('select-md');
       await select.evaluate((el) => el.scrollIntoView({ block: 'start' }));
       const selectorBg = await select
@@ -524,7 +524,7 @@ test.describe('yer tutucu ve açık seçim metni', () => {
         .locator('.ant-select-selection-placeholder')
         .evaluate((el) => getComputedStyle(el).color);
       expect(await contrast(phColor, selectorBg), 'select yer tutucu').toBeGreaterThanOrEqual(4.5);
-      // Fareyle açılmış Select'te seçili metin
+      // Selected text in a Select opened with the mouse
       await select.click();
       await expect(page.locator('.ant-select-dropdown')).toBeVisible();
       await page.locator('.ant-select-item-option', { hasText: 'Orta' }).click();

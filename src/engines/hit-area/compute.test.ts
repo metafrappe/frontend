@@ -39,7 +39,7 @@ describe('dokunma alanı hesabı (R1–R10)', () => {
   });
 
   it('R3 Komşu: aynı satırdaki komşuya bakan kenar boşluğun yarısını aşamaz', () => {
-    // a: 0..100, b: 106..206 → boşluk 6 px, sınır 3 px (ideal 6 px)
+    // a: 0..100, b: 106..206 → gap 6 px, limit 3 px (ideal 6 px)
     const [a, b] = computeHitAreas([
       target('a', box(0, 0, 100, 42)),
       target('b', box(106, 0, 100, 42)),
@@ -48,7 +48,7 @@ describe('dokunma alanı hesabı (R1–R10)', () => {
     expect(a?.extension.l).toBeCloseTo(6, 6);
     expect(b?.extension.l).toBeCloseTo(3, 6);
     expect(a?.limitedByNeighbour).toBe(true);
-    // hiçbir nokta iki öğeye ait olmaz
+    // no point belongs to two elements
     expect(100 + a!.extension.r).toBeLessThanOrEqual(106 - b!.extension.l + 1e-9);
   });
 
@@ -92,7 +92,7 @@ describe('dokunma alanı hesabı (R1–R10)', () => {
   });
 
   it('R4: üst üste binen kutularda yön merkez uzaklığına göre seçilir', () => {
-    // Dikey yığın, 1 px örtüşme (Space.Compact dikey)
+    // Vertical stack, 1 px overlap (vertical Space.Compact)
     const [a, b] = computeHitAreas([
       target('a', box(0, 0, 100, 42)),
       target('b', box(0, 41, 100, 42)),
@@ -148,7 +148,7 @@ describe('dokunma alanı hesabı (R1–R10)', () => {
   });
 
   it('kaynaktaki ölçümlerle örtüşür: "Yeni sipariş" butonu', () => {
-    // Kaynak: görünen 140.43 × 41.99, komşularla sınırlı, hit 148.42 × 47.03
+    // Source: visible 140.43 × 41.99, limited by neighbours, hit 148.42 × 47.03
     const measured = designSource.hitArea.measurements.find((m) => m.label === 'Yeni sipariş');
     expect(measured).toBeDefined();
     const [r] = computeHitAreas([

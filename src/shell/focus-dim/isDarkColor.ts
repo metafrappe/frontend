@@ -1,4 +1,4 @@
-/** Rengin koyu olup olmadığını bağıl parlaklıkla bulur. */
+/** Determines whether a colour is dark using relative luminance. */
 export function isDarkColor(color: string): boolean {
   const hex = /^#([0-9a-f]{6})$/i.exec(color.trim());
   if (!hex?.[1]) return false;

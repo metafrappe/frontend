@@ -1,20 +1,21 @@
 #!/usr/bin/env node
 /**
- * Hareket kapısı. `src/design/` dışında sabit süre, `cubic-bezier(...)`, `steps(...)` ya da
- * `ease`, `ease-in`, `ease-out`, `ease-in-out`, `linear` anahtar sözcüğü yazılırsa başarısız olur.
- * Bütün süre ve eğriler `src/design/motion.ts` içindedir; bileşenler CSS değişkenlerini ya da
- * tokenları kullanır.
+ * Motion gate. Fails if a fixed duration, `cubic-bezier(...)`, `steps(...)` or the keyword
+ * `ease`, `ease-in`, `ease-out`, `ease-in-out` or `linear` is written outside `src/design/`.
+ * All durations and curves live in `src/design/motion.ts`; components use CSS variables or
+ * tokens.
  *
- * Kapı metni satır satır değil, bildirim bildirim tarar. Bildirim `transition` ya da `animation`
- * ile başlar ve noktalı virgüle (CSS), metin değerinin sonuna ya da nesne değerinin kapanışına (JS)
- * kadar sürer. Prettier'in birden çok satıra böldüğü değerler de böylece yakalanır. Web Animations
- * API (`el.animate(kareler, { duration, easing })`) çağrıları da taranır.
+ * The gate scans text declaration by declaration, not line by line. A declaration starts with `transition`
+ * or `animation` and runs to the semicolon (CSS), the end of a string value or the close of an object value (JS).
+ * Values that Prettier splits over several lines are caught this way too. Web Animations
+ * API calls (`el.animate(keyframes, { duration, easing })`) are scanned as well.
  *
- * Satır içi izin: bildirimin içine `motion-gate: allow sahip=<iş> neden=<en az 10 karakter>`
- * yorumu yazılır. Yorum yalnız kendi bildirimini susturur. Sahip ya da neden eksikse kapı yine
- * ihlal verir. İhlali olmayan bildirimdeki izin yorumu gereksizdir ve ihlal sayılır.
+ * Inline allowance: write `motion-gate: allow sahip=<task> neden=<at least 10 characters>` inside the
+ * declaration (`sahip` = owner, `neden` = reason). The comment silences only its own declaration. If the
+ * owner or reason is missing the gate still reports a violation. An allowance comment on a declaration
+ * without a violation is unnecessary and counts as a violation.
  *
- * Kullanım: node scripts/motion-gate.mjs [kök]
+ * Usage: node scripts/motion-gate.mjs [root]
  */
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join, relative, sep } from 'node:path';
@@ -32,7 +33,7 @@ const SKIP_DIRS = new Set([
   '.serena',
 ]);
 
-/** Muaf yollar: tasarım kaynağı, token katmanı, testler ve betikler. */
+/** Exempt paths: design source, token layer, tests and scripts. */
 export function isMotionExempt(file) {
   const f = file.split(sep).join('/');
   return (
@@ -46,33 +47,33 @@ export function isMotionExempt(file) {
 }
 
 /**
- * Bildirim başlangıcı: CSS (`transition-duration:`) ya da JS (`transitionDuration:`, `'transition':`,
- * `transition =`, JSX `transition=`). Grup 1 özellik adı, grup 2 ek (süre, gecikme, eğri), grup 3 ayraç.
+ * Declaration start: CSS (`transition-duration:`) or JS (`transitionDuration:`, `'transition':`,
+ * `transition =`, JSX `transition=`). Group 1 is the property name, group 2 the suffix (duration, delay, timing), group 3 the separator.
  */
 const DECLARATION_START =
   /(?<![-\w])(transition|animation)(-duration|-delay|-timing-function|Duration|Delay|TimingFunction)?['"]?\s*([:=])\s*/g;
 
-/** Web Animations API ve hareket kitaplıkları: `el.animate(kareler, seçenekler)`. */
+/** Web Animations API and motion libraries: `el.animate(keyframes, options)`. */
 const ANIMATE_CALL = /(?<![-\w])animate\s*\(/g;
 
-/** Sabit süre: `200ms`, `0.3s`, `.2s`, `1.5s`. */
+/** Fixed duration: `200ms`, `0.3s`, `.2s`, `1.5s`. */
 const DURATION_RE = /(?<![-\w.])(?:\d+(?:\.\d+)?|\.\d+)m?s(?![-\w])/;
-/** Çıplak sayı (JS): `200`, `0.3`, `.3`. */
+/** Bare number (JS): `200`, `0.3`, `.3`. */
 const NUMBER_ONLY_RE = /^(?:\d+(?:\.\d+)?|\.\d+)\s*(?:[,;)}\]]|$)/;
 const KEYWORD_RE = /(?<![-\w])(ease-in-out|ease-in|ease-out|ease|linear)(?![-\w])/;
-/** Seçenek nesnesinde sayı süre: `duration: 200`, `delay: .3`. */
+/** Numeric duration in an options object: `duration: 200`, `delay: .3`. */
 const OPTION_NUMBER_RE =
   /(?<![-\w])(?:duration|delay)['"]?\s*:\s*(?:\d+(?:\.\d+)?|\.\d+)(?![-\w.])/;
-/** Seçenek nesnesinde eğri sözcüğü: `ease: 'linear'`, `easing: "ease-in"`. */
+/** Curve keyword in an options object: `ease: 'linear'`, `easing: "ease-in"`. */
 const OPTION_KEYWORD_RE =
   /(?<![-\w])(?:ease|easing|timingFunction)['"]?\s*:\s*['"`](ease-in-out|ease-in|ease-out|ease|linear)['"`]/;
-/** Satır içi izin yorumu: sahip ve neden zorunludur. */
+/** Inline allowance comment: owner and reason are required. */
 const ALLOW_RE = /motion-gate:\s*allow(?:\s+sahip=(\S+)\s+neden=([^*\n]+?))?\s*(?:\*\/|$|\n)/m;
 const ALLOW_MIN_REASON = 10;
 
 const CLOSER = { '{': '}', '[': ']', '(': ')' };
 
-/** Tırnaklı metnin kapanışından sonraki konumu döner. */
+/** Returns the position after the closing quote of a quoted string. */
 function skipString(text, start) {
   const quote = text[start];
   let i = start + 1;
@@ -83,7 +84,7 @@ function skipString(text, start) {
   return i + 1;
 }
 
-/** `text[start]` açılış ayracıdır; eşleşen kapanıştan sonraki konumu döner. Metinler atlanır. */
+/** `text[start]` is an opening bracket; returns the position after the matching close. Strings are skipped. */
 function skipBalanced(text, start) {
   const stack = [CLOSER[text[start]]];
   let i = start + 1;
@@ -101,10 +102,10 @@ function skipBalanced(text, start) {
 }
 
 /**
- * Bildirimin değerini ve bittiği konumu döner.
- * - Tırnaklı metin tırnakla sınırlıdır (`quoted`).
- * - Nesne ya da dizi değeri eşleşen kapanışa kadar sürer (`object`); JSX `{{ ... }}` dahil.
- * - Diğer değerler CSS'te `;{}` ayracına, JS'te ayrıca `,` ve satır sonuna kadar sürer.
+ * Returns the declaration's value and the position where it ends.
+ * - A quoted string is bounded by its quotes (`quoted`).
+ * - An object or array value runs to the matching close (`object`); including JSX `{{ ... }}`.
+ * - Other values run to a `;{}` delimiter in CSS, and in JS also to `,` and the end of the line.
  */
 function readValue(text, start, isJs) {
   const first = text[start];
@@ -129,7 +130,7 @@ const NUMBER_REASON = 'süre sabit sayı olarak yazılmış (JS); motion tokenla
 const keywordReason = (word) =>
   `eğri anahtar sözcüğü yasaktır (${word}); --motion-easing-* kullanın`;
 
-/** Seçenek nesnesi ya da `animate(...)` argümanları için nedenler. */
+/** Reasons for an options object or `animate(...)` arguments. */
 function reasonsForOptions(value) {
   const reasons = [];
   if (/cubic-bezier\s*\(/.test(value)) reasons.push(CUBIC_REASON);
@@ -163,8 +164,8 @@ function reasonsFor({ value, suffix, quoted, object }) {
 }
 
 /**
- * İzin yorumunu uygular. Geçerli yorum ve gerçek ihlal: bildirim susturulur (null döner).
- * Eksik sahip ya da neden: ihlal listesine eklenir. İhlalsiz bildirimde izin: gereksiz sayılır.
+ * Applies the allowance comment. Valid comment and a real violation: the declaration is silenced (returns null).
+ * Missing owner or reason: added to the violation list. Allowance on a declaration without a violation: counted as unnecessary.
  */
 function applyAllow(text, reasons) {
   const allow = text.match(ALLOW_RE);
@@ -187,7 +188,7 @@ function lineAt(text, index) {
   return line;
 }
 
-/** Metindeki ihlalleri döner: { file, line, reason, text }. Her bildirim için en çok bir kayıt. */
+/** Returns the violations in the text: { file, line, reason, text }. At most one record per declaration. */
 export function findMotionViolations(text, file) {
   if (isMotionExempt(file)) return [];
   const isJs = /\.[cm]?[jt]sx?$/.test(file);
@@ -216,9 +217,9 @@ export function findMotionViolations(text, file) {
     const end = skipBalanced(clean, open);
     record(match.index, end, reasonsForOptions(clean.slice(open + 1, end - 1)));
   }
-  // Bildirim dışındaki steps(...) ve cubic-bezier(...) çağrıları da yasaktır. İşlenmiş bildirimlerin
-  // kapladığı parçalar boşlukla maskelenir; böylece bildirimin içindeki izin yorumu ve eğri ikinci
-  // kez okunmaz (tek satırlı bildirimde satırın başı ve sonu bildirimin dışında kalabilir).
+  // steps(...) and cubic-bezier(...) calls outside declarations are forbidden too. The spans covered by
+  // processed declarations are masked with spaces, so the allowance comment and curve inside a declaration
+  // are not read twice (in a single-line declaration the start and end of the line may lie outside it).
   const masked = covered.reduce(
     (acc, [s, e]) => acc.slice(0, s) + ' '.repeat(e - s) + acc.slice(e),
     clean,
@@ -247,7 +248,7 @@ function walk(dir, root, acc) {
   return acc;
 }
 
-/** Geçici izin listesi: scripts/motion-gate.allow.json. Her kayıt dosya, sahip ve neden taşır. */
+/** Temporary allow list: scripts/motion-gate.allow.json. Each record holds file, owner and reason. */
 export function readAllowList(
   file = join(dirname(fileURLToPath(import.meta.url)), 'motion-gate.allow.json'),
 ) {

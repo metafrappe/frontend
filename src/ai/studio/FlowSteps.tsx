@@ -3,7 +3,7 @@ import { CaretDown } from '@phosphor-icons/react';
 import { FLOW_STEPS, MODE_LABELS, STEP_LABELS } from '../agent';
 import type { FlowState, FlowStep } from '../agent';
 
-/** Yalnız "İşlem yap" kipinde açılan adımlar. */
+/** Steps that open only in `act` mode. */
 const ACT_ONLY: ReadonlySet<FlowStep> = new Set(['approval', 'apply', 'undo']);
 
 type StepState = 'done' | 'current' | 'waiting' | 'absent';
@@ -24,9 +24,9 @@ function stateOf(flow: FlowState, step: FlowStep): StepState {
 }
 
 /**
- * Akışın altı adımı (AJA-880 taslağı, 3. sürüm).
- * Durum yalnız sunucu olaylarından gelir. Yüzde ya da tahmini süre yazılmaz.
- * Liste kapalı başlar. Özet satırı şimdiki adımı ve kipi yazar.
+ * The flow's six steps (AJA-880 draft, version 3).
+ * State comes only from server events. No percentage or time estimate is shown.
+ * The list starts collapsed. The summary line shows the current step and mode.
  */
 export function FlowSteps({ flow }: { flow: FlowState }) {
   const at = FLOW_STEPS.indexOf(flow.step) + 1;

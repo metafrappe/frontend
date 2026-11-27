@@ -11,7 +11,7 @@ import { routes } from '../paths';
 export type CommandMode = 'ask' | 'do' | 'search';
 
 interface CommandBoxProps {
-  /** Hızlı eylemler. Liste boşsa bölüm çizilmez. Uydurma öneri gösterilmez. */
+  /** Quick actions. If the list is empty the section is not rendered. No made-up suggestions are shown. */
   actions?: readonly QuickAction[];
   onSubmitted?: () => void;
   mode?: CommandMode | undefined;
@@ -19,8 +19,8 @@ interface CommandBoxProps {
 }
 
 /**
- * Komut alanı. Gönderilen istek asistan sayfasına gider.
- * Bu sürümde yanıt üretilmez. Sahte yanıt gösterilmez.
+ * Command box. A submitted request goes to the assistant page.
+ * This version produces no reply. No fake reply is shown.
  */
 export function CommandBox({
   actions = [],
@@ -45,7 +45,7 @@ export function CommandBox({
     onSubmitted?.();
   };
 
-  // Sayfa eylemi sayfayı açar. İstek eylemi isteği asistana gönderir.
+  // A page action opens the page. A request action sends the request to the assistant.
   const runAction = (action: QuickAction | undefined) => {
     if (!action) return;
     if (action.to) {

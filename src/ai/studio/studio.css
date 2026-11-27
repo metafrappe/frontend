@@ -1,6 +1,6 @@
 /*
- * AI Studio yerleşimi. Bütün değerler `useGenuiVars` CSS değişkenlerinden gelir.
- * Önce telefon: tek sütun. Geniş ekranda üç sütun: 260 px, esnek, 280 px.
+ * AI Studio layout. All values come from the `useGenuiVars` CSS variables.
+ * Phone first: one column. On a wide screen three columns: 260 px, flexible, 280 px.
  */
 .ai-studio {
   display: grid;
@@ -77,7 +77,7 @@
   margin: 0;
 }
 
-/* Kaynak etiketi okunur olmalı. Uyarı rengi yalnız zeminde kalır, yazı ana metin rengidir. */
+/* The source tag must be readable. The warning colour stays on the background; text uses the main text colour. */
 .ai-scope .ant-tag.ant-tag-warning {
   color: var(--ai-text);
 }
@@ -142,7 +142,7 @@
   margin-left: var(--ai-gap-xs);
   vertical-align: text-bottom;
   background: var(--color-primary);
-  animation: /* motion-gate: allow sahip=ai-studio neden=imleç yanıp sönmesi kesik adım ister, token yok */ ai-caret
+  animation: /* motion-gate: allow sahip=ai-studio neden=caret blink needs stepped timing, no token exists */ ai-caret
     var(--ai-dur-caret) steps(1) infinite;
 }
 
@@ -158,8 +158,8 @@
 }
 
 /*
- * Akış adımları (AJA-1159). Özet satırı her zaman görünür, liste kapalı başlar.
- * Ayrım boşlukla kurulur. Durum renkle değil yazıyla anlatılır.
+ * Flow steps (AJA-1159). The summary line is always visible; the list starts collapsed.
+ * Separation comes from spacing. State is shown with text, not colour.
  */
 .ai-flow {
   padding: var(--ai-gap-xs) var(--ai-gap);
@@ -232,7 +232,7 @@
   color: var(--ai-text-2);
 }
 
-/* Yanıtın içindeki adım bölümleri: başlık ve onaylı yüzey. */
+/* Step sections inside the reply: heading and approved surface. */
 .ai-step {
   display: flex;
   flex-direction: column;
@@ -246,7 +246,7 @@
   font-weight: 600;
 }
 
-/* Kip seçici. Dar ekranda düğmeler satıra sarılır; her düğme dokunma alanını karşılar. */
+/* Mode picker. On a narrow screen the buttons wrap; each button meets the touch target. */
 .ai-mode {
   display: flex;
   flex-wrap: wrap;
@@ -375,7 +375,7 @@
   white-space: nowrap;
 }
 
-/* AM1 parıltı, AM2 nabız. Gradyan yok. */
+/* AM1 sparkle, AM2 pulse. No gradient. */
 .ai-spark {
   transform-box: fill-box;
   transform-origin: center;
@@ -433,9 +433,9 @@
 }
 
 /*
- * Çevreleyen odak halkası yasak. Sender odaklanınca renkli çerçeve çizmez.
- * Odak yüzey tonuyla gösterilir. Metin imleci de odağı gösterir.
- * Merkezi klavye odak modu `foundation` işinin ortak katmanıdır.
+ * A surrounding focus ring is forbidden. Sender draws no coloured frame on focus.
+ * Focus is shown with the surface tone. The text caret also shows focus.
+ * The central keyboard focus mode is the shared layer of the `foundation` task.
  */
 .ai-sender .ant-sender:focus-within {
   border-color: var(--ai-border);
@@ -447,10 +447,10 @@
 }
 
 /*
- * Odak (genel kural: çevreleyen odak halkası yasak).
- * antd düğmesi ve tarayıcı, odakta çevreleyen çizgi çizer. AI alanında bu çizgi kapalıdır.
- * Klavye modu foundation işinin motorundan gelir: html[data-focus-mode="keyboard"].
- * Gösterge alt kenarda tek çizgidir. Renk ve kalınlık foundation değişkenleridir.
+ * Focus (general rule: a surrounding focus ring is forbidden).
+ * The antd button and the browser draw a surrounding line on focus. It is off in the AI area.
+ * Keyboard mode comes from the foundation task's engine: html[data-focus-mode="keyboard"].
+ * The indicator is a single line on the bottom edge. Colour and thickness are foundation variables.
  */
 .ai-scope :focus-visible,
 .ai-scope .ant-btn.ant-btn:focus-visible,
@@ -471,7 +471,7 @@ html[data-focus-mode='keyboard'] .ai-scope .ant-btn.ant-btn:focus-visible {
   }
 }
 
-/* Model geçidi bağlantısı yoksa görünen açıklama. Ölçüler ortak tokenlardan gelir. */
+/* Explanation shown when there is no model gateway connection. Sizes come from shared tokens. */
 .ai-not-connected {
   box-sizing: border-box;
   max-width: var(--content-max-width);

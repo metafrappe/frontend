@@ -1,7 +1,7 @@
 import type { ScopeBlock } from '../types';
 import { MODE_LABEL } from './SurfaceLabels';
 
-/** Kapsam şeridi: kiracı, ortam, kip ve kapsam her zaman görünür. */
+/** Scope strip: tenant, environment, mode and scope are always visible. */
 export function ScopeView({ block }: { block: ScopeBlock }) {
   return (
     <div data-genui="scope" className="genui-scope" role="group" aria-label="Kapsam">

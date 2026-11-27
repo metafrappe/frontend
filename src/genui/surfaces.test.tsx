@@ -8,8 +8,8 @@ import type { GenUIActionResult } from './types';
 import { SURFACE_SAMPLES, SURFACE_STATES } from './demo/samples';
 
 /**
- * Altı yapay zekâ yüzeyi (AJA-1156): kapsam şeridi, araç olayı listesi, kaynak kartı,
- * değişiklik incelemesi, karar kuyruğu ve sonuç kartı.
+ * Six AI surfaces (AJA-1156): scope strip, tool event list, source card,
+ * change review, decision queue and result card.
  */
 const accept = () => vi.fn((): GenUIActionResult => 'accepted');
 

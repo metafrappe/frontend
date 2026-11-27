@@ -1,14 +1,14 @@
-// Ant Design X `useXAgent` için bağdaştırıcı.
+// Adapter for Ant Design X `useXAgent`.
 //
-// Akış şöyledir:
-//   1. Model geçidi (`platform_core.api.model.complete`) yanıt üretir. Model anahtarı sunucudadır.
-//   2. Model araç isterse araç MCP ucunda (`platform_core.api.ai.mcp`) oturum çereziyle çalışır.
-//      Okuma aracı kullanıcının izniyle okur. Yazma aracı yalnız öneri açar, belgeyi değiştirmez.
-//   3. Yanıt `{ text, steps, ui[] }` biçimine çevrilir (U1).
+// The flow is as follows:
+//   1. The model gateway (`platform_core.api.model.complete`) produces the reply. The model key stays on the server.
+//   2. If the model requests a tool, the tool runs on the MCP endpoint (`platform_core.api.ai.mcp`) with the session cookie.
+//      A read tool reads with the user's permissions. A write tool only opens a proposal; it does not change the document.
+//   3. The reply is converted to the `{ text, steps, ui[] }` shape (U1).
 //
-// Onay bloğunu yalnız bu bağdaştırıcı ekler. Modelin yazdığı onay bloğu atılır.
-// Onay yalnız kullanıcı düğmeye basınca `approveProposal` ile verilir (U4).
-// `steps` yalnız gerçek araç olaylarını taşır. Sahte ilerleme yoktur (AX-5).
+// Only this adapter adds the approval block. An approval block written by the model is discarded.
+// Approval is given via `approveProposal` only when the user presses the button (U4).
+// `steps` carries only real tool events. There is no fake progress (AX-5).
 import messages from './ai-messages.json';
 import { TOOL_RESULT_PREFIX } from './ai-protocol';
 import type { ApiClient } from './client';
@@ -21,7 +21,7 @@ export interface ChatMessage {
   content: string;
 }
 
-/** `ui` dizisinin bir öğesi. Türü kayıtlı değilse çizim katmanı güvenli JSON görünümü kullanır (U2). */
+/** One item of the `ui` array. If its type is not registered, the rendering layer uses a safe JSON view (U2). */
 export interface UiBlock {
   type: string;
   [prop: string]: unknown;
@@ -57,14 +57,14 @@ export interface AgentCallbacks {
 
 export interface AgentDeps {
   api: Pick<ApiClient, 'complete' | 'callMcp'>;
-  /** Model geçidindeki "AI Route" kaydının adı. */
+  /** Name of the "AI Route" record in the model gateway. */
   route: string;
   locale?: MessageLocale;
-  /** Bir yanıtta en çok kaç araç turu olur. */
+  /** Maximum number of tool rounds in one reply. */
   maxToolRounds?: number;
-  /** Bir yanıtta en çok kaç çıktı belirteci istenir. */
+  /** Maximum number of output tokens requested for one reply. */
   outputLimit?: number;
-  /** Sohbet kimliği. Sunucu yalnız özetini saklar. */
+  /** Conversation ID. The server stores only its hash. */
   conversationId?: () => string | undefined;
 }
 
@@ -110,7 +110,7 @@ function truncate(text: string): string {
   return text.length > MAX_TOOL_RESULT_CHARS ? `${text.slice(0, MAX_TOOL_RESULT_CHARS)}…` : text;
 }
 
-/** MCP araç listesini model geçidinin araç biçimine çevirir. Okuma araçları önce gelir. */
+/** Converts the MCP tool list to the model gateway's tool format. Read tools come first. */
 function toGatewayTools(result: unknown): GatewayTool[] {
   if (!isRecord(result) || !Array.isArray(result.tools)) return [];
   const tools = result.tools.filter(
@@ -133,7 +133,7 @@ function toGatewayTools(result: unknown): GatewayTool[] {
     }));
 }
 
-/** Model çıktısını güvenilmez sayar (AX-3). Biçim tutmazsa metni düz yazı olarak döner. */
+/** Treats model output as untrusted (AX-3). If the format does not match, returns the text as plain text. */
 function parseReply(text: string): AssistantReply {
   let parsed: unknown;
   try {
@@ -145,7 +145,7 @@ function parseReply(text: string): AssistantReply {
   const ui = Array.isArray(parsed.ui)
     ? parsed.ui
         .filter((block): block is UiBlock => isRecord(block) && typeof block.type === 'string')
-        // Onay bloğunu yalnız bağdaştırıcı ekler. Modelin yazdığı onay ve form gönderimi güvenilmezdir.
+        // Only the adapter adds the approval block. Approvals and form submissions written by the model are untrusted.
         .filter((block) => block.type !== 'confirm')
         .slice(0, MAX_UI_BLOCKS)
     : [];
@@ -225,7 +225,7 @@ export function createAgentRequest(deps: AgentDeps) {
           },
           conversationOptions(signal),
         );
-        // `tools/call` her zaman gövdeli yanıt bekler. Boş kabul yanıtı aracın sonucu değildir.
+        // `tools/call` always expects a response with a body. An empty accepted response is not the tool's result.
         const response =
           outcome.status === 'ok'
             ? outcome.response
@@ -282,7 +282,7 @@ export function createAgentRequest(deps: AgentDeps) {
     return { text: text.tool_round_limit, steps: [...steps], ui: [...confirms] };
   }
 
-  /** `useXAgent({ request })` için istek işlevi. */
+  /** Request function for `useXAgent({ request })`. */
   return function request(input: AgentInput, callbacks: AgentCallbacks): void {
     const controller = new AbortController();
     callbacks.onStream?.(controller);

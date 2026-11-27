@@ -3,11 +3,11 @@ import { useId } from 'react';
 import type { FieldChange } from '../types';
 
 /**
- * Sabit onay ekranının değişiklik tablosu (AX-4, AX-6).
+ * Change table of the fixed confirm screen (AX-4, AX-6).
  *
- * Her alanın adı kendi satırında başlıktır. Altında önceki ve sonraki değer
- * yan yana durur. Böylece tablo 320 CSS px'te de kaydırmadan sığar ve
- * kelimeler ortasından bölünmez. Hücreler `headers` ile başlıklara bağlıdır.
+ * Each field name is a header on its own row. The before and after values sit
+ * side by side below it. So the table fits at 320 CSS px without scrolling and
+ * words are not broken in the middle. Cells link to headers via `headers`.
  */
 export function ChangeTable({ changes }: { changes: FieldChange[] }) {
   const id = useId();

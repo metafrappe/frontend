@@ -1,16 +1,15 @@
 /**
- * AI Studio, GenUI ve baykuşa özgü tasarım değerleri.
+ * Design values specific to AI Studio, GenUI and the owl.
  *
- * Ortak değerler bu dosyada yoktur. Onlar `foundation` işinin CSS
- * değişkenlerinden gelir. Adlar `src/design/css-variables.ts` dosyasındadır.
- * Örnek: `--font-ui`, `--radius`, `--card-radius`, `--color-primary`,
- * `--motion-easing-standard` ve `--focus-indicator-color`.
+ * Shared values are not in this file. They come from the CSS variables of the
+ * `foundation` task. The names are in `src/design/css-variables.ts`.
+ * Example: `--font-ui`, `--radius`, `--card-radius`, `--color-primary`,
+ * `--motion-easing-standard` and `--focus-indicator-color`.
  *
- * Bu dosya yalnız AI alanına özgü değerleri tutar. Değerlerin çoğu
- * `design/source/control-size-config.json` dosyasından okunur. Kaynakta cümle
- * içinde yazılan değerler ayrıştırılır. Ayrıştırma başarısız olursa modül
- * yüklenirken hata verir. Böylece kaynak değişince sessizce yanlış değer
- * kullanılmaz.
+ * This file holds only values specific to the AI area. Most values are read from
+ * `design/source/control-size-config.json`. Values written inside sentences in the
+ * source are parsed. If parsing fails, the module throws while loading. This way a
+ * wrong value is not used silently when the source changes.
  */
 import config from '@design-source/control-size-config.json';
 
@@ -18,7 +17,7 @@ function fail(what: string): never {
   throw new Error(`AI tokenı kaynak dosyada bulunamadı: ${what}`);
 }
 
-/** "2.4 s" gibi ilk saniye değerini milisaniyeye çevirir. */
+/** Converts the first seconds value, such as "2.4 s", into milliseconds. */
 function secondsIn(text: string, what: string): number {
   const match = /(\d+(?:\.\d+)?)\s*s\b/.exec(text);
   if (!match?.[1]) fail(what);
@@ -44,7 +43,7 @@ export const aiMotion = {
     badge: secondsIn(itemStartingWith('AI rozeti'), 'AI rozeti'),
     ring: secondsIn(itemStartingWith('AI kredisi'), 'AI kredisi'),
   },
-  /** Öneri kartı üzerine gelince bu kadar yükselir, px. */
+  /** How far a suggestion card rises on hover, px. */
   hoverLift: Number(liftMatch[1]),
 } as const;
 
@@ -54,8 +53,8 @@ const blinkMatch = /(\d+)\s*sn/.exec(config.mascot.motion);
 if (!blinkMatch?.[1]) fail('mascot göz kırpma süresi');
 
 /**
- * Baykuşun ek renkleri `control-size-engine.html` içindeki `OWL_COLORS`
- * nesnesinden gelir. JSON yalnız ana renkleri tutar.
+ * The owl's extra colours come from the `OWL_COLORS` object in
+ * `control-size-engine.html`. The JSON holds only the main colours.
  */
 const owlEngineColors = {
   tuft: '#007f99',
@@ -92,33 +91,33 @@ export const aiStudioLayout = {
 export const genuiRules = config.aiStudio.genui.rules;
 
 /**
- * AI alanının ölçüleri. JSON bu ölçüleri tutmaz. Değerler çalışan örnek
- * `control-size-engine.html` dosyasındaki AI Studio ve GenUI kurallarıdır.
- * Sütun genişlikleri `ch` birimindedir. Diğerleri px'tir.
+ * Sizes of the AI area. The JSON does not hold these sizes. The values are the AI Studio
+ * and GenUI rules in the working example `control-size-engine.html`.
+ * Column widths are in `ch`. The others are in px.
  */
 export const aiSizes = {
-  /** `.st-welcome` en büyük genişliği. */
+  /** Maximum width of `.st-welcome`. */
   welcomeMaxWidth: 760,
-  /** `.gu-bars` yüksekliği. */
+  /** Height of `.gu-bars`. */
   chartHeight: 150,
-  /** `.gu-bar i` en büyük genişliği. */
+  /** Maximum width of `.gu-bar i`. */
   chartBarMax: 34,
-  /** `.st-caret` ölçüleri. */
+  /** Sizes of `.st-caret`. */
   caretWidth: 7,
   caretHeight: 15,
-  /** Akan imlecin yanıp sönme süresi (`stCaret 1s`), ms. */
+  /** Blink duration of the streaming caret (`stCaret 1s`), ms. */
   caretBlink: 1000,
-  /** `.gu-skel i` yüksekliği. */
+  /** Height of `.gu-skel i`. */
   skeletonLine: 12,
-  /** Gösterge ve form alanının en küçük genişliği. */
+  /** Minimum width of the indicator and the form field. */
   kpiMin: 140,
   fieldMin: 200,
-  /** Tablo açıklama sütununun en küçük ve en büyük genişliği, ch. */
+  /** Minimum and maximum width of the table description column, ch. */
   textCellMin: 16,
   textCellMax: 40,
 } as const;
 
-/** AI değerlerini CSS değişkeni olarak verir. Bileşenler değeri buradan okur. */
+/** Exposes the AI values as CSS variables. Components read the values from here. */
 export function aiCssVars(): Record<`--${string}`, string> {
   const d = aiMotion.durations;
   const z = aiSizes;

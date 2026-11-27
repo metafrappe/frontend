@@ -7,7 +7,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { devBackendPlugin, devBackendProxy, readDevBackend } from './dev-backend.ts';
 
-/** Sahte Frappe arka ucu. `ping` isteğine Frappe biçiminde `pong` yanıtı verir. */
+/** Fake Frappe backend. Answers a `ping` request with a Frappe-style `pong` response. */
 function startFakeBackend(): Promise<Server> {
   const server = createHttpServer((request, response) => {
     if (request.url?.startsWith('/api/method/ping')) {

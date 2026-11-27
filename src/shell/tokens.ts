@@ -1,12 +1,12 @@
 /**
- * Kabuğun tasarım değerleri.
+ * The shell's design values.
  *
- * Bütün değerler `design/source/control-size-config.json` dosyasından gelir.
- * Bazı kararlar kaynakta yalnız metin olarak yazılıdır. Örneğin "60 ms açılış".
- * Bu değerler aşağıda metinden okunur. Kaynak değişirse değer de değişir.
+ * All values come from `design/source/control-size-config.json`.
+ * Some decisions are written in the source only as text, e.g. the Turkish phrase for "60 ms opening".
+ * Those values are parsed from the text below. If the source changes, the value changes too.
  *
- * GEÇİCİ: `foundation` işi `src/design/` içine token dışa aktarımı ekleyince
- * bu dosya oradan okuyacak. Bkz. `src/shell/README.md`.
+ * TEMPORARY: once the `foundation` work adds a token export under `src/design/`,
+ * this file will read from there. See `src/shell/README.md`.
  */
 import config from '@design-source/control-size-config.json';
 
@@ -26,7 +26,7 @@ function str(text: string, pattern: RegExp, name: string): string {
   return m[1];
 }
 
-/** Kaynak alanı zorunludur. Alan yoksa sabit yedek yerine hata verir. */
+/** The source field is required. If it is missing, this throws instead of using a hard-coded fallback. */
 export function required<T>(value: T | undefined | null, name: string): T {
   if (value === undefined || value === null) {
     throw new Error(`Kaynak dosyada değer bulunamadı: ${name}`);
@@ -71,9 +71,9 @@ export const shellTokens = {
     widthExpanded: sb.widthExpanded,
     widthCollapsed: sb.widthCollapsed,
     item: { ...sb.item, fontSize: Math.max(14, sb.item.fontSize) },
-    /** S2: etkin öğe göstergesi genişliği. */
+    /** S2: active item indicator width. */
     indicator: num(sb.active.indicator, /(\d+)\s*px/, 'sidebar.active.indicator'),
-    /** S2: etkin zemin opaklığı, açık ve koyu tema. */
+    /** S2: active background opacity, light and dark theme. */
     activeTint: {
       light: num(sb.active.background, /%(\d+)/, 'sidebar.active.background') / 100,
       dark: num(sb.active.background, /koyu tema %(\d+)/, 'sidebar.active.background') / 100,
@@ -119,19 +119,19 @@ export const shellTokens = {
     })),
   },
   radius: config.radius.default,
-  /** Satır kutusu = metin + 8 (kaynak: typography.lineHeightRule). */
+  /** Line box = text + 8 (source: typography.lineHeightRule). */
   lineHeightAdd: num(config.typography.lineHeightRule, /\+\s*(\d+)/, 'typography.lineHeightRule'),
   fontMd: config.sizes.md.button.fontSize,
   fontLg: config.sizes.lg.button.fontSize,
-  /** Rozet yüksekliği: Pill/Tag en küçük boy (kaynak: choice.tagHeights). */
+  /** Badge height: smallest Pill/Tag size (source: choice.tagHeights). */
   tagHeight: required(config.choice.tagHeights[0], 'choice.tagHeights[0]'),
-  /** Açıklamalı dropdown ikon kutusu (kaynak: dropdown.styles described). */
+  /** Icon box of the described dropdown (source: dropdown.styles described). */
   ddBox: required(described.contentHeight, 'dropdown.styles described.contentHeight'),
   ddRow: required(described.itemHeight, 'dropdown.styles described.itemHeight'),
   motion: {
-    /** Durum nabzı (kaynak: aiMotion, çalışan ajan 1.4 s). */
+    /** Status pulse (source: aiMotion, running agent 1.4 s). */
     pulse: secondsToMs(aiItem(/ajan[^:]*:\s*([\d.]+)\s*s/i), 'aiMotion ajan'),
-    /** Kredi halkası dolumu (kaynak: aiMotion, 1.2 s). */
+    /** Credit ring fill (source: aiMotion, 1.2 s). */
     ring: secondsToMs(aiItem(/halkası:[^\d]*([\d.]+)\s*s/i), 'aiMotion halka'),
   },
   /** Approved workspace model, section 6: minimum 14 px, body 16 px. */
@@ -140,7 +140,7 @@ export const shellTokens = {
   darkPalette: config.darkPalette,
 } as const;
 
-/** Kabuk kökünde kullanılan CSS değişkenleri. Değerler yalnız tokenlardan gelir. */
+/** CSS variables used at the shell root. Values come only from tokens. */
 export function shellCssVars(): Record<`--${string}`, string> {
   const t = shellTokens;
   return {

@@ -1,4 +1,4 @@
-// Bu klasörün sahibi `shell` işidir. Dışa aktarımlar buraya eklenir.
+// This folder is owned by the `shell` task. Exports are added here.
 export { ShellApp } from './ShellApp';
 export { AppShell } from './layout/AppShell';
 export { PageHeader } from './header/PageHeader';

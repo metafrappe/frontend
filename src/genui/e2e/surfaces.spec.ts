@@ -3,9 +3,9 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '../../../tests/setup/playwright-fixtures';
 
 /**
- * Altı yapay zekâ yüzeyinin tarayıcı testleri (AJA-1156).
- * Deneme sayfası yalnız e2e derlemesinde `/_demo/genui` yolunda açılır.
- * Rota satırı `src/shell/routes.ts` içindedir.
+ * Browser tests for the six AI surfaces (AJA-1156).
+ * The demo page opens at `/_demo/genui` only in the e2e build.
+ * The route line is in `src/shell/routes.ts`.
  */
 const DEMO = '/_demo/genui';
 const AXE_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa', 'best-practice'];

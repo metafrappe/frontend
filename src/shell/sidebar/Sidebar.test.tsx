@@ -11,9 +11,9 @@ import type { Agent } from '../sampleData';
 import { sampleAgents, sampleNav, sampleWorkspaces } from '../sampleData';
 import { Sidebar } from './Sidebar';
 
-/** Deneme menüsü: rota bağlantıları ve örnek gruplar. Canlı menü örnek grup göstermez. */
+/** Demo menu: route links and sample groups. The live menu shows no sample groups. */
 const demoNav = [...routeNav, ...sampleNav];
-/** Deneme sayfasının örnek çalışma alanları. Canlı panel bunları göstermez. */
+/** Sample workspaces of the demo page. The live panel does not show them. */
 const demoWorkspaces = { items: sampleWorkspaces, current: 'a' };
 
 function setup(variant: 'solid' | 'rail' = 'solid', agents: Agent[] = sampleAgents) {

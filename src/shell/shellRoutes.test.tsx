@@ -47,7 +47,7 @@ describe('buildShellRoutes: hata ekranı', () => {
     mount('/bozuk', [broken]);
     expect(await screen.findByRole('heading', { name: 'Sayfa yüklenemedi' })).toBeInTheDocument();
     expect(screen.queryByText('Sayfa bulunamadı')).not.toBeInTheDocument();
-    // Kabuk yerinde kalır. Yalnız içerik alanı hata gösterir.
+    // The shell stays in place. Only the content area shows the error.
     expect(screen.getByRole('navigation', { name: 'Ana gezinme' })).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole('button', { name: 'Yeniden dene' }));

@@ -11,7 +11,7 @@ import {
 
 import type { ViewType } from '../tokens';
 
-/** Kaynak dosyadaki `header.viewTypes[].icon` eşlemesi. */
+/** Mapping for `header.viewTypes[].icon` in the source file. */
 export const viewIcons: Record<ViewType, Icon> = {
   table: Rows,
   kanban: Kanban,

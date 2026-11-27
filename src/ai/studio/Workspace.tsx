@@ -9,8 +9,8 @@ import { SIMULATED_TOOLS_NOTE, toEventsBlock } from './chain';
 export const FILE_NAME_ONLY_NOTE = 'Yalnız dosya adı gönderilir. Dosya içeriği okunmaz.';
 
 /**
- * Sağdaki çalışma alanı: araç işlemleri, bu sohbetin dosya adları ve güvenlik.
- * Kaynak ve mod her zaman görünür (AX-7).
+ * Workspace on the right: tool operations, this conversation's file names and security.
+ * Source and mode are always visible (AX-7).
  */
 export function Workspace({
   steps,
@@ -32,7 +32,7 @@ export function Workspace({
         {events ? (
           <>
             {source.simulated && <p className="ai-note">{SIMULATED_TOOLS_NOTE}</p>}
-            {/* Salt okunur yüzeydir. Eylem üretmez. */}
+            {/* Read-only surface. It produces no actions. */}
             <GenUI blocks={[events]} onAction={() => 'busy'} />
           </>
         ) : (

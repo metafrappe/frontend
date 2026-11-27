@@ -1,15 +1,15 @@
 /**
- * Açık temada #00aacc yazı rengi olmaz (AJA-997, QA AJA-1007).
- * Birincil renk yalnız düğme zemininde kullanılır. Yazı, bağlantı ve odak vurgu rengidir (`--color-ink`).
- * Soluk yazı (Typography type="secondary") her zeminde en az 4.5:1 verir.
- * Renkler testte yazılmaz; sayfadaki tokenlardan okunur.
+ * In the light theme #00aacc is never a text colour (AJA-997, QA AJA-1007).
+ * The primary colour is used only for button backgrounds. Text, links and focus use the accent colour (`--color-ink`).
+ * Muted text (Typography type="secondary") gives at least 4.5:1 on every background.
+ * Colours are not hard-coded in the test; they are read from the page's tokens.
  */
 import type { Page } from '@playwright/test';
 
 import { tokenColor } from '../setup/odak-gostergesi';
 import { expect, test } from '../setup/playwright-fixtures';
 
-/** Sayfa ve hazır olduğunu gösteren öğe. */
+/** A page and the element showing that it is ready. */
 const PAGES: Record<string, (page: Page) => ReturnType<Page['locator']>> = {
   '/_demo/foundation': (page) => page.getByTestId('btn-md'),
   '/_demo/controls': (page) => page.getByRole('button', { name: 'İşlemler' }),
@@ -29,7 +29,7 @@ async function openLight(page: Page, path: string) {
   });
 }
 
-/** Kendi yazısı olan görünür öğeler: verilen renkte olanların kısa tarifi. */
+/** Visible elements with their own text: short descriptions of those in the given colour. */
 function visibleTextIn(page: Page, color: string): Promise<string[]> {
   return page.evaluate((target) => {
     const hits: string[] = [];
@@ -108,9 +108,9 @@ test('açık temada giriş sayfasının soluk yazısı her zeminde en az 4.5:1 v
 });
 
 /**
- * Fare üstü ve basılı durumda yazı da vurgu rengidir (QA AJA-1023).
- * antd seçili olmayan radyo düğmesinde `colorPrimary`, kenarlıklı düğmede `colorPrimaryHover` kullanır.
- * Bu iki renk beyaz zeminde 4.5:1 vermez.
+ * In hover and pressed states the text is also the accent colour (QA AJA-1023).
+ * antd uses `colorPrimary` on an unselected radio button and `colorPrimaryHover` on a bordered button.
+ * These two colours do not give 4.5:1 on a white background.
  */
 test('açık temada seçili olmayan radyo düğmesinin üstüne gelince yazı vurgu rengidir', async ({
   page,

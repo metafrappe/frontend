@@ -1,19 +1,19 @@
-// Press hesap silme sayfasının adresi.
+// Address of the Press account deletion page.
 //
-// Orkestratör kararı, 23 Kasım 2026 Pazartesi: panel Press ucunu doğrudan çağırmaz.
-// Press ayrı bir köktür. Press kendi CSRF belirtecini kendi `/account-deletion` sayfasına yazar.
-// Tarayıcı başka kökün çerezini ve CSRF belirtecini taşımaz (SZ-7).
-// Panel "Hesabı sil" düğmesinde kullanıcıyı bu sayfaya tam sayfa yönlendirir.
-// Yeniden doğrulama ve onay Press sayfasında olur. Ayrıntı: src/api/README.md.
+// Orchestrator decision, Monday 23 November 2026: the panel does not call the Press endpoint directly.
+// Press is a separate origin. Press writes its own CSRF token into its own `/account-deletion` page.
+// The browser does not carry another origin's cookie or CSRF token (SZ-7).
+// On the "Delete account" button, the panel does a full-page redirect of the user to this page.
+// Re-authentication and confirmation happen on the Press page. Details: src/api/README.md.
 
 export interface PressEnv {
   VITE_PRESS_URL?: string;
-  /** Vite geliştirme sunucusunda doğrudur. Düz HTTP localhost yalnız bu durumda kabul edilir. */
+  /** True on the Vite dev server. Plain HTTP localhost is accepted only in this case. */
   DEV?: boolean;
 }
 
 export interface PressConfig {
-  /** Press kökü. Örnek: `https://press.example.test`. Yol, sorgu ve kullanıcı bilgisi taşımaz. */
+  /** Press origin. Example: `https://press.example.test`. It carries no path, query or user info. */
   pressUrl: string;
 }
 
@@ -24,9 +24,9 @@ function isLocalHost(hostname: string): boolean {
 }
 
 /**
- * Press ayarını okur ve kökü denetler (GV-3).
- * Ayar yoksa Press kapalıdır ve `undefined` döner.
- * Ayar geçersizse hata verir. Böylece yanlış adres sessizce kullanılmaz.
+ * Reads the Press setting and validates the origin (GV-3).
+ * If the setting is absent, Press is disabled and `undefined` is returned.
+ * If the setting is invalid, it throws. This way a wrong address is never used silently.
  */
 export function readPressConfig(env: PressEnv): PressConfig | undefined {
   const raw = env.VITE_PRESS_URL?.trim();
@@ -52,7 +52,7 @@ export function readPressConfig(env: PressEnv): PressConfig | undefined {
   return { pressUrl: url.origin };
 }
 
-/** Press hesap silme sayfasının tam adresi. Panel bu adrese tam sayfa yönlendirir. */
+/** Full address of the Press account deletion page. The panel does a full-page redirect to it. */
 export function pressAccountDeletionUrl(config: PressConfig): string {
   return `${config.pressUrl}/account-deletion`;
 }

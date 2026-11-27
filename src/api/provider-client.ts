@@ -1,11 +1,11 @@
-// Yapay zekâ sağlayıcı bağlantılarının istemcisi (model geçidi sözleşmesi).
+// Client for AI provider connections (model gateway contract).
 //
-// Bu dosya ilk yüke girmez. Modül istemcisi onu yalnız "Yapay zekâ sağlayıcıları" sayfası
-// açılınca `import()` ile yükler. İstekler yine ortak istemciden geçer (SZ-5): `frappeDocument`
-// site kökünü, CSRF başlığını, zaman aşımını ve oturum süresi işini üstlenir.
+// This file is not part of the initial load. The module client loads it with `import()` only when
+// the AI providers page opens. Requests still go through the shared
+// client (SZ-5): `frappeDocument` handles the site origin, CSRF header, timeout and session expiry.
 //
-// Değerler yalnız `./index` dosyasından alınır. Böylece ortak istemci, hata ve denetim kodu ilk
-// yükteki tek parçada kalır; paketleyici onları bu dosya için ayrı bir parçaya bölmez.
+// Values are imported only from `./index`. This keeps the shared client, error and guard code in
+// the single initial-load chunk; the bundler does not split them into a separate chunk for this file.
 import type { ApiClient, DocumentResponse, RequestOptions } from './client';
 import type { components as GatewayComponents } from './generated/platform_core-model-gateway';
 import type { Guard } from './guards';
@@ -19,7 +19,7 @@ export type SavedConnection = GatewayComponents['schemas']['SavedConnection'];
 export type ConnectionCheck = GatewayComponents['schemas']['ConnectionCheck'];
 export type ConnectionStatus = ConnectionCheck['status'];
 
-/** Katalog ve kayıt kimlikleri: küçük harf, rakam ve alt çizgi, en çok 40 karakter. */
+/** Catalogue and record IDs: lowercase letters, digits and underscores, at most 40 characters. */
 export const CATALOG_ID_PATTERN = /^[a-z][a-z0-9_]{0,39}$/;
 const FIELD_KINDS = new Set(['secret', 'text', 'url']);
 const FIELD_SCOPES = new Set(['account', 'api']);
@@ -71,7 +71,7 @@ function isProviderDefinition(value: unknown): value is ProviderDefinition {
   );
 }
 
-/** Katalog yanıtını denetler. Her sağlayıcının kategorisi listede olmalıdır. */
+/** Checks the catalogue response. Every provider's category must be in the list. */
 export const isProviderCatalog: Guard<ProviderCatalog> = (value): value is ProviderCatalog => {
   if (
     !isRecord(value) ||
@@ -122,8 +122,8 @@ const NAME_MAX = 140;
 const FIELD_VALUE_MAX = 4096;
 
 /**
- * Bağlantı girdisini sözleşme sınırlarıyla denetler. Hatalı girdi sunucuya gitmez.
- * `code` hatalı alanı söyler: `provider`, `account`, `account_name`, `api_name` ya da `fields`.
+ * Checks connection input against the contract limits. Invalid input is not sent to the server.
+ * `code` names the invalid field: `provider`, `account`, `account_name`, `api_name` or `fields`.
  */
 export function connectionInputError(input: ConnectionInput): ApiError | undefined {
   const invalid = (code: string) =>
@@ -148,22 +148,22 @@ export function connectionInputError(input: ConnectionInput): ApiError | undefin
   return undefined;
 }
 
-/** Arka uçtaki kayıt türleri (model geçidi). */
+/** DocTypes on the backend (model gateway). */
 const AI_DOCTYPES = {
   api: 'PLT AI API',
   account: 'PLT AI Account',
   provider: 'PLT AI Provider',
 } as const;
-/** Okunan alanlar. Parola alanı (`api_key`) bu listede hiç yoktur. */
+/** Fields read. The password field (`api_key`) is never in this list. */
 const AI_FIELDS = {
   api: ['name', 'api_name', 'account', 'connection_status', 'connection_checked_at'],
   account: ['name', 'account_name', 'provider'],
   provider: ['name', 'provider_name', 'catalog_provider'],
 };
-/** Liste ucunun en büyük sayfası. Daha çok bağlantı MVP kapsamında beklenmez. */
+/** Largest page of the list endpoint. More connections are not expected within the MVP scope. */
 const AI_LIST_LIMIT = 100;
 
-/** Kayıtlı API bağlantıları, hesaplar ve sağlayıcı kayıtları. Satırlar ham kayıttır. */
+/** Saved API connections, accounts and provider records. Rows are raw records. */
 export interface AiConnectionListing {
   apis: Record<string, unknown>[];
   accounts: Record<string, unknown>[];
@@ -172,7 +172,7 @@ export interface AiConnectionListing {
 
 const METHOD = '/api/method/platform_core.api.model.';
 
-/** Geçidin `message.fields` listesini okur. Yalnız metin öğeler alınır; değerler taşınmaz (SZ-8). */
+/** Reads the gateway's `message.fields` list. Only string items are taken; values are not carried (SZ-8). */
 function readFields(body: unknown): string[] | undefined {
   if (!isRecord(body) || !isRecord(body.message) || !Array.isArray(body.message.fields)) {
     return undefined;
@@ -183,14 +183,14 @@ function readFields(body: unknown): string[] | undefined {
   return fields.length > 0 ? fields : undefined;
 }
 
-/** Hata yanıtına sunucunun hatalı bulduğu alanları ekler. */
+/** Adds the fields the server found invalid to the error response. */
 function withFields(response: Extract<DocumentResponse, { ok: false }>): ApiError {
   const fields = readFields(response.body);
   return fields ? new ApiError({ ...response.error, fields }) : response.error;
 }
 
 export function createProviderClient(api: ApiClient) {
-  /** Model geçidine POST gönderir. Yanıtı `message` zarfından çıkarır ve denetler. */
+  /** Sends a POST to the model gateway. Unwraps the response from the `message` envelope and checks it. */
   async function post<T>(
     method: 'provider_catalog' | 'save_connection' | 'check_connection',
     body: object,
@@ -212,14 +212,14 @@ export function createProviderClient(api: ApiClient) {
 
   return {
     /**
-     * Sağlayıcı kataloğunu okur: kategoriler, sağlayıcılar ve alan şemaları.
-     * Sözleşme bu ucu POST yapar; istek CSRF başlığı taşır. Yanıtta sır ve model adı yoktur.
+     * Reads the provider catalogue: categories, providers and field schemas.
+     * The contract makes this endpoint POST, so the request carries the CSRF header. The response has no secrets or model names.
      */
     listProviderCatalog(options: RequestOptions = {}): Promise<ProviderCatalog> {
       return post('provider_catalog', {}, isProviderCatalog, options);
     },
 
-    /** Bağlantıları, hesapları ve sağlayıcı kayıtlarını Frappe API v2 ile okur. */
+    /** Reads connections, accounts and provider records via Frappe API v2. */
     async listAiConnections(options: RequestOptions = {}): Promise<AiConnectionListing> {
       const read = (kind: keyof typeof AI_DOCTYPES, orderBy: string) =>
         api
@@ -238,9 +238,9 @@ export function createProviderClient(api: ApiClient) {
     },
 
     /**
-     * Sağlayıcı bağlantısını kaydeder. Sır yalnız istek gövdesinde gider; yanıt sır döndürmez.
-     * `account` (var olan hesap) ya da `account_name` (yeni hesap) alanlarından tam biri verilir.
-     * Sözleşme dışı istek sunucuya gitmeden `invalid_request` hatası alır.
+     * Saves a provider connection. The secret travels only in the request body; the response returns no secret.
+     * Exactly one of `account` (existing account) or `account_name` (new account) is given.
+     * A request outside the contract gets an `invalid_request` error without reaching the server.
      */
     saveProviderConnection(
       input: ConnectionInput,
@@ -252,8 +252,8 @@ export function createProviderClient(api: ApiClient) {
     },
 
     /**
-     * Kayıtlı bağlantıyı canlı dener. Sunucu sağlayıcıya tek bir model listesi isteği gönderir.
-     * Başarısız deneme de HTTP 200 ve bir `status` değeri döner. Hız sınırı 429 `gateway_busy` olur.
+     * Tests a saved connection live. The server sends the provider a single model-list request.
+     * A failed test also returns HTTP 200 and a `status` value. Rate limiting gives 429 `gateway_busy`.
      */
     checkProviderConnection(api: string, options: RequestOptions = {}): Promise<ConnectionCheck> {
       if (api.length === 0 || api.length > NAME_MAX) {

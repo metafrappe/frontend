@@ -8,7 +8,7 @@ import { describe, expect, it } from 'vitest';
 
 import { SAMPLE_KEYCLOAK_URL } from '../mocks/fixtures';
 
-// Vitest depo kökünden koşar. `vite.config.ts` oradadır.
+// Vitest runs from the repository root, where `vite.config.ts` lives.
 const ROOT = process.cwd();
 
 async function defineFor(mode: string, command: 'build' | 'serve') {
@@ -16,7 +16,7 @@ async function defineFor(mode: string, command: 'build' | 'serve') {
   return config.define ?? {};
 }
 
-/** Ortam dosyaları geçici bir klasörden okunur. Depodaki dosyalara dokunulmaz. */
+/** Env files are read from a temporary folder. Files in the repository are not touched. */
 async function configWithEnvFile(command: 'build' | 'serve', file: string, body: string) {
   const envDir = mkdtempSync(join(tmpdir(), 'atonota-env-'));
   try {
@@ -28,9 +28,9 @@ async function configWithEnvFile(command: 'build' | 'serve', file: string, body:
 }
 
 /**
- * İnceleme 2, K-3: e2e kipinin Keycloak kökü tek bir yerdedir: `vite/e2e-env.ts`.
- * Vite bu değerleri yalnız `e2e` kipinde verir: `build:e2e` ve `dev:e2e`.
- * Depoda `.env` dosyası yoktur. Yayın kapısı her `.env` dosyasını gizli dosya sayar.
+ * Review 2, K-3: the Keycloak root for e2e mode lives in one place: `vite/e2e-env.ts`.
+ * Vite provides these values only in `e2e` mode: `build:e2e` and `dev:e2e`.
+ * The repository has no `.env` file. The release gate treats every `.env` file as a secret.
  */
 describe('e2e kipinin ortam ayarı', () => {
   it('depoda .env.e2e dosyası yoktur', () => {
@@ -49,7 +49,7 @@ describe('e2e kipinin ortam ayarı', () => {
     });
   }
 
-  // İnceleme 1, K-2: `define` ile sahte sunucu eklentisi aynı kaynağı okur: Vite'ın `loadEnv` sonucu.
+  // Review 1, K-2: `define` and the mock server plugin read the same source: the result of Vite's `loadEnv`.
   for (const command of ['build', 'serve'] as const) {
     it(`${command}: .env.e2e.local dosyasındaki değer define değerine geçer`, async () => {
       const config = await configWithEnvFile(
@@ -61,7 +61,7 @@ describe('e2e kipinin ortam ayarı', () => {
         JSON.stringify('https://yerel.example.test'),
       );
       expect(config.define?.['import.meta.env.VITE_API_MOCKS']).toBe(JSON.stringify('off'));
-      // Sahte sunucu eklentisi `config.env` değerini okur. İki kaynak aynı değeri verir.
+      // The mock server plugin reads `config.env`. Both sources give the same value.
       expect(config.env['VITE_KEYCLOAK_URL']).toBe('https://yerel.example.test');
       expect(config.env['VITE_API_MOCKS']).toBe('off');
     });

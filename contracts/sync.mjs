@@ -1,19 +1,19 @@
 #!/usr/bin/env node
 /* global process, console */
-// Arka uç sözleşmelerini bu depoya kopyalar.
+// Copies the backend contracts into this repository.
 //
-// Kaynak klasör bir ayardır. Sıra şöyledir:
-//   1. --source <klasör> argümanı
-//   2. ATONOTA_BACKEND_DIR ortam değişkeni
-// Kaynak klasör `backend/contracts/` ve `backend/docs/contracts.md` taşımalıdır.
-// Kaynak bir git deposuysa commit kimliği git ile okunur.
-// Değilse kaynak klasördeki `SOURCE_COMMIT` dosyası okunur.
+// The source folder is configurable. Precedence:
+//   1. --source <folder> argument
+//   2. ATONOTA_BACKEND_DIR environment variable
+// The source folder must contain `backend/contracts/` and `backend/docs/contracts.md`.
+// If the source is a git repository, the commit ID is read with git.
+// Otherwise the `SOURCE_COMMIT` file in the source folder is read.
 //
-// Kullanım:
+// Usage:
 //   node contracts/sync.mjs --source ../frappesetup
 //   node contracts/sync.mjs --source ../frappesetup --check
 //
-// --check bir şey yazmaz. Kopya kaynaktan farklıysa 1 ile çıkar.
+// --check writes nothing. Exits with 1 if the copy differs from the source.
 
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
@@ -59,8 +59,8 @@ function gitOutput(source, args) {
 
 export function readCommit(source) {
   try {
-    // Kaynak başka bir deponun alt klasörü olabilir. Örneğin `.pane/backend-ref`.
-    // O zaman dış deponun commit kimliği yanlış olur. Git yalnız kaynak deponun köküyse kullanılır.
+    // The source may be a subfolder of another repository, e.g. `.pane/backend-ref`.
+    // Then the outer repository's commit ID would be wrong. Git is used only if the source is the repository root.
     const top = realpathSync(gitOutput(source, ['rev-parse', '--show-toplevel']));
     if (top !== realpathSync(source)) throw new Error('Kaynak git kökü değil.');
     const commit = gitOutput(source, ['rev-parse', 'HEAD']);
@@ -83,7 +83,7 @@ export function readCommit(source) {
   }
 }
 
-/** Kaynaktaki dosyaları okur. Dönen her öğe hedef yolunu ve içeriğini taşır. */
+/** Reads the source files. Each returned item carries its target path and content. */
 export function collectSource(source) {
   const contractsDir = join(source, 'backend', 'contracts');
   const docFile = join(source, 'backend', 'docs', 'contracts.md');
@@ -116,7 +116,7 @@ function manifestText(manifest) {
   return `${JSON.stringify(manifest, null, 2)}\n`;
 }
 
-/** Hedefteki kopyanın kaynakla aynı olup olmadığını söyler. Farkları döner. */
+/** Reports whether the target copy matches the source. Returns the differences. */
 export function diffTarget(target, files, manifest) {
   const problems = [];
   for (const file of files) {
@@ -138,7 +138,7 @@ export function diffTarget(target, files, manifest) {
     return problems;
   }
   const stored = JSON.parse(readFileSync(manifestPath, 'utf8'));
-  // SOURCE_COMMIT dosyası kısa kimlik taşıyabilir. Bu yüzden kimlikler önekle karşılaştırılır.
+  // The SOURCE_COMMIT file may hold a short ID, so IDs are compared by prefix.
   const sameCommit =
     typeof stored.commit === 'string' &&
     stored.commit.length >= 7 &&

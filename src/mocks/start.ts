@@ -1,9 +1,9 @@
-// Tarayıcıda sahte sunucuyu açar.
+// Starts the mock server in the browser.
 //
-// Sahte sunucu şu durumda açılır:
-//   - geliştirme sunucusunda (`import.meta.env.DEV`), `VITE_API_MOCKS=off` değilse,
-//   - ya da derlemede `VITE_API_MOCKS=on` verilmişse. Örneğin tarayıcı testlerinde.
-// Üretim derlemesinde bu ayar yoksa sahte sunucu koda girmez.
+// The mock server starts when:
+//   - on the dev server (`import.meta.env.DEV`), unless `VITE_API_MOCKS=off`,
+//   - or the build sets `VITE_API_MOCKS=on`, for example for browser tests.
+// Without this setting, a production build does not include the mock server.
 
 export interface MockEnv {
   DEV: boolean;
@@ -18,18 +18,18 @@ export function mocksEnabled(env: MockEnv): boolean {
 export type MockStartResult = { active: false } | { active: true; csrfToken: string };
 
 /**
- * Sahte sunucunun sahiplendiği istekler: yolu `/api/` ile başlayanlar.
- * Sayfa, parça ve yazı tipi istekleri sahte sunucuya ait değildir; olduğu gibi geçer.
- * Karşılığı olmayan `/api/` isteği hata alır ve ağa çıkmaz.
+ * Requests the mock server owns: those whose path starts with `/api/`.
+ * Page, chunk and font requests do not belong to the mock server; they pass through unchanged.
+ * An `/api/` request with no handler fails and does not reach the network.
  */
 export function isMockedApiRequest(url: string): boolean {
   return new URL(url).pathname.startsWith('/api/');
 }
 
-/** API isteklerinden önce çağrılır. İşçi hazır olmadan istek gönderilmez. */
+/** Called before API requests. No request is sent before the worker is ready. */
 export async function startApiMocks(): Promise<MockStartResult> {
-  // Koşul doğrudan `import.meta.env` ile yazılır. Derleme onu sabite çevirir.
-  // Böylece kapalıyken sahte sunucu pakete girmez. Kural `mocksEnabled` ile aynıdır.
+  // The condition uses `import.meta.env` directly. The build turns it into a constant,
+  // so when off, the mock server is not bundled. The rule matches `mocksEnabled`.
   if (
     import.meta.env.VITE_API_MOCKS === 'off' ||
     !(import.meta.env.DEV || import.meta.env.VITE_API_MOCKS === 'on')

@@ -1,7 +1,7 @@
-// Ortak API istemcisi (SZ-5). Bileşenler arka uca yalnız bu istemciyle bağlanır.
+// Shared API client (SZ-5). Components reach the backend only through this client.
 //
-// Oturum aynı kökteki Frappe çereziyle yürür. Tarayıcı erişim belirteci tutmaz.
-// Yazan istek `X-Frappe-CSRF-Token` başlığını taşır (SZ-7). `Authorization` başlığı hiç gönderilmez.
+// The session runs on the same-origin Frappe cookie. The browser holds no access token.
+// Writing requests carry the `X-Frappe-CSRF-Token` header (SZ-7). The `Authorization` header is never sent.
 import createClient, { type Client, type Middleware } from 'openapi-fetch';
 
 import { version as packageVersion } from '../../package.json';
@@ -70,7 +70,7 @@ import {
 export interface ApiClientDeps {
   config: ApiConfig;
   csrf: CsrfStore;
-  /** Oturum bitince bir kez çağrılır. Örneğin kullanıcıyı girişe yönlendirir. */
+  /** Called once when the session ends. For example, it redirects the user to sign-in. */
   onSessionExpired?: (error: ApiError) => void;
 }
 
@@ -95,7 +95,7 @@ export interface JsonRpcRequest {
   params?: Record<string, unknown>;
 }
 
-/** Uygulama sürümü. PWA uçları `X-Mobile-App-Version` başlığında `1.2.3` biçimini ister. */
+/** App version. PWA endpoints require the `1.2.3` format in the `X-Mobile-App-Version` header. */
 const APP_VERSION = packageVersion;
 
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
@@ -106,7 +106,7 @@ function isJsonResponse(response: Response): boolean {
   return /^application\/(.+\+)?json\b/i.test(type);
 }
 
-/** Zaman aşımı ve ağ hatasını ortak türe çeviren fetch. Kullanıcı iptali olduğu gibi iletilir. */
+/** A fetch that converts timeouts and network errors to the shared type. A user abort is passed through unchanged. */
 function timedFetch(timeoutMs: number) {
   return async (request: Request): Promise<Response> => {
     const timer = AbortSignal.timeout(timeoutMs);
@@ -122,8 +122,8 @@ function timedFetch(timeoutMs: number) {
 }
 
 /**
- * Gövde okunurken çıkan hatayı ortak türe çevirir.
- * Kullanıcının iptali olduğu gibi iletilir. Böylece ekran iptali hata saymaz.
+ * Converts an error raised while reading the body to the shared type.
+ * A user abort is passed through unchanged, so the screen does not treat the abort as an error.
  */
 function toReadError(error: unknown, userSignal: AbortSignal | undefined): unknown {
   if (error instanceof ApiError) return error;
@@ -144,7 +144,7 @@ async function settle<T>(pending: Promise<T>, userSignal: AbortSignal | undefine
 }
 
 export interface LeaveListQuery {
-  /** Okunacak alanlar. Verilmezse Frappe yalnız `name` döner. */
+  /** Fields to read. If omitted, Frappe returns only `name`. */
   fields?: (
     | 'name'
     | 'employee'
@@ -158,7 +158,7 @@ export interface LeaveListQuery {
     | 'total_leave_days'
     | 'leave_balance'
   )[];
-  /** Eşitlik süzgeci ya da ad üyeliği süzgeci. Örnek: `[['name', 'in', ['A', 'B']]]`. */
+  /** Equality filter or name-membership filter. Example: `[['name', 'in', ['A', 'B']]]`. */
   filters?:
     | {
         name?: string;
@@ -169,13 +169,13 @@ export interface LeaveListQuery {
       }
     | ['name', 'in', string[]][];
   orderBy?: 'modified desc, name asc' | 'name asc';
-  /** Atlanacak kayıt sayısı. */
+  /** Number of records to skip. */
   start?: number;
-  /** Sayfa boyu. 1 ile 100 arasındadır. Varsayılan 20. */
+  /** Page size. Between 1 and 100. Default 20. */
   pageLength?: number;
 }
 
-/** `set_role_permission` gövdesi. `permissions` yalnız değişen hakları taşır. */
+/** `set_role_permission` body. `permissions` carries only the changed rights. */
 export interface RolePermissionChange {
   doctype: string;
   role: string;
@@ -184,7 +184,7 @@ export interface RolePermissionChange {
   permissions: Record<string, boolean>;
 }
 
-/** `list_permission_logs` süzgeçleri ve sayfası. */
+/** `list_permission_logs` filters and page. */
 export interface PermissionLogQuery {
   for_doctype?: string;
   for_document?: string;
@@ -195,15 +195,15 @@ export interface PermissionLogQuery {
 export interface ExplainPermissionQuery {
   doctype: string;
   name: string;
-  /** Verilmezse `read` sayılır. */
+  /** Treated as `read` if omitted. */
   ptype?: PermissionType;
-  /** Yalnız "System Manager" başka kullanıcıyı sorabilir. */
+  /** Only "System Manager" may query another user. */
   user?: string;
 }
 
 /**
- * Sayfalama değerlerini sözleşme sınırlarıyla denetler.
- * Geçersiz değerde istek gönderilmez ve `invalid_request` hatası döner.
+ * Checks pagination values against the contract limits.
+ * On an invalid value no request is sent and an `invalid_request` error is returned.
  */
 function pagingError(
   start: number,
@@ -224,41 +224,41 @@ function pagingError(
 export type McpResult = { status: 'accepted' } | { status: 'ok'; response: JsonRpcResponse };
 
 /**
- * Frappe'nin standart kayıt uçlarına giden istek (kayıt görünümü).
- * Bu uçlar OpenAPI sözleşmelerimizde yoktur. İstek yine ortak istemciden geçer:
- * site kökü, çerez ayarı, CSRF deposu, zaman aşımı ve oturum süresi işi aynıdır (SZ-5).
+ * A request to Frappe's standard record endpoints (record view).
+ * These endpoints are not in our OpenAPI contracts. The request still goes through the shared client:
+ * site origin, cookie setting, CSRF store, timeout and session-expiry handling are the same (SZ-5).
  */
 export interface DocumentRequest {
   method: 'GET' | 'POST' | 'PUT' | 'DELETE';
   /**
-   * Site köküne göre yol. `/api/resource/`, `/api/method/` ya da `/api/v2/` ile başlar.
-   * Yol parçaları çağıran tarafından kodlanır. Sorgu `query` alanıyla verilir.
+   * Path relative to the site origin. Starts with `/api/resource/`, `/api/method/` or `/api/v2/`.
+   * Path segments are encoded by the caller. The query is given in the `query` field.
    */
   path: string;
   query?: Record<string, string>;
-  /** JSON olarak gönderilir. */
+  /** Sent as JSON. */
   body?: unknown;
-  /** Verilirse `If-None-Match` başlığı olur. Sunucu 304 dönebilir. */
+  /** If given, becomes the `If-None-Match` header. The server may return 304. */
   etag?: string | undefined;
   signal?: AbortSignal | undefined;
-  /** `model` seçilirse model geçidinin daha uzun süresi kullanılır. */
+  /** If `model` is chosen, the model gateway's longer timeout is used. */
   timeout?: 'model' | undefined;
 }
 
 /**
- * Başarılı yanıt gövdesi ham JSON'dur. Doğrulama çağıran tarafındır.
- * Hata yanıtında ortak hata türü ve ham gövde döner. Oturum denetimi ve
- * oturum süresi işi (girişe dönüş) bu noktada yapılmış olur.
- * Ham gövde ekrana olduğu gibi konmaz; kayıt görünümü yalnız temizlenmiş iletiyi gösterir (SZ-8).
+ * A successful response body is raw JSON. Validation is the caller's job.
+ * On an error response the shared error type and the raw body are returned. The session check and
+ * session-expiry handling (return to sign-in) have already been done at this point.
+ * The raw body is never put on screen as is; the record view shows only the sanitised message (SZ-8).
  */
 export type DocumentResponse =
   | { ok: true; status: number; etag: string | undefined; body: unknown }
   | { ok: false; error: ApiError; body: unknown };
 
-/** İzinli kayıt yolu. Kök, sorgu, parça, `.` ve `..` parçası yasaktır. */
+/** Allowed record path. Origin, query, fragment, and `.` and `..` segments are forbidden. */
 const DOCUMENT_PATH = /^\/api\/(?:resource|method|v2)\/[^?#\\]+$/;
 
-/** Nokta parçası mı? Tarayıcı `%2e` kodunu nokta gibi çözer; `%2e%2e` de `..` sayılır. */
+/** Is it a dot segment? The browser decodes `%2e` as a dot, and `%2e%2e` counts as `..`. */
 function isDotSegment(segment: string): boolean {
   const plain = segment.replace(/%2e/gi, '.');
   return plain === '.' || plain === '..';
@@ -267,7 +267,7 @@ function isDotSegment(segment: string): boolean {
 function isDocumentPath(path: string): boolean {
   if (!DOCUMENT_PATH.test(path) || path.includes('//')) return false;
   if (path.split('/').some(isDotSegment)) return false;
-  // Son denetim: tarayıcının çözdüğü yol da izinli önekle başlamalıdır.
+  // Final check: the path as decoded by the browser must also start with an allowed prefix.
   const resolved = new URL(path, 'https://site.invalid').pathname;
   return DOCUMENT_PATH.test(resolved);
 }
@@ -275,7 +275,7 @@ function isDocumentPath(path: string): boolean {
 export function createApiClient({ config, csrf, onSessionExpired }: ApiClientDeps) {
   let sessionExpiredNotified = false;
 
-  /** Her isteğin ortak başlıkları. Belirteç başlığı yok, CSRF belirteci her yazmada depodan okunur. */
+  /** Headers shared by every request. No token header; the CSRF token is read from the store on every write. */
   function prepare(request: Request): Request {
     request.headers.delete('Authorization');
     request.headers.set('Accept', 'application/json');
@@ -291,7 +291,7 @@ export function createApiClient({ config, csrf, onSessionExpired }: ApiClientDep
       return prepare(request);
     },
     onResponse({ response }) {
-      // Başarılı yanıt JSON olmalıdır (SZ-5). Aksi hâlde yanıt okunmaz.
+      // A successful response must be JSON (SZ-5). Otherwise the response is not read.
       if (response.ok && !EMPTY_BODY_STATUSES.has(response.status) && !isJsonResponse(response)) {
         throw new ApiError({ kind: 'invalid_response', status: response.status });
       }
@@ -322,8 +322,8 @@ export function createApiClient({ config, csrf, onSessionExpired }: ApiClientDep
   const mobile = make<MobilePaths>(methodRoot);
   const collection = make<CollectionPaths>(methodRoot);
   const frappeV2 = make<FrappeV2Paths>(config.siteUrl);
-  // PWA uçlarının zorunlu başlıkları. Tarayıcı `Origin` başlığını kendisi koyar ve bu değeri yok sayar.
-  // Panel ve kiracı sitesi aynı köktedir. Bu yüzden değer site köküdür.
+  // Required headers for PWA endpoints. The browser sets the `Origin` header itself and ignores this value.
+  // The panel and the tenant site share an origin, so the value is the site origin.
   const pwaHeaders = {
     Origin: new URL(config.siteUrl).origin,
     'X-Mobile-App-Version': APP_VERSION,
@@ -331,9 +331,9 @@ export function createApiClient({ config, csrf, onSessionExpired }: ApiClientDep
   };
 
   /**
-   * Belirsiz 403 için oturumu ayrı ve önbelleksiz istekle doğrular (SZ-8).
-   * Oturum yalnız kesin kanıtla bitmiş sayılır: 401, misafir 403 ya da `Guest` kullanıcı.
-   * Sunucu hatası, bozuk yanıt ya da ağ hatası `unknown` olur. O zaman ilk yetki hatası korunur.
+   * For an ambiguous 403, verifies the session with a separate, uncached request (SZ-8).
+   * The session counts as ended only on firm evidence: 401, a guest 403 or the `Guest` user.
+   * A server error, malformed response or network error gives `unknown`. The original permission error is then kept.
    */
   async function checkSession(): Promise<'alive' | 'ended' | 'unknown'> {
     try {
@@ -385,7 +385,7 @@ export function createApiClient({ config, csrf, onSessionExpired }: ApiClientDep
     response: Response;
   }
 
-  /** Yanıtı denetler ve `message` alanını döner. */
+  /** Checks the response and returns the `message` field. */
   async function unwrap<T>(
     pending: Promise<FetchResult>,
     guard: Guard<T>,
@@ -398,7 +398,7 @@ export function createApiClient({ config, csrf, onSessionExpired }: ApiClientDep
     if (!response.ok) {
       return fail(response, error, { notify: options.notifySessionExpired ?? true });
     }
-    // Frappe RPC yanıtı `message`, kayıt ucu (`/api/resource`) yanıtı `data` alanını taşır.
+    // A Frappe RPC response carries `message`; a record endpoint (`/api/resource`) response carries `data`.
     const value =
       options.envelope === 'data' ? (isRecord(data) ? data.data : undefined) : readMessage(data);
     if (!guard(value)) throw new ApiError({ kind: 'invalid_response', status: response.status });
@@ -412,8 +412,8 @@ export function createApiClient({ config, csrf, onSessionExpired }: ApiClientDep
 
   return {
     /**
-     * Oturumdaki kullanıcının adını döner.
-     * Bu uç oturumu yoklar. Oturum yoksa hata verir ama girişe yönlendirme başlatmaz.
+     * Returns the name of the signed-in user.
+     * This endpoint probes the session. With no session it errors but does not start a redirect to sign-in.
      */
     getLoggedUser(options: RequestOptions = {}): Promise<string> {
       return unwrap(
@@ -426,7 +426,7 @@ export function createApiClient({ config, csrf, onSessionExpired }: ApiClientDep
       );
     },
 
-    /** Keycloak giriş adresini sunucudan ister. `state`, PKCE ve `nonce` sunucuda üretilir. */
+    /** Requests the Keycloak sign-in URL from the server. `state`, PKCE and `nonce` are generated on the server. */
     getLoginUrl(redirectTo?: string, options: RequestOptions = {}): Promise<LoginUrl> {
       return unwrap(
         identity.POST('/platform_core.api.auth.get_login_url', {
@@ -438,7 +438,7 @@ export function createApiClient({ config, csrf, onSessionExpired }: ApiClientDep
       );
     },
 
-    /** Frappe oturumunu kapatır. Keycloak çıkış adresini döner. */
+    /** Closes the Frappe session. Returns the Keycloak sign-out URL. */
     logout(options: RequestOptions = {}): Promise<LogoutUrl> {
       return unwrap(
         identity.POST('/platform_core.api.auth.logout', signalOf(options)),
@@ -447,7 +447,7 @@ export function createApiClient({ config, csrf, onSessionExpired }: ApiClientDep
       );
     },
 
-    /** Kabuğun açılış verisini okur: kullanıcı, roller, uygulamalar ve kenar çubuğu. */
+    /** Reads the shell's boot data: user, roles, apps and sidebar. */
     getBootstrap(options: RequestOptions = {}): Promise<Bootstrap> {
       return unwrap(
         shell.GET('/api/method/platform_core.api.shell.get_bootstrap', signalOf(options)),
@@ -457,8 +457,8 @@ export function createApiClient({ config, csrf, onSessionExpired }: ApiClientDep
     },
 
     /**
-     * Sunucunun DocType tanımından ürettiği sayfa tanımını okur (RE-11).
-     * `etag` verilirse sunucu değişiklik yoksa 304 döner.
+     * Reads the page definition the server generates from the DocType definition (RE-11).
+     * If `etag` is given and nothing has changed, the server returns 304.
      */
     async getDocType(
       doctype: string,
@@ -482,8 +482,8 @@ export function createApiClient({ config, csrf, onSessionExpired }: ApiClientDep
     },
 
     /**
-     * MCP ucuna tek JSON-RPC isteği gönderir. Oturum çereziyle çağrılır.
-     * Bildirim (`id` yok) kabul edilince sunucu boş 202 döner. Sonuç `accepted` olur.
+     * Sends a single JSON-RPC request to the MCP endpoint. Called with the session cookie.
+     * When a notification (no `id`) is accepted, the server returns an empty 202. The result is `accepted`.
      */
     async callMcp(
       rpc: JsonRpcRequest,
@@ -507,7 +507,7 @@ export function createApiClient({ config, csrf, onSessionExpired }: ApiClientDep
       query: { status?: Proposal['status']; limit?: number; start?: number } = {},
       options: RequestOptions = {},
     ) {
-      // Sözleşme: limit 1 ile 100, start 0 ile 10000 arasındadır.
+      // Contract: limit is between 1 and 100, start between 0 and 10000.
       const invalid = pagingError(query.start ?? 0, query.limit ?? 20, {
         maxStart: 10_000,
         maxLimit: 100,
@@ -531,7 +531,7 @@ export function createApiClient({ config, csrf, onSessionExpired }: ApiClientDep
       );
     },
 
-    /** İnsan onayı. Yalnız kullanıcı onay düğmesine bastığında çağrılır. Özet `getProposal` yanıtından gelir. */
+    /** Human approval. Called only when the user presses the approve button. The digest comes from the `getProposal` response. */
     approveProposal(
       proposalId: string,
       digest: string,
@@ -573,13 +573,13 @@ export function createApiClient({ config, csrf, onSessionExpired }: ApiClientDep
       );
     },
 
-    /** İzin başvurularını sayfa sayfa okur. Frappe kayıt ve alan iznini uygular. */
+    /** Reads leave applications page by page. Frappe applies record and field permissions. */
     listLeaveApplications(
       query: LeaveListQuery = {},
       options: RequestOptions = {},
     ): Promise<LeaveApplication[]> {
       const pageLength = query.pageLength ?? 20;
-      // Sözleşme: limit_start en az 0, limit_page_length 1 ile 100 arasındadır.
+      // Contract: limit_start is at least 0, limit_page_length is between 1 and 100.
       const invalid = pagingError(query.start ?? 0, pageLength, { maxLimit: 100 });
       if (invalid) return Promise.reject(invalid);
       return unwrap(
@@ -611,7 +611,7 @@ export function createApiClient({ config, csrf, onSessionExpired }: ApiClientDep
       );
     },
 
-    /** Başvuruyu onaylar. `version`, okunan kaydın `modified` değeridir. Eski sürüm `conflict` verir. */
+    /** Approves the application. `version` is the `modified` value of the record read. A stale version gives `conflict`. */
     approveLeave(name: string, version: string, options: RequestOptions = {}): Promise<LeaveName> {
       return unwrap(
         hrms.POST('/method/hrms_tr.api.approve_leave', {
@@ -623,7 +623,7 @@ export function createApiClient({ config, csrf, onSessionExpired }: ApiClientDep
       );
     },
 
-    /** Açık başvuruyu reddeder. `version`, okunan kaydın `modified` değeridir. Eski sürüm `conflict` verir. */
+    /** Rejects an open application. `version` is the `modified` value of the record read. A stale version gives `conflict`. */
     rejectLeave(name: string, version: string, options: RequestOptions = {}): Promise<LeaveName> {
       return unwrap(
         hrms.POST('/method/hrms_tr.api.reject_leave', {
@@ -636,8 +636,8 @@ export function createApiClient({ config, csrf, onSessionExpired }: ApiClientDep
     },
 
     /**
-     * Ana sayfanın dört parçasını okur: bekleyen onaylar, sorunlu kayıtlar,
-     * son değişiklikler ve özet sayılar. Bozuk yanıt `invalid_response` verir.
+     * Reads the four parts of the home page: pending approvals, problem records,
+     * recent changes and summary counts. A malformed response gives `invalid_response`.
      */
     getHomeSummary(options: RequestOptions = {}): Promise<HomeSummary> {
       return unwrap(
@@ -647,7 +647,7 @@ export function createApiClient({ config, csrf, onSessionExpired }: ApiClientDep
       );
     },
 
-    /** Onaylanmış başvuruyu iptal eder. `version`, okunan kaydın `modified` değeridir. */
+    /** Cancels an approved application. `version` is the `modified` value of the record read. */
     cancelLeave(name: string, version: string, options: RequestOptions = {}): Promise<LeaveName> {
       return unwrap(
         hrms.POST('/method/hrms_tr.api.cancel_leave', {
@@ -659,7 +659,7 @@ export function createApiClient({ config, csrf, onSessionExpired }: ApiClientDep
       );
     },
 
-    /** Bir kayıt üzerindeki iznin kararını ve nedenini okur. Kayıt değişmez. */
+    /** Reads the permission decision and its reason for a record. The record is not changed. */
     explainPermission(
       query: ExplainPermissionQuery,
       options: RequestOptions = {},
@@ -674,7 +674,7 @@ export function createApiClient({ config, csrf, onSessionExpired }: ApiClientDep
       );
     },
 
-    /** Oturum sahibine uyan erişim kurallarının özetini okur. */
+    /** Reads a summary of the access rules that match the session owner. */
     getAccessSummary(doctype: string, options: RequestOptions = {}): Promise<AccessSummary> {
       return unwrap(
         access.GET('/platform_core.api.access.get_access_summary', {
@@ -686,7 +686,7 @@ export function createApiClient({ config, csrf, onSessionExpired }: ApiClientDep
       );
     },
 
-    /** Bir kayıt türünün bütün rol izni satırlarını okur (G-62). Kayıt değişmez. */
+    /** Reads all role permission rows of a DocType (G-62). No record is changed. */
     listRolePermissions(doctype: string, options: RequestOptions = {}): Promise<unknown> {
       return unwrap(
         access.GET('/platform_core.api.access.list_role_permissions', {
@@ -698,7 +698,7 @@ export function createApiClient({ config, csrf, onSessionExpired }: ApiClientDep
       );
     },
 
-    /** Bir rolün bir kayıt türündeki izin satırını yazar (G-62). Yalnız verilen haklar değişir. */
+    /** Writes a role's permission row for a DocType (G-62). Only the given rights change. */
     setRolePermission(body: RolePermissionChange, options: RequestOptions = {}): Promise<unknown> {
       return unwrap(
         access.POST('/platform_core.api.access.set_role_permission', {
@@ -710,7 +710,7 @@ export function createApiClient({ config, csrf, onSessionExpired }: ApiClientDep
       );
     },
 
-    /** Permission Log satırlarını en yeniden başlayarak sayfa sayfa okur (G-98). */
+    /** Reads Permission Log rows page by page, newest first (G-98). */
     listPermissionLogs(query: PermissionLogQuery, options: RequestOptions = {}): Promise<unknown> {
       const invalid = pagingError(query.start ?? 0, query.page_length ?? 20, { maxLimit: 100 });
       if (invalid) return Promise.reject(invalid);
@@ -725,8 +725,8 @@ export function createApiClient({ config, csrf, onSessionExpired }: ApiClientDep
     },
 
     /**
-     * Hesabın telefon ve PWA kurulumlarını sayfa sayfa okur. Bir sayfada en çok 20 kurulum olur.
-     * `after`, önceki sayfanın `nextAfter` değeridir. Son sayfada `nextAfter` boştur.
+     * Reads the account's phone and PWA installations page by page. A page holds at most 20 installations.
+     * `after` is the previous page's `nextAfter` value. On the last page `nextAfter` is empty.
      */
     async listInstallations(
       after?: string,
@@ -747,7 +747,7 @@ export function createApiClient({ config, csrf, onSessionExpired }: ApiClientDep
       return { installations: page.installations, nextAfter: page.next_after };
     },
 
-    /** Hesaba ait bir kurulumu iptal eder. Tarayıcının Frappe oturumu açık kalır. */
+    /** Revokes an installation belonging to the account. The browser's Frappe session stays open. */
     revokeInstallation(installationId: string, options: RequestOptions = {}): Promise<Revoked> {
       if (!UUID_PATTERN.test(installationId)) {
         return Promise.reject(
@@ -766,9 +766,9 @@ export function createApiClient({ config, csrf, onSessionExpired }: ApiClientDep
     },
 
     /**
-     * Bir kayıt türünün kayıtlarını sayfa sayfa okur (Frappe API v2, `GET /api/v2/document/<doctype>`).
-     * Frappe kayıt ve alan iznini uygular. Toplam sayı dönmez. `hasNextPage` sonraki sayfayı söyler.
-     * Gruplu sayım ve toplam için `groupSummary` kullanılır.
+     * Reads a DocType's records page by page (Frappe API v2, `GET /api/v2/document/<doctype>`).
+     * Frappe applies record and field permissions. No total count is returned. `hasNextPage` tells whether there is a next page.
+     * Use `groupSummary` for grouped counts and totals.
      */
     async listDocuments(
       doctype: string,
@@ -798,7 +798,7 @@ export function createApiClient({ config, csrf, onSessionExpired }: ApiClientDep
         options.signal,
       );
       if (!response.ok) return fail(response, error);
-      // API v2 yanıtı `message` zarfı taşımaz. `data` ve `has_next_page` üst düzeydedir.
+      // An API v2 response has no `message` envelope. `data` and `has_next_page` are at the top level.
       if (!isRawDocumentPage(data)) {
         throw new ApiError({ kind: 'invalid_response', status: response.status });
       }
@@ -837,9 +837,9 @@ export function createApiClient({ config, csrf, onSessionExpired }: ApiClientDep
     },
 
     /**
-     * Frappe'nin standart kayıt uçlarına istek gönderir (`/api/resource`, `/api/method`, `/api/v2`).
-     * Kayıt görünümü bu yöntemi kullanır. Kendi `fetch` katmanı kurmaz (SZ-5, güvenlik bulgusu B3).
-     * İzinli yol dışındaki adrese istek gönderilmez ve `invalid_request` hatası döner.
+     * Sends a request to Frappe's standard record endpoints (`/api/resource`, `/api/method`, `/api/v2`).
+     * The record view uses this method and does not build its own `fetch` layer (SZ-5, security finding B3).
+     * No request is sent to a URL outside the allowed paths; an `invalid_request` error is returned.
      */
     async frappeDocument(request: DocumentRequest): Promise<DocumentResponse> {
       if (!isDocumentPath(request.path)) {
@@ -879,7 +879,7 @@ export function createApiClient({ config, csrf, onSessionExpired }: ApiClientDep
         try {
           body = await response.json();
         } catch (error) {
-          // Kullanıcı iptali olduğu gibi iletilir. Bozuk hata gövdesi yok sayılır.
+          // A user abort is passed through unchanged. A malformed error body is ignored.
           if (request.signal?.aborted) throw error;
         }
       }
@@ -891,7 +891,7 @@ export function createApiClient({ config, csrf, onSessionExpired }: ApiClientDep
       }
     },
 
-    /** Model geçidinden yanıt ister. Model anahtarı sunucudadır (AX-2). */
+    /** Requests a reply from the model gateway. The model key stays on the server (AX-2). */
     complete(request: CompletionRequest, options: RequestOptions = {}): Promise<CompletionResult> {
       return unwrap(
         gateway.POST('/api/method/platform_core.api.model.complete', {

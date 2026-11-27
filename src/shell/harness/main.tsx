@@ -1,9 +1,9 @@
 /**
- * Kabuk deneme sayfası. Yalnız geliştirme ve tarayıcı testleri içindir.
+ * Shell test page. For development and browser tests only.
  *
- * GEÇİCİ: Tema `foundation` işinin `src/app/` sağlayıcısına taşınınca
- * bu sayfa da onu kullanacak. Şimdilik kaynak dosyadaki türetilmiş
- * antd temasını doğrudan verir.
+ * TEMPORARY: once the theme moves to the `foundation` task's `src/app/` provider,
+ * this page will use it too. For now it passes the derived antd theme
+ * from the source file directly.
  */
 import '@fontsource-variable/outfit';
 import '@fontsource/jetbrains-mono/400.css';
@@ -39,8 +39,8 @@ const token = light
     }
   : base.token;
 
-// Kaynak karar D06: açık temada birincil metin siyah %85.
-// Koyu temada metin birincil renk %85, zemin birincil renk %14.
+// Source decision D06: in the light theme, primary text is black at 85%.
+// In the dark theme, text is the primary colour at 85% and the background the primary colour at 14%.
 const pr = config.primary;
 const buttonTokens = light
   ? { primaryColor: hexToRgba(pr.light.text, pr.light.opacity) }
@@ -51,8 +51,8 @@ const buttonTokens = light
       colorPrimaryActive: hexToRgba(pr.color, pr.dark.activeBackground),
     };
 
-// Deneme sayfası views-collection örnek tanımını kullanır. Her adres aynı örnek tanımı
-// gösterir. Kayıtlar ortak sahte sunucudan (MSW) gelir. Gerçek bağlantıyı uygulama girişi kurar.
+// The test page uses the views-collection sample definition. Every address shows the same sample
+// definition. Records come from the shared mock server (MSW). The app entry sets up the real connection.
 const mocks = await startApiMocks();
 const harnessApi = createApiClient({
   config: readApiConfig({}, window.location.origin),
@@ -63,13 +63,13 @@ const harnessViewData = {
     loadDefinition: () => Promise.resolve(sampleDefinition),
     source: createApiSource(harnessApi),
   },
-  // Ana sayfa (Bekleyenler) aynı sahte sunucuya bağlanır.
+  // The home page (the "Bekleyenler" (pending) page) connects to the same mock server.
   home: createShellHomeData(harnessApi),
 };
 
-// Deneme sayfası kabuğu istenen adreste açar. Örnek: `?yol=/satis/teklif/TEK-0003`.
-// Bu sayfada kayıt bağlantısı yoktur. Kayıt adresi kabuğun örnek formunu çizer.
-// Yalnız aynı kökteki yol kabul edilir.
+// The test page opens the shell at the requested address. Example: `?yol=/satis/teklif/TEK-0003`.
+// This page has no record connection. A record address renders the shell's sample form.
+// Only same-origin paths are accepted.
 const startPath = new URLSearchParams(window.location.search).get('yol');
 if (startPath?.startsWith('/') && !startPath.startsWith('//')) {
   window.history.replaceState(null, '', startPath);
@@ -81,7 +81,7 @@ if (!container) throw new Error('Kök öğe bulunamadı: #root');
 createRoot(container).render(
   <StrictMode>
     <ConfigProvider
-      // Deneme sayfasında oturum ve açılış verisi yoktur. Dil yedek dildir.
+      // The test page has no session or boot data. The locale is the fallback locale.
       locale={localeBundle(FALLBACK_LANGUAGE).antd}
       theme={{
         algorithm: light ? theme.defaultAlgorithm : theme.darkAlgorithm,

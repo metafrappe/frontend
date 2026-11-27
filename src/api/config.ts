@@ -1,23 +1,23 @@
 /**
- * API ayarları. Değerler derleme ortamından gelir (`VITE_` değişkenleri).
- * Bu değerler tarayıcıya gider. Buraya gizli değer konmaz (GV-1).
+ * API settings. Values come from the build environment (`VITE_` variables).
+ * These values reach the browser. No secret values go here (GV-1).
  */
 export interface ApiConfig {
-  /** Kiracı sitesinin kökü. Örnek: `https://kiraci.example.test`. Panel aynı kökte sunulur. */
+  /** Origin of the tenant site. Example: `https://kiraci.example.test`. The panel is served on the same origin. */
   siteUrl: string;
-  /** Çerez politikası. Aynı kökte `same-origin`, aynı sitede başka kökte `include` olur (SZ-14). */
+  /** Cookie policy. `same-origin` on the same origin, `include` on a different origin of the same site (SZ-14). */
   credentials: RequestCredentials;
-  /** Olağan istek için zaman aşımı, milisaniye. */
+  /** Timeout for an ordinary request, in milliseconds. */
   timeoutMs: number;
-  /** Model geçidi isteği için zaman aşımı, milisaniye. Geçidin kendi süresi 60 saniyedir. */
+  /** Timeout for a model gateway request, in milliseconds. The gateway's own timeout is 60 seconds. */
   modelTimeoutMs: number;
-  /** Keycloak'ın tarayıcıdan görülen kökü. Giriş adresi bu kökle denetlenir. */
+  /** Keycloak origin as seen from the browser. The sign-in URL is checked against this origin. */
   keycloakUrl: string;
-  /** Keycloak realm adı. */
+  /** Keycloak realm name. */
   keycloakRealm: string;
-  /** Model geçidindeki "AI Route" kaydının adı. Boşsa yapay zekâ kapalıdır. */
+  /** Name of the "AI Route" record in the model gateway. If empty, AI is disabled. */
   aiRoute: string;
-  /** CSRF belirtecini taşıyan `meta` öğesinin adı. */
+  /** Name of the `meta` element that carries the CSRF token. */
   csrfMetaName: string;
 }
 
@@ -29,7 +29,7 @@ export interface ApiEnv {
   VITE_CSRF_META_NAME?: string;
 }
 
-/** AtonotA Login giriş adresi. Ortamlarda `https://api.login.<ortam>.atonota.net` olur. */
+/** AtonotA Login sign-in URL. In each environment it is `https://api.login.<ortam>.atonota.net`. */
 export const DEFAULT_KEYCLOAK_URL = 'https://api.login.atonota.net';
 export const DEFAULT_KEYCLOAK_REALM = 'platform';
 

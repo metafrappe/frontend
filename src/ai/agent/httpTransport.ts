@@ -1,15 +1,15 @@
 import type { AgentTransport } from './types';
 
 export interface HttpTransportOptions {
-  /** Arka ucun model geçidi adresi. Adresi `api-client` işi verir. */
+  /** Backend model gateway address. The `api-client` task provides the address. */
   url: string;
   fetch?: typeof fetch;
   headers?: () => Record<string, string> | Promise<Record<string, string>>;
 }
 
 /**
- * Gerçek bağdaştırıcı. İstek kendi arka ucumuzdan geçer (AX-2).
- * Model anahtarı ve model adı arayüzde yoktur.
+ * Real adapter. The request goes through our own backend (AX-2).
+ * The model key and model name are not in the UI.
  */
 export function createHttpTransport({
   url,

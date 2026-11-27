@@ -1,10 +1,10 @@
 /**
- * Odak perdesi (D1–D5) için kabuk bağlantısı.
+ * Shell binding for the focus dim (D1–D5).
  *
- * GEÇİCİ: `foundation` işinin `src/engines/focus-dim/` motoru henüz `main`
- * dalında yok. Bu dosya aynı kararı kabuk içinde uygular. Motor gelince
- * `useFocusDim` yalnız o motoru çağıracak. Bileşenler bu kancayı kullanır,
- * bu yüzden geçişte bileşen değişmez.
+ * TEMPORARY: the `foundation` work's `src/engines/focus-dim/` engine is not yet
+ * on the `main` branch. This file applies the same decision inside the shell. Once
+ * the engine lands, `useFocusDim` will only call that engine. Components use this
+ * hook, so no component changes during the switch-over.
  */
 import { theme } from 'antd';
 import type { ReactNode } from 'react';

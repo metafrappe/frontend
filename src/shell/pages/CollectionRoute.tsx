@@ -16,8 +16,8 @@ type Loaded =
   | { key: string; status: 'error' };
 
 /**
- * Liste rotası. Koleksiyonu yalnız `views-collection` işinin `CollectionView`
- * bileşeni çizer. Kabuk yalnız tanımı getirir ve sayfa başlığını verir.
+ * List route. Only the `views-collection` task's `CollectionView` component
+ * renders the collection. The shell only fetches the definition and provides the page header.
  */
 export default function CollectionRoute() {
   const { module = '', doctype = '' } = useParams();
@@ -51,9 +51,9 @@ export default function CollectionRoute() {
     );
   }
 
-  // Yanıt bu adrese ait değilse tanım yükleniyor sayılır. Eski yanıt yeni sayfayı ezmez.
+  // If the response is not for this address, the definition counts as loading. A stale response does not overwrite the new page.
   const current = loaded?.key === key ? loaded : null;
-  // Tanım gelmeden sayfa başlığı adresteki türün adıdır. Ad verilmezse genel başlık kullanılır.
+  // Before the definition arrives, the page header is the type name from the address. Without a name the generic title is used.
   const title = data.title?.({ module, doctype }) || t.pages.records;
 
   if (!current) {
@@ -89,7 +89,7 @@ export default function CollectionRoute() {
   return (
     <div className="shell-page">
       <div className="shell-body">
-        {/* CollectionView başlığı h2 düzeyindedir. Sayfanın h1 başlığını kabuk verir. */}
+        {/* The CollectionView heading is at h2 level. The shell provides the page's h1. */}
         <h1 className="shell-vh">{current.definition.label}</h1>
         <CollectionView
           definition={current.definition}

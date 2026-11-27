@@ -1,17 +1,17 @@
 /**
- * GenUI blok sözleşmesi (U1).
+ * GenUI block contract (U1).
  *
- * Asistan yanıtı `{ text, steps, ui[] }` biçimindedir. `ui` tipli blok dizisidir.
- * Sunucudan gelen veri güvenilmez sayılır. `schema.ts` her bloğu doğrular.
+ * The assistant reply has the shape `{ text, steps, ui[] }`. `ui` is an array of typed blocks.
+ * Data from the server is treated as untrusted. `schema.ts` validates every block.
  */
 
 export interface KpiItem {
   label: string;
   value: string;
   delta?: number;
-  /** Değişim birimi. Örnek: "%" ya da "puan". */
+  /** Unit of the change. Example: "%" or "puan". */
   unit?: string;
-  /** Düşüş iyi bir şeyse "down" olur. Örnek: iade oranı. */
+  /** "down" when a fall is good. Example: return rate. */
   goodWhen?: 'up' | 'down';
 }
 
@@ -35,8 +35,8 @@ export interface TableColumn {
   key: string;
   title: string;
   /**
-   * `id`: kimlik ya da kısa değer. Satır sarılmaz, en küçük genişlik korunur.
-   * `text`: açıklama. Kelimeler arasından sarılır. Varsayılan budur.
+   * `id`: identifier or short value. The line does not wrap; the minimum width is kept.
+   * `text`: description. Wraps between words. This is the default.
    */
   kind?: 'id' | 'text';
 }
@@ -51,7 +51,7 @@ export interface TableBlock {
   rows: Record<string, TableCell>[];
 }
 
-/** Yazma işleminde değişecek tek alan. Onay ekranı önce ve sonra değerini gösterir. */
+/** One field a write will change. The confirm screen shows its before and after values. */
 export interface FieldChange {
   field: string;
   before: string;
@@ -61,44 +61,44 @@ export interface FieldChange {
 export interface ConfirmBlock {
   type: 'confirm';
   /**
-   * İşlem kimliği. Sunucu onayı bu kimliğe bağlar.
-   * Sözleşme: sunucu her yeni işlem için yeni bir kimlik üretir.
-   * Aynı soru yeniden sorulsa da kimlik yenidir.
-   * Onay tek kullanımlıktır. Aynı kimlik ikinci kez gönderilmez.
+   * Operation ID. The server binds the approval to this ID.
+   * Contract: the server creates a new ID for every new operation.
+   * Even if the same question is asked again, the ID is new.
+   * An approval is single-use. The same ID is never sent twice.
    */
   id: string;
   title: string;
-  /** İşlemin özeti. Örnek: kime ne gideceği ve geri alınıp alınamayacağı. */
+  /** Summary of the operation. Example: what goes to whom and whether it can be undone. */
   summary: string;
-  /** Değişecek alanlar. Boş olamaz. Kullanıcı değişikliği görmeden onay vermez. */
+  /** Fields that will change. Cannot be empty. The user never approves without seeing them. */
   changes: FieldChange[];
   confirmLabel: string;
   cancelLabel: string;
   danger?: boolean;
   /**
-   * Onayın son geçerlilik zamanı, ISO 8601. Örnek: `2026-11-24T12:00:00+03:00`.
-   * Süre geçince blok "Süresi doldu" yazar ve onay düğmesi görünmez.
+   * Expiry time of the approval, ISO 8601. Example: `2026-11-24T12:00:00+03:00`.
+   * After expiry the block shows "Expired" and the approve button is hidden.
    */
   expiresAt?: string;
   /**
-   * Risk düzeyi. Düzeyi sunucu atar, model değiştiremez.
-   * Düzey gelmezse kart R1 gibi davranır.
-   * - R1: tek "Onayla" düğmesi.
-   * - R2: "Önizlemeyi okudum." kutusu işaretlenince düğme açılır.
-   * - R3: kullanıcı `target.name` değerini elle yazınca düğme açılır.
+   * Risk level. The server assigns the level; the model cannot change it.
+   * If no level arrives, the card behaves as R1.
+   * - R1: a single "Approve" button.
+   * - R2: the button is enabled once the "I have read the preview." box is ticked.
+   * - R3: the button is enabled once the user types the `target.name` value by hand.
    */
   risk?: ConfirmRisk;
-  /** Hedef kayıt. `label` kartta görünür. R3 düzeyinde `name` elle yazılır. R3 için zorunludur. */
+  /** Target record. `label` shows on the card. At R3 `name` is typed by hand. Required for R3. */
   target?: ConfirmTarget;
   /**
-   * Sunucu geri alma önerisi ucunu bildirirse `true` olur.
-   * Yalnız o zaman onaydan sonra "Geri almayı öner" düğmesi görünür.
-   * Kartta hiçbir zaman "Geri al" düğmesi yoktur. Sunucuda geri alma yok.
+   * `true` when the server advertises the undo-proposal endpoint.
+   * Only then does the "Propose undo" button appear after approval.
+   * The card never has an "Undo" button. The server has no undo.
    */
   undoProposal?: boolean;
 }
 
-/** Onay kartı yalnız yazan işlemde açılır. R0 okuma onay istemez. */
+/** The confirm card opens only for write operations. An R0 read needs no approval. */
 export type ConfirmRisk = Exclude<RiskLevel, 'R0'>;
 
 export interface ConfirmTarget {
@@ -135,31 +135,31 @@ export interface ChoicesBlock {
 }
 
 /*
- * Yapay zekâ yüzeyleri (AJA-1156). Model belgesi: "Onaylı bileşen listesi".
- * Dürüstlük kuralı: yüzeylerde güven yüzdesi ve modelin iç düşüncesi yoktur.
- * Şema bu yüzeylerde tanımsız alanı reddeder.
+ * AI surfaces (AJA-1156). Model document: "Approved component list".
+ * Honesty rule: surfaces show no confidence percentage and no model internal reasoning.
+ * The schema rejects undefined fields on these surfaces.
  */
 
-/** Yardımcının kipi. Ekranda "Sor", "Ara", "Taslak hazırla" ya da "İşlem yap" yazar. */
+/** Assistant mode. The screen shows Ask, Search, Draft or Act. */
 export type AssistMode = 'ask' | 'search' | 'draft' | 'act';
 
-/** Kapsam şeridi: işin hangi kiracıda, ortamda, kipte ve kapsamda yapıldığı. */
+/** Scope strip: the tenant, environment, mode and scope the work runs in. */
 export interface ScopeBlock {
   type: 'scope';
   tenant: string;
   environment: string;
   mode: AssistMode;
-  /** Örnek: "İnsan kaynakları, izin talepleri". */
+  /** Example: "Human resources, leave requests". */
   scope?: string;
 }
 
-/** Araç olayının durumu. Olay yalnız sunucudan gelince eklenir. */
+/** Status of a tool event. An event is added only when it arrives from the server. */
 export type ToolEventStatus = 'running' | 'done' | 'failed';
 
 export interface ToolEvent {
-  /** Olayın tekil kimliği. Liste sırası sunucunun gönderdiği sıradır. */
+  /** Unique event ID. List order is the order the server sent. */
   id: string;
-  /** Aracın adı. Örnek: `izin_talebi.oku`. */
+  /** Tool name. Example: `izin_talebi.oku`. */
   tool: string;
   summary: string;
   status: ToolEventStatus;
@@ -170,33 +170,33 @@ export interface EventsBlock {
   items: ToolEvent[];
 }
 
-/** Kaynak. Bağlantı yalnız `https://`, `http://` ya da `/` ile başlar. */
+/** Source. The link starts only with `https://`, `http://` or `/`. */
 export interface SourceItem {
   title: string;
   url?: string;
 }
 
-/** Kaynak kartı. Liste boşsa kart "Kaynak yok." yazar. */
+/** Source card. If the list is empty the card shows "No sources.". */
 export interface SourceBlock {
   type: 'source';
   items: SourceItem[];
 }
 
-/** Risk düzeyini sunucu atar. Model düzeyi değiştiremez. */
+/** The server assigns the risk level. The model cannot change it. */
 export type RiskLevel = 'R0' | 'R1' | 'R2' | 'R3';
 
-/** Değişiklik incelemesi. Salt okunurdur, onay düğmesi taşımaz. */
+/** Change review. Read-only; it has no approve button. */
 export interface ReviewBlock {
   type: 'review';
-  /** Bir cümlelik özet. */
+  /** One-sentence summary. */
   summary: string;
   risk: RiskLevel;
-  /** Hedef kayıt. */
+  /** Target record. */
   target: string;
-  /** "Geri alınabilir mi?" sorusunun yanıtı. */
+  /** Answer to the question "Can it be undone?". */
   reversible: string;
   changes: FieldChange[];
-  /** Kaynaklar. Yoksa ekran "Kaynak yok." yazar. */
+  /** Sources. If none, the screen shows "No sources.". */
   sources?: SourceItem[];
 }
 
@@ -207,13 +207,13 @@ export interface QueueItem {
   risk: RiskLevel;
 }
 
-/** Karar kuyruğu: kullanıcının kararını bekleyen işler. Salt okunurdur. */
+/** Decision queue: items waiting for the user's decision. Read-only. */
 export interface QueueBlock {
   type: 'queue';
   items: QueueItem[];
 }
 
-/** Sunucu işi bir kez yapar. Sonuç "başarılı", "başarısız" ya da "bilinmiyor" olur. */
+/** The server runs the job once. The outcome is succeeded, failed or unknown. */
 export type ResultOutcome = 'succeeded' | 'failed' | 'unknown';
 
 export interface ResultBlock {
@@ -222,7 +222,7 @@ export interface ResultBlock {
   summary: string;
 }
 
-/** Doğrulanamayan blok. Kayıtlı türse JSON olarak gösterilir, değilse hiç çizilmez. */
+/** Block that failed validation. Shown as JSON if its type is registered, otherwise not drawn. */
 export interface UnknownBlock {
   type: 'unknown';
   raw: unknown;
@@ -249,28 +249,28 @@ export type BlockType = KnownBlock['type'];
 export type FormValues = Record<string, string | string[]>;
 
 /**
- * Eylemin sonucu.
- * - `accepted`: sohbet kararı aldı. Blok kilitlenir.
- * - `busy`: sohbet meşgul. Blok açık kalır, kullanıcı sonra yeniden dener.
- * - `used`: bu onay daha önce gönderildi. Blok kilitlenir, karar yeniden gitmez.
+ * Result of an action.
+ * - `accepted`: the chat took the decision. The block locks.
+ * - `busy`: the chat is busy. The block stays open; the user retries later.
+ * - `used`: this approval was already sent. The block locks; the decision is not resent.
  */
 export type GenUIActionResult = 'accepted' | 'busy' | 'used';
 
-/** Eylemi alan işlev. */
+/** Function that receives the action. */
 export type GenUIActionHandler = (action: GenUIAction) => GenUIActionResult;
 
 export type GenUIDecision = 'approved' | 'rejected';
 
 /**
- * Sohbet geçmişinden çıkarılan kararlar. Anahtar blok kimliğidir.
- * Blok yeniden çizilince kararı buradan okur. Örnek: sohbet değişip geri gelince.
+ * Decisions derived from chat history. The key is the block ID.
+ * A redrawn block reads its decision from here. Example: after switching chats and back.
  */
 export type GenUIDecisions = Readonly<Record<string, GenUIDecision>>;
 
 /**
- * Bloktan çıkan kullanıcı eylemi.
- * Eylem yalnız kullanıcı bir düğmeye basınca oluşur (U4).
- * Sohbet bu eylemi yeni bir kullanıcı mesajına çevirir.
+ * User action emitted by a block.
+ * An action is created only when the user presses a button (U4).
+ * The chat turns this action into a new user message.
  */
 export type GenUIAction =
   | { kind: 'ask'; text: string }

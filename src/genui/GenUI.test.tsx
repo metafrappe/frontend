@@ -280,7 +280,7 @@ describe('Seçenek bloğu', () => {
   });
 });
 
-/** MVP denetimi: süresi dolmuş öneri onaylanamaz. */
+/** MVP audit: an expired proposal cannot be approved. */
 describe('Onay bloğunun süresi', () => {
   it('süresi geçmiş onay "Süresi doldu" yazar ve onay düğmesi göstermez', () => {
     const [block] = parseBlocks([{ ...confirmBlock, expiresAt: '2000-01-01T00:00:00Z' }]);

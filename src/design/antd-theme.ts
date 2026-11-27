@@ -1,6 +1,6 @@
 /**
- * antd temasını kaynak kararlardan üretir. Açık ve koyu tema aynı tokenlardan çıkar.
- * Başlangıç noktası kaynaktaki `derived.antdTheme` nesnesidir; test bununla karşılaştırır.
+ * Builds the antd theme from the source decisions. Light and dark themes come from the same tokens.
+ * The starting point is the source `derived.antdTheme` object; the test compares against it.
  */
 import { theme as antdTheme, type ThemeConfig } from 'antd';
 
@@ -24,7 +24,7 @@ import {
 } from './tokens';
 
 export interface BuildThemeOptions {
-  /** `prefers-reduced-motion: reduce` açıkken antd hareketi kapanır. */
+  /** antd motion turns off while `prefers-reduced-motion: reduce` is on. */
   reducedMotion?: boolean;
 }
 
@@ -47,15 +47,15 @@ export function buildAntdTheme(mode: ThemeMode, options: BuildThemeOptions = {})
     colorLinkHover: link[mode].hover,
     colorLinkActive: link[mode].active,
     colorInfo: primary.color,
-    // Birincil ve bilgi yazısı vurgu rengidir (AJA-997, QA AJA-1007). antd bunları colorPrimary'den
-    // türetir; açık temada #00aacc yazı olur (2.76:1). Bağlantı renkleriyle aynı değerler kullanılır.
+    // Primary and info text use the accent colour (AJA-997, QA AJA-1007). antd derives them from
+    // colorPrimary, which gives #00aacc text in the light theme (2.76:1). The link colour values are used.
     colorPrimaryText: link[mode].color,
     colorPrimaryTextHover: link[mode].hover,
     colorPrimaryTextActive: link[mode].active,
     colorInfoText: link[mode].color,
     colorInfoTextHover: link[mode].hover,
     colorInfoTextActive: link[mode].active,
-    // Soluk yazı (Typography type="secondary"): açıklama metniyle aynı, her zeminde 4.5:1.
+    // Muted text (Typography type="secondary"): same as description text, 4.5:1 on every background.
     colorTextSecondary: textDescription[mode].color,
     colorTextPlaceholder: placeholder[mode],
     colorTextDescription: textDescription[mode].color,
@@ -76,11 +76,11 @@ export function buildAntdTheme(mode: ThemeMode, options: BuildThemeOptions = {})
     borderRadiusLG: radius.control + 2,
     boxShadowSecondary: shadow.dropdown,
     lineWidth: border.width,
-    // Odak: çevreleyen halka ve çerçeve yasak. Gösterge CSS'te alt çizgi olarak verilir.
+    // Focus: a surrounding ring or frame is forbidden. CSS draws the indicator as an underline.
     lineWidthFocus: 0,
     controlOutlineWidth: 0,
     controlOutline: 'transparent',
-    // Hareket: bütün eğriler merkezi tokendan gelir.
+    // Motion: all curves come from the central tokens.
     motion: !options.reducedMotion,
     motionDurationFast: seconds(duration.fast),
     motionDurationMid: seconds(duration.mid),
@@ -96,7 +96,7 @@ export function buildAntdTheme(mode: ThemeMode, options: BuildThemeOptions = {})
   };
 
   if (!dark) {
-    // Açık tema zeminleri kaynaktaki açık paletten gelir; koyu tema ile aynı tokenlardan üretilir.
+    // Light theme backgrounds come from the source light palette; built from the same tokens as the dark theme.
     Object.assign(token, {
       colorBgLayout: palette.light.layout,
       colorBgContainer: palette.light.panel,
@@ -131,9 +131,10 @@ export function buildAntdTheme(mode: ThemeMode, options: BuildThemeOptions = {})
       defaultShadow: shadow.button,
       dangerShadow: shadow.button,
       primaryColor: dark ? primary.dark.text : primary.light.text,
-      // Tehlike düğmesi (tokens.ts: danger). antd `colorError*` tokenlarını düz düğmede zemin, diğer
-      // türlerde yazı rengi yapar. Burada yazı rengi verilir: her zeminde en az 4.5:1. Düz düğmenin
-      // zemini `--danger-bg*` CSS değişkenlerinden gelir (css-variables.ts); metni beyazdır.
+      // Danger button (tokens.ts: danger). antd uses the `colorError*` tokens as the background of the
+      // solid button and as the text colour of other variants. Here they get the text colour: at least
+      // 4.5:1 on every background. The solid button background comes from the `--danger-bg*` CSS
+      // variables (css-variables.ts); its text is white.
       dangerColor: danger[mode].solidText,
       colorError: danger[mode].color,
       colorErrorHover: danger[mode].colorHover,
@@ -150,8 +151,9 @@ export function buildAntdTheme(mode: ThemeMode, options: BuildThemeOptions = {})
             defaultHoverColor: derivedButton.defaultHoverColor,
           }
         : {
-            // Kenarlıklı düğmenin fare üstü ve basılı yazısı antd'de colorPrimaryHover ve colorPrimaryActive
-            // olur (beyazda 2.5:1). Yazı bağlantı rengidir; kenarlık antd kuralında kalır (AJA-1023).
+            // In antd the hover and pressed text of the outlined button is colorPrimaryHover and
+            // colorPrimaryActive (2.5:1 on white). The text uses the link colour; the border keeps the
+            // antd rule (AJA-1023).
             defaultHoverColor: link.light.hover,
             defaultActiveColor: link.light.active,
           }),
@@ -181,7 +183,7 @@ export function buildAntdTheme(mode: ThemeMode, options: BuildThemeOptions = {})
       ...(dark ? { selectorBg: darkPalette.input, colorBgContainer: darkPalette.input } : {}),
     },
     Dropdown: { fontSize: typography.default },
-    /** Tablo metni en küçük metindir: 14 px (model 4. bölüm). Gövde 16 px kalır. */
+    /** Table text is the smallest text: 14 px (model section 4). Body stays 16 px. */
     Table: { fontSize: typography.min },
     Card: { borderRadiusLG: radius.card },
   };

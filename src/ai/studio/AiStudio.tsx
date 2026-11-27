@@ -41,14 +41,14 @@ import { actionToMessage, decisionsOf, useStudioChat } from './useStudioChat';
 import { FILE_NAME_ONLY_NOTE, Workspace } from './Workspace';
 
 /**
- * Taşıyıcı verilmezse sahte sunucu kullanılır.
- * Taşıyıcı verilirse kaynak bilgisi de verilmelidir (AX-7).
+ * If no transport is given, the mock server is used.
+ * If a transport is given, source info must be given too (AX-7).
  */
 export type AiStudioProps =
   | { transport?: undefined; source?: undefined }
   | { transport: AgentTransport; source: AgentSource };
 
-/** Üç sütun ancak iki yan bölüm ve okunur bir orta alan sığınca açılır. */
+/** Three columns open only when both side panels and a readable middle area fit. */
 const WIDE_QUERY = `(min-width: ${aiStudioLayout.left + aiStudioLayout.right + 600}px)`;
 
 const FIRST_CONVERSATIONS: StudioConversation[] = [
@@ -70,21 +70,21 @@ function StudioInner({ transport, source }: { transport: AgentTransport; source:
   const wide = useMediaQuery(WIDE_QUERY);
   const [conversations, setConversations] = useState(FIRST_CONVERSATIONS);
   const [activeKey, setActiveKey] = useState('c1');
-  // Seçilen kip bir sonraki yeni işe uygulanır. Başlamış akışın kipi değişmez.
+  // The chosen mode applies to the next new task. A started flow keeps its mode.
   const [mode, setMode] = useState<AgentMode>('ask');
   const { flow, flowTransport, start, approve, forget } = useFlow(transport, activeKey);
   const { messages, setMessages, send, cancel, regenerate, retryKind, busy } =
     useStudioChat(flowTransport);
   const store = useRef<Record<string, StoredMessages>>({});
   const nextId = useRef(2);
-  // Çekmece kapanınca odak, çekmeceyi açan düğmeye döner.
+  // When the drawer closes, focus returns to the button that opened it.
   const leftTrigger = useRef<HTMLButtonElement>(null);
   const rightTrigger = useRef<HTMLButtonElement>(null);
   const wasOpen = useRef({ left: false, right: false });
 
   const [value, setValue] = useState('');
   const [attachOpen, setAttachOpen] = useState(false);
-  // Dosyalar sohbete bağlıdır. Başka sohbete geçince taşınmaz.
+  // Files belong to a conversation. They do not move when switching to another conversation.
   const [filesByConversation, setFilesByConversation] = useState<Record<string, FileItems>>({});
   const files = filesByConversation[activeKey] ?? [];
   const setFiles = (list: FileItems) =>
@@ -93,7 +93,7 @@ function StudioInner({ transport, source }: { transport: AgentTransport; source:
   const [leftOpen, setLeftOpen] = useState(false);
   const [rightOpen, setRightOpen] = useState(false);
 
-  // Çekmece kapanır kapanmaz odağı açan düğmeye ver. Yoksa odak sayfa gövdesine düşer.
+  // As soon as the drawer closes, give focus to the opening button. Otherwise focus falls to the page body.
   useEffect(() => {
     if (wasOpen.current.left && !leftOpen) leftTrigger.current?.focus();
     if (wasOpen.current.right && !rightOpen) rightTrigger.current?.focus();
@@ -102,7 +102,7 @@ function StudioInner({ transport, source }: { transport: AgentTransport; source:
 
   const fileNames = files.map((f) => f.name);
 
-  // Kararlar sohbet geçmişinden çıkar. Sohbet değişip geri gelince bloklar kilitli kalır.
+  // Decisions come from the conversation history. Blocks stay locked after switching away and back.
   const decisions = useMemo(() => decisionsOf(messages.map((m) => m.message)), [messages]);
 
   const latestSteps = useMemo(() => {
@@ -140,7 +140,7 @@ function StudioInner({ transport, source }: { transport: AgentTransport; source:
   const onAction = useCallback(
     (action: GenUIAction): GenUIActionResult => {
       if (action.kind === 'ask') return submit(action.text);
-      // Onay adımında kullanıcının onayı akışa yazılır. Uygulama adımı ancak bundan sonra açılır.
+      // At the approval step the user's approval is written to the flow. Only then does the apply step open.
       const result = send(actionToMessage(action));
       if (result === 'accepted' && action.decision === 'approved') approve();
       return result;
@@ -435,9 +435,9 @@ function StudioInner({ transport, source }: { transport: AgentTransport; source:
 }
 
 /**
- * Tema, Türkçe dil ve odak modu foundation işinin `AppProviders` katmanından gelir.
- * AI Studio sayfası. Solda sohbetler, ortada mesajlar, sağda çalışma alanı.
- * Dar ekranda tek sütun olur. Sol ve sağ bölüm çekmeceye taşınır.
+ * Theme, Turkish locale and focus mode come from the foundation task's `AppProviders` layer.
+ * AI Studio page. Conversations on the left, messages in the middle, workspace on the right.
+ * On a narrow screen it becomes one column. The left and right panels move into drawers.
  */
 export function AiStudio({ transport, source }: AiStudioProps) {
   const resolvedTransport = useMemo(() => transport ?? createFlowDemoTransport(), [transport]);

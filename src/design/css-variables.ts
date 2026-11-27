@@ -1,7 +1,7 @@
 /**
- * CSS değişkenlerini ve temel stil kurallarını kaynak kararlardan üretir.
- * Kaynaktaki `derived.css` başlangıç noktasıdır; burada aynı adlar korunur ve
- * açık/koyu değerler doğru bloklara ayrılır.
+ * Builds the CSS variables and base style rules from the source decisions.
+ * The source `derived.css` is the starting point; the same names are kept here and
+ * light/dark values are split into the right blocks.
  */
 import { readCspNonce } from './csp-nonce';
 import { dropdownAnimation, duration, easing, instantMs } from './motion';
@@ -39,7 +39,7 @@ function block(selector: string, lines: Record<string, string>): string {
   return `${selector} {\n${body}\n}`;
 }
 
-/** Zemin, metin, çizgi, durum, bağlantı ve odak rengi. Açık ve koyu tema aynı adları üretir. */
+/** Background, text, line, status, link and focus colours. Light and dark themes produce the same names. */
 function paletteVars(mode: ThemeMode): Record<string, string> {
   const p = palette[mode];
   return {
@@ -77,7 +77,7 @@ function shadowVars(mode: ThemeMode): Record<string, string> {
   };
 }
 
-/** Temadan bağımsız değişkenler. */
+/** Theme-independent variables. */
 export function rootVariables(): Record<string, string> {
   const { button, input } = sizes;
   return {
@@ -180,7 +180,7 @@ export function rootVariables(): Record<string, string> {
   };
 }
 
-/** Yalnız koyu temada değişen değişkenler. */
+/** Variables that change only in the dark theme. */
 export function darkVariables(): Record<string, string> {
   return {
     '--primary-text': primary.dark.text,
@@ -204,7 +204,7 @@ export function darkVariables(): Record<string, string> {
   };
 }
 
-/** Kaynaktaki satır kutusu ve yükseklik düzeltmeleri (derived.css ile aynı). */
+/** Line box and height fixes from the source (same as derived.css). */
 function controlFixCss(): string {
   const { button, input } = sizes;
   return [
@@ -237,11 +237,12 @@ function controlFixCss(): string {
 }
 
 /**
- * Birincil buton metni ve koyu tema zemini (kaynak: primary.light / primary.dark; koyu zemin düz renktir).
- * Tehlikeli birincil düğme (`danger`) de `ant-btn-primary` sınıfını taşır; kurallar onu dışarıda
- * bırakır. Düz tehlike düğmesinin zemini `--danger-bg*` değişkenlerinden, metni `--danger-text`
- * değişkeninden gelir. antd'nin `colorError*` tokenları bu projede yazı rengidir (tokens.ts: danger);
- * düz zemin o tokenlardan ayrı tutulur ki kenarlıklı, metin ve bağlantı türünde yazı 4.5:1 versin.
+ * Primary button text and dark theme background (source: primary.light / primary.dark; the dark
+ * background is a solid colour). The dangerous primary button (`danger`) also has the
+ * `ant-btn-primary` class; the rules leave it out. The solid danger button takes its background from
+ * the `--danger-bg*` variables and its text from `--danger-text`. In this project antd's
+ * `colorError*` tokens are text colours (tokens.ts: danger); the solid background is kept apart from
+ * those tokens so that outlined, text and link variants give 4.5:1 text.
  */
 function primaryButtonCss(): string {
   const primary = '.ant-btn-primary:not(.ant-btn-dangerous):not(:disabled):not(.ant-btn-disabled)';
@@ -261,12 +262,12 @@ function primaryButtonCss(): string {
 }
 
 /**
- * Odak göstergesi. Çevreleyen halka yasaktır. Gösterge alt kenarda tek çizgidir.
- * Görünür odak modu yalnız klavyeyle açılır: `html[data-focus-mode="keyboard"]`.
+ * Focus indicator. A surrounding ring is forbidden. The indicator is a single line on the bottom edge.
+ * Visible focus mode is turned on only by the keyboard: `html[data-focus-mode="keyboard"]`.
  */
 /**
- * Metin bağlantısı seçicisi. Düğme, menü ve sekme görünümlü bağlantılar dışarıdadır (türetilmiş karar 3).
- * Kendi menü bileşeni olan işler bağlantıya `data-nav-link` özelliğini verir (örnek: kabuk menüsü).
+ * Text link selector. Links styled as buttons, menus and tabs are excluded (derived decision 3).
+ * Features with their own menu component give the link the `data-nav-link` attribute (e.g. the shell menu).
  */
 const TEXT_LINK = 'a:not(.ant-btn):not(.ant-menu-item):not(.ant-tabs-tab):not([data-nav-link])';
 
@@ -302,15 +303,15 @@ function focusCss(): string {
 }
 
 /**
- * Dropdown açılış hareketi (kaynak: dropdown.animation). Controls işi bu adı kullanır.
- * Eğri varsayılan eğridir, süre kısa dropdown süresidir (AJA-997). Eğilme yoktur.
+ * Dropdown opening motion (source: dropdown.animation). The Controls task uses this name.
+ * The curve is the default curve; the duration is the short dropdown duration (AJA-997). There is no tilt.
  */
 function dropdownMotionCss(): string {
   const frames = Object.entries(dropdownAnimation.keyframes).map(([at, rule]) => `  ${at} { ${rule}; }`);
   return [`@keyframes atonota-dropdown-in {`, ...frames, `}`].join('\n');
 }
 
-/** Dokunmatik ekranda dokunma alanı tokenı büyür. Görünen kontrol boyutu değişmez. */
+/** On touch screens the touch area token grows. The visible control size does not change. */
 function hitTargetCss(): string {
   return `@media (any-pointer: coarse) { :root { --hit-target: ${px(hitTarget.coarse)}; } }`;
 }
@@ -350,7 +351,7 @@ function baseCss(): string {
 
 export const DESIGN_STYLE_ID = 'atonota-design';
 
-/** Bütün tasarım CSS'i: değişkenler, temel kurallar, odak, dokunma alanı, hareket. */
+/** All design CSS: variables, base rules, focus, touch area, motion. */
 export function buildDesignCss(): string {
   return [
     block(':root', rootVariables()),
@@ -366,13 +367,13 @@ export function buildDesignCss(): string {
   ].join('\n\n');
 }
 
-/** CSS'i belgeye bir kez ekler. Tekrar çağrı aynı öğeyi günceller. */
+/** Adds the CSS to the document once. A repeat call updates the same element. */
 export function ensureDesignStyles(doc: Document = document): HTMLStyleElement {
   let el = doc.getElementById(DESIGN_STYLE_ID) as HTMLStyleElement | null;
   if (!el) {
     el = doc.createElement('style');
     el.id = DESIGN_STYLE_ID;
-    // Sunucu CSP nonce verdiyse stil öğesi de onu taşır (src/app/csp-nonce.ts).
+    // If the server gave a CSP nonce, the style element carries it too (src/app/csp-nonce.ts).
     const nonce = readCspNonce(doc);
     if (nonce) el.nonce = nonce;
     doc.head.appendChild(el);

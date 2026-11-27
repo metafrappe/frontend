@@ -2,7 +2,7 @@ import { useEffect, useId } from 'react';
 
 import { setFocusDim } from './focus-dim';
 
-/** Bileşen `open` iken perdeyi açar; kapanınca veya sökülünce kapatır. */
+/** Opens the dim layer while the component is `open`; closes it on close or unmount. */
 export function useFocusDim(open: boolean, key?: string): void {
   const autoKey = useId();
   const k = key ?? autoKey;

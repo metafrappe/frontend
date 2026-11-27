@@ -1,10 +1,10 @@
 /**
- * Birim testleri için `@ant-design/x` taklidi.
+ * `@ant-design/x` mock for unit tests.
  *
- * Neden: Vitest bu paketi Node içinde yüklüyor. Paket `antd/es/version`
- * klasörünü içe aktarıyor ve Node ESM bunu reddediyor. Kalıcı çözüm
- * `vite.config.ts` içinde `test.server.deps.inline` ayarıdır. Ayar
- * `foundation` işine aittir. Gerçek paket tarayıcı testlerinde denenir.
+ * Why: Vitest loads this package in Node. The package imports the
+ * `antd/es/version` folder and Node ESM rejects it. The permanent fix is
+ * the `test.server.deps.inline` setting in `vite.config.ts`. That setting
+ * belongs to the `foundation` task. The real package is tested in browser tests.
  */
 import type { ReactNode } from 'react';
 

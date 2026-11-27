@@ -3,8 +3,8 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '../../../tests/setup/playwright-fixtures';
 
 /**
- * Yardımcı akışı ekranda (AJA-1159). Sayfa e2e derlemesinde sahte sunucuyla açılır.
- * Kabul ölçütleri: sunucu olayı, R3 onayı, kaldırılan öğeler, taşma, axe, klavye ve dokunma.
+ * Assistant flow on screen (AJA-1159). In the e2e build the page opens with the mock server.
+ * Acceptance criteria: server event, R3 approval, removed items, overflow, axe, keyboard and touch.
  */
 const PAGE = '/panel/ai';
 const ACT = 'İşlem yap';
@@ -21,7 +21,7 @@ async function ask(page: Page, text: string) {
   await page.getByRole('button', { name: 'Mesajı gönder' }).click();
 }
 
-/** Kip etiketine basar. antd radyo girişi görünmezdir; kullanıcı etikete basar. */
+/** Clicks the mode label. The antd radio input is invisible, so the user clicks the label. */
 async function pickAct(page: Page) {
   await page.locator('.ai-mode label').filter({ hasText: ACT }).click();
   await expect(
@@ -48,7 +48,7 @@ async function settle(page: Page) {
 
 test.describe('Yardımcı akışı', () => {
   test('sunucu olayı gelmeden araç olayı görünmez', async ({ page }) => {
-    // Sahte sunucu her olaydan önce 1,5 saniye bekler. İlk olay gelmeden liste yoktur.
+    // The mock server waits 1.5 seconds before each event. There is no list before the first event.
     await open(page, '?gecikme=1500');
     await pickAct(page);
     await ask(page, R1_TEXT);
@@ -56,7 +56,7 @@ test.describe('Yardımcı akışı', () => {
     await expect(page.getByRole('button', { name: 'Yanıtı durdur' })).toBeVisible();
     await expect(log.locator('[data-genui="events"]')).toHaveCount(0);
     await expect(log.getByText('Araç olayları')).toHaveCount(0);
-    // İlk sunucu olayı gelince liste görünür.
+    // The list appears when the first server event arrives.
     await expect(log.locator('[data-genui="events"]').first()).toBeVisible({ timeout: 15_000 });
   });
 

@@ -1,6 +1,6 @@
 /**
- * Güvenli JSON görünümü (U2). Bilinmeyen blok asla HTML olarak çizilmez.
- * İçerik yalnız metin düğümü olarak basılır.
+ * Safe JSON view (U2). An unknown block is never drawn as HTML.
+ * Content is rendered only as a text node.
  */
 export function JsonView({ raw }: { raw: unknown }) {
   let text: string;

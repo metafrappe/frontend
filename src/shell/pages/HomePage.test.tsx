@@ -80,7 +80,7 @@ function fakeHome(over: Partial<ShellHomeData> = {}): ShellHomeData {
 }
 
 function mount(data: ShellViewData | null) {
-  // Tarih ve sayılar Türkçe biçimle sınanır. Yedek dil en-GB olduğu için dil açıkça verilir.
+  // Dates and numbers are tested in Turkish format. The fallback locale is en-GB, so the locale is passed explicitly.
   return render(
     <LanguageProvider initialLanguage="tr">
       <MemoryRouter initialEntries={['/']}>
@@ -293,7 +293,7 @@ describe('HomePage: Bekleyenler', () => {
     expect(icons).toHaveLength(1);
     expect(icons[0]).toHaveAttribute('aria-hidden', 'true');
     expect(icons[0]).toHaveClass('shell-home-ic');
-    // Simge satırın ilk öğesidir. Taslakta simge metnin önünde durur.
+    // The icon is the row's first element. In the mock-up the icon sits before the text.
     expect(item?.firstElementChild).toBe(icons[0]);
     const heading = screen.getByRole('heading', { level: 2, name: 'Son değişiklikler' });
     expect(heading.querySelector('svg')).toBeNull();

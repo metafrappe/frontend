@@ -1,22 +1,22 @@
 import type { HomeSummary, PendingApproval } from '@/api';
 import type { ModuleEnvironment } from '@/modules';
 
-/** Onay ya da ret isteğinin kimliği. `version` okunan kaydın sürümüdür. */
+/** Identity of an approve or reject request. `version` is the version of the record that was read. */
 export type HomeDecisionTarget = Pick<PendingApproval, 'name' | 'version'>;
 
 /**
- * Ana sayfanın (Bekleyenler) veri bağlantısı.
- * Kabuk API istemcisi kurmaz. Bağlantıyı `createShellHomeData` ortak istemciden kurar.
- * Hata olursa işlevler `HomeDataError` ile reddedilir. Hatanın metni kullanıcıya gösterilir.
+ * Data connection for the home page ("Bekleyenler", pending items).
+ * The shell does not create an API client. `createShellHomeData` builds the connection from the shared client.
+ * On error the functions reject with `HomeDataError`. The error text is shown to the user.
  */
 export interface ShellHomeData {
-  /** Dört parçayı okur: bekleyen onaylar, sorunlu kayıtlar, son değişiklikler, özet sayılar. */
+  /** Reads four parts: pending approvals, problem records, recent changes, summary counts. */
   load: (signal: AbortSignal) => Promise<HomeSummary>;
   approve: (target: HomeDecisionTarget) => Promise<void>;
   reject: (target: HomeDecisionTarget) => Promise<void>;
 }
 
-/** Kullanıcıya gösterilecek hata. `message` Türkçe ve yalın bir cümledir. */
+/** An error to show to the user. `message` is a plain Turkish sentence. */
 export class HomeDataError extends Error {
   constructor(message: string) {
     super(message);
@@ -25,9 +25,9 @@ export class HomeDataError extends Error {
 }
 
 /**
- * Modül ortamına bağlı ana sayfa bağlantısı.
- * Uygulama girişi modül ortamını `createShellModuleEnvironment` ile kurar.
- * O işlev ana sayfa bağlantısını da buraya yazar. Böylece giriş ayrı bir alan vermek zorunda kalmaz.
+ * Home page connection tied to the module environment.
+ * The app entry builds the module environment with `createShellModuleEnvironment`.
+ * That function also writes the home page connection here, so the entry does not have to pass a separate field.
  */
 const byEnvironment = new WeakMap<ModuleEnvironment, ShellHomeData>();
 

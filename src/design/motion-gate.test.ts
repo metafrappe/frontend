@@ -157,7 +157,7 @@ describe('hareket kapısı', () => {
       '};',
     ].join('\n');
     expect(findMotionViolations(js, 'src/shell/a.ts')).toHaveLength(0);
-    // Aynı satırda bildirim dışında kalan cubic-bezier yine ihlaldir; bildirimin izni onu kapsamaz.
+    // A cubic-bezier outside the declaration on the same line is still a violation; the declaration's allow does not cover it.
     const mixed =
       '.a { transition: opacity 200ms /* motion-gate: allow sahip=shell neden=geçici kabuk geçişi */; } .b { x: cubic-bezier(.2,.9,.3,1.15); }';
     const violations = findMotionViolations(mixed, 'src/shell/a.css');

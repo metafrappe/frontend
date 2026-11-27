@@ -1,6 +1,6 @@
 /**
- * Dokunma alanı hesabı (kaynak: hitArea.rules R1–R10, hitArea.algorithm).
- * Bu dosya DOM'a dokunmaz; saf hesap yapar. DOM uygulaması engine.ts dosyasındadır.
+ * Touch area calculation (source: hitArea.rules R1–R10, hitArea.algorithm).
+ * This file does not touch the DOM; it only does pure maths. The DOM side lives in engine.ts.
  */
 import { hitArea as hitAreaTokens } from '@/design/tokens';
 
@@ -23,11 +23,11 @@ export interface Extension {
 export interface HitTarget {
   id: string;
   box: Box;
-  /** R6: disabled veya görünmeyen kontrol genişlemez. */
+  /** R6: a disabled or hidden control does not expand. */
   active: boolean;
-  /** R8: kenarlık kalınlıkları; ölçüm border dahil kutudan yapılır, offset'e eklenir. */
+  /** R8: border widths; measured from the border box and added to the offset. */
   border?: Partial<Extension>;
-  /** R5: üst hedefin kimliği. Varsa bu hedef hesaba girmez. */
+  /** R5: ID of the parent target. If set, this target is left out of the calculation. */
   parentId?: string;
 }
 
@@ -39,23 +39,23 @@ export interface Obstacle {
 export interface HitResult {
   id: string;
   active: boolean;
-  /** Komşuya göre sınırlı saf genişleme (border hariç). */
+  /** Pure expansion limited by neighbours (border excluded). */
   extension: Extension;
-  /** CSS değişkenlerine yazılacak değer: genişleme + kenarlık. */
+  /** Value written to the CSS variables: expansion + border. */
   offset: Extension;
   visible: { width: number; height: number };
   hit: { width: number; height: number };
   limitedByNeighbour: boolean;
-  /** R10: tıklanabilir yükseklik ≥ minTarget. */
+  /** R10: clickable height ≥ minTarget. */
   meetsMinTarget: boolean;
 }
 
 export interface ComputeOptions {
-  /** Sayfa kenarı sınırı (R3'ün özel hali): genişleme bu kenarları aşamaz. */
+  /** Page edge limit (a special case of R3): expansion cannot cross these edges. */
   bounds?: { left?: number; right?: number; top?: number; bottom?: number };
   expand?: number;
   minTarget?: number;
-  /** İki kutunun aynı satır veya sütun sayılması için gereken örtüşme (px). */
+  /** Overlap (px) needed for two boxes to count as the same row or column. */
   epsilon?: number;
 }
 
@@ -73,18 +73,18 @@ function overlapLength(a1: number, a2: number, b1: number, b2: number): number {
   return Math.min(a2, b2) - Math.max(a1, b1);
 }
 
-/** R1 + R2: komşu yokken her kenarın ideal genişlemesi. */
+/** R1 + R2: ideal expansion of each edge when there is no neighbour. */
 export function idealExtension(b: Box, expand: number): Extension {
   const dx = (b.width * expand) / 2;
   const dy = (b.height * expand) / 2;
   return { t: dy, r: dx, b: dy, l: dx };
 }
 
-/** R3 + R4: komşuya bakan kenarı boşluğun yarısıyla sınırlar; boşluk ≤ 0 ise 0. */
+/** R3 + R4: limits the edge facing a neighbour to half the gap; 0 if the gap is ≤ 0. */
 export function limitByNeighbour(ext: Extension, a: Box, b: Box, epsilon = EPSILON): void {
   const sameRow = overlapLength(a.top, a.bottom, b.top, b.bottom) > epsilon;
   const sameCol = overlapLength(a.left, a.right, b.left, b.right) > epsilon;
-  if (!sameRow && !sameCol) return; // çapraz komşu: dokunmaz
+  if (!sameRow && !sameCol) return; // diagonal neighbour: no effect
   const acx = (a.left + a.right) / 2;
   const acy = (a.top + a.bottom) / 2;
   const bcx = (b.left + b.right) / 2;
@@ -104,7 +104,7 @@ export function limitByNeighbour(ext: Extension, a: Box, b: Box, epsilon = EPSIL
   }
 }
 
-/** Bütün hedefler için genişlemeyi hesaplar. */
+/** Calculates the expansion for all targets. */
 export function computeHitAreas(
   targets: readonly HitTarget[],
   obstacles: readonly Obstacle[] = [],
@@ -114,7 +114,7 @@ export function computeHitAreas(
   const minTarget = options.minTarget ?? hitAreaTokens.minTarget;
   const epsilon = options.epsilon ?? EPSILON;
 
-  // R5: başka bir hedefin içindeki hedefler elenir; dıştaki hedef kapsar.
+  // R5: targets inside another target are dropped; the outer target covers them.
   const ids = new Set(targets.map((t) => t.id));
   const topLevel = targets.filter((t) => !(t.parentId && ids.has(t.parentId)));
 

@@ -12,7 +12,7 @@ import { LanguageProvider, useLocaleBundle, type SiteFormatting } from './locale
 import { ThemeModeProvider, useThemeMode, type ThemeModeChoice } from './theme-mode';
 import { usePrefersReducedMotion } from './use-reduced-motion';
 
-/** Gövde zemini ve metin rengi antd tokenlarından gelir; sayfa kökü de temaya uyar. */
+/** Body background and text colour come from antd tokens; the page root follows the theme too. */
 function BodyTheme() {
   const { token } = antdThemeApi.useToken();
   useEffect(() => {
@@ -23,9 +23,9 @@ function BodyTheme() {
 }
 
 /**
- * Sunucunun CSP nonce değeri. Sayfa açılınca bir kez okunur; değer sayfa boyunca aynıdır.
- * antd ve öteki kitaplıklar çalışma anında eklediği stil öğelerine bu değeri verir.
- * Kurulum çocuklar çizilmeden önce yapılır. Değer yoksa hiçbir öğe nonce almaz.
+ * The server's CSP nonce value. It is read once when the page opens; the value stays the same for the page's lifetime.
+ * antd and other libraries give this value to the style elements they add at runtime.
+ * Setup happens before the children render. If there is no value, no element gets a nonce.
  */
 function useCspConfig(): { nonce: string } | undefined {
   return useMemo(() => {
@@ -59,19 +59,19 @@ export interface AppProvidersProps {
   children: ReactNode;
   initialThemeChoice?: ThemeModeChoice;
   /**
-   * Başlangıç dili. Varsayılan yedek dildir. Oturum açılınca dil açılış verisinden gelir.
-   * Testler dili buradan verir.
+   * Initial language. Defaults to the fallback language. Once the session opens, the language comes from the bootstrap data.
+   * Tests supply the language here.
    */
   initialLanguage?: string;
-  /** Başlangıç saat dilimi ve para birimi. Oturum açılınca açılış verisinden gelir. Testler buradan verir. */
+  /** Initial time zone and currency. Once the session opens, they come from the bootstrap data. Tests supply them here. */
   initialFormatting?: SiteFormatting;
-  /** Testlerde motorları kapatmak için. Varsayılan açık. */
+  /** For turning the engines off in tests. Enabled by default. */
   engines?: boolean;
 }
 
 /**
- * Uygulama kökü: dil bağlamı, tasarım CSS'i, tema modu, antd ConfigProvider,
- * odak modu motoru, dokunma alanı motoru ve odak perdesi.
+ * Application root: language context, design CSS, theme mode, antd ConfigProvider,
+ * focus mode engine, touch target engine and focus scrim.
  */
 export function AppProviders({
   children,

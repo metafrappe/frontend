@@ -3,9 +3,9 @@ import type { components as ShellComponents } from '@/api/generated/platform_cor
 type Meta = ShellComponents['schemas']['Meta'];
 
 /**
- * Sahte sunucunun "Communication" şeması (AJA-812, G-63).
- * Alanlar Frappe v16 `communication.json` dosyasından alındı. Liste yalnız bu alanları gösterir.
- * `communication_medium` seçenekleri gerçek şemadaki gibi boş bir seçenekle başlar.
+ * The mock server's "Communication" schema (AJA-812, G-63).
+ * The fields come from Frappe v16 `communication.json`. The list shows only these fields.
+ * `communication_medium` options start with an empty option, as in the real schema.
  */
 export const sampleCommunicationMeta: Meta = {
   catalog_version: 1,
@@ -75,7 +75,10 @@ export const sampleCommunicationMeta: Meta = {
   },
 };
 
-/** Sahte iletişim kayıtları. İçerik uzun tutuldu; dar ekranda satır sarımı da denenir. */
+/**
+ * Mock communication records. The content is long so that line wrapping is tested on narrow
+ * screens.
+ */
 export const sampleCommunications: Record<string, unknown>[] = [
   {
     name: 'ILETISIM-0001',

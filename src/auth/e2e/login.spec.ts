@@ -15,9 +15,9 @@ const BUTTON = 'AtonotA Login ile oturum aç';
 const START_LOGIN = '/api/method/platform_core.api.auth.start_login';
 
 /**
- * Sahte sunucu oturumu kapalı açar. Giriş ekranı görünür.
- * Sahte sunucu `start_login` isteğine 302 yanıtı verir. Yanıt Keycloak giriş adresini gösterir.
- * Keycloak adresi `api.login.atonota.net` köküdür. Tarayıcı oraya gidince boş bir sayfa döner.
+ * The mock server starts signed out. The sign-in screen is shown.
+ * The mock server answers `start_login` with a 302 pointing to the Keycloak sign-in URL.
+ * The Keycloak URL is the `api.login.atonota.net` root. When the browser goes there, a blank page is returned.
  */
 async function openLogin(page: Page): Promise<void> {
   await page.route(`${SAMPLE_KEYCLOAK_URL}/**`, (route) =>
@@ -32,8 +32,8 @@ async function openLogin(page: Page): Promise<void> {
 }
 
 /**
- * Sahte sunucu sayfanın içinde çalışır. Playwright bu yüzden `start_login` isteğini görmez.
- * Sahte sunucu isteğin adresini oturum deposuna yazar. Test panele geri döner ve kaydı okur.
+ * The mock server runs inside the page, so Playwright does not see the `start_login` request.
+ * The mock server writes the request URL to session storage. The test goes back to the panel and reads the record.
  */
 async function readStartLogin(page: Page): Promise<URL> {
   await page.goBack();
@@ -49,7 +49,7 @@ test.describe('AtonotA Login düğmesi', () => {
     const button = page.getByRole('button', { name: BUTTON });
     await expect(button).toBeVisible();
     await expect(button).toHaveText(BUTTON);
-    // 320 px genişlikte de sayfa yatay taşmaz.
+    // The page does not overflow horizontally at 320 px wide either.
     const overflow = await page.evaluate(
       () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
     );
@@ -71,25 +71,25 @@ test.describe('AtonotA Login düğmesi', () => {
   test('düğme klavyeyle de basılır', async ({ page, browserName }) => {
     await openLogin(page);
     const button = page.getByRole('button', { name: BUTTON });
-    // Tab tuşu görünür odak kipini açar. Alt+Tab kipi açmaz (odak kuralı).
+    // The Tab key turns on visible focus mode. Alt+Tab does not (focus rule).
     await page.keyboard.press('Tab');
     await expect(page.locator('html')).toHaveAttribute('data-focus-mode', 'keyboard');
-    // Tab ile odak düğmeye gelir. Enter ile basılır.
-    // macOS WebKit Tab ile düğmeye gitmez. Orada Alt+Tab kullanılır (controls.spec.ts ile aynı).
+    // Tab moves focus to the button. Enter presses it.
+    // macOS WebKit does not Tab to buttons. Alt+Tab is used there (same as controls.spec.ts).
     const tab = browserName === 'webkit' ? 'Alt+Tab' : 'Tab';
     for (let i = 0; i < 10; i += 1) {
       if (await button.evaluate((node) => node === document.activeElement)) break;
       await page.keyboard.press(tab);
     }
     await expect(button).toBeFocused();
-    // Çevreleyen odak halkası yoktur. outline ve box-shadow ikisi de denetlenir.
+    // There is no surrounding focus ring. Both outline and box-shadow are checked.
     const outline = await button.evaluate((node) => {
       const style = getComputedStyle(node);
       return style.outlineStyle === 'none' || style.outlineWidth === '0px';
     });
     expect(outline, 'outline').toBe(true);
-    // Gösterge alt kenarda tek bir vurgu rengi çizgidir. Renk tokendan okunur (`--focus-indicator-color`).
-    // Gösterge geçişle gelir. Test bu yüzden bekler.
+    // The indicator is a single accent-colour line on the bottom edge. The colour is read from the token (`--focus-indicator-color`).
+    // The indicator appears with a transition, so the test waits.
     const FOCUS_RGB = await tokenColor(page, '--focus-indicator-color');
     const shadows = async () =>
       splitShadows(await button.evaluate((node) => getComputedStyle(node).boxShadow));

@@ -1,6 +1,6 @@
 /**
- * Erişilebilirlik denetimi bulguları (Ö1, Ö2, Ö3, Ö5, Ö6, K1, K3, K5, liste başlığı).
- * Bulgu kimlikleri `qa-a11y-raporu.md` raporundaki kimliklerdir.
+ * Accessibility audit findings (Ö1, Ö2, Ö3, Ö5, Ö6, K1, K3, K5, list header).
+ * The finding IDs are the IDs in the `qa-a11y-raporu.md` report.
  */
 import AxeBuilder from '@axe-core/playwright';
 import type { Locator, Page } from '@playwright/test';
@@ -8,7 +8,7 @@ import { tokenColor } from '../../../tests/setup/odak-gostergesi';
 import { expect, test } from '../../../tests/setup/playwright-fixtures';
 
 const LIST = `/ornek/${encodeURIComponent('örnek-kayıt')}`;
-/** Kabuğun deneme sayfası: metin bağlantısı ve ekmek kırıntısı bağlantısı buradadır. */
+/** The shell's test page: the text link and the breadcrumb link are here. */
 const DEMO = '/_demo/shell';
 
 const isCompact = (page: Page) => {
@@ -23,7 +23,7 @@ async function settle(page: Page) {
   });
 }
 
-/** Görünür odak modunu Tab ile açar. Sonra odak öğeye programatik verilir. */
+/** Turns on visible focus mode with Tab. Then focus is given to the element programmatically. */
 async function keyboardFocus(page: Page, target: Locator) {
   await page.keyboard.press('Tab');
   await expect(page.locator('html')).toHaveAttribute('data-focus-mode', 'keyboard');
@@ -43,7 +43,7 @@ test.describe('Ö1: metin bağlantısında klavye odağı görünür', () => {
     const link = page.getByRole('link', { name: 'yardım sayfası' });
     await expect(link).toBeVisible();
     await settle(page);
-    // Renk tokendan okunur: `--focus-indicator-color` (açık temada koyu mavi, AJA-997).
+    // The colour is read from the token: `--focus-indicator-color` (dark blue in the light theme, AJA-997).
     const focusRgb = await tokenColor(page, '--focus-indicator-color');
     const rest = await link.evaluate((el) => {
       const s = getComputedStyle(el);
@@ -53,9 +53,9 @@ test.describe('Ö1: metin bağlantısında klavye odağı görünür', () => {
     await expect(link).toHaveCSS('text-decoration-line', 'underline');
     await expect(link).toHaveCSS('text-decoration-thickness', '2px');
     await expect(link).toHaveCSS('text-decoration-color', focusRgb);
-    // Gösterge görünüşü gerçekten değiştirir: dinlenme hâliyle aynı değildir.
+    // The indicator really changes the appearance: it differs from the resting state.
     expect(rest.thickness === '2px' && rest.color === focusRgb).toBe(false);
-    // Çevreleyen halka yoktur.
+    // There is no surrounding ring.
     await expect(link).toHaveCSS('outline-style', 'none');
     await expect(link).toHaveCSS('box-shadow', 'none');
   });
@@ -258,7 +258,7 @@ test.describe('K5: ekmek kırıntısı bağlantısının dokunma alanı', () => 
       };
     });
     expect(r.min).toBeGreaterThanOrEqual(24);
-    // Görünen kutu metin satırı kadar kalır; büyüyen yalnız dokunma alanıdır.
+    // The visible box stays as tall as the text line; only the touch area grows.
     expect(r.visibleHeight).toBeLessThan(r.min);
     expect(r.up).toBe(true);
     expect(r.down).toBe(true);

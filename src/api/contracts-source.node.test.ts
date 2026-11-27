@@ -5,8 +5,8 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
-// Bu test depodaki gerçek sözleşme kopyasını denetler.
-// Kopya `backend` dalına girmiş temiz bir arka uç commit'inden alınmalıdır.
+// This test checks the real contract copy in the repository.
+// The copy must come from a clean backend commit that has landed on the `backend` branch.
 const contracts = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', 'contracts');
 
 interface Source {
@@ -21,10 +21,10 @@ function contract(name: string) {
   return readFileSync(join(contracts, 'openapi', `${name}.openapi.yaml`), 'utf8');
 }
 
-// Bu uçlar `backend` dalına girmedi. Kayıt AJA-918 ve AJA-919 görevlerindedir.
+// These commit tips have not landed on the `backend` branch. They are tracked in tasks AJA-918 and AJA-919.
 const REJECTED_COMMITS = ['50b27fce', '1d102243'];
 
-// ATONOTA_BACKEND_DIR verilirse uç `backend` dalında aranır.
+// If ATONOTA_BACKEND_DIR is set, the source commit is looked up on the `backend` branch.
 const backendDir = process.env.ATONOTA_BACKEND_DIR;
 
 describe('sözleşme kopyasının kaynağı', () => {
@@ -38,7 +38,7 @@ describe('sözleşme kopyasının kaynağı', () => {
   });
 
   it.skipIf(!backendDir)('kaynak uç backend dalının içindedir', () => {
-    // Komut uç dalın içinde değilse hata verir.
+    // The command fails if the commit is not in the branch.
     execFileSync('git', [
       '-C',
       backendDir as string,
@@ -58,7 +58,7 @@ describe('sözleşme kopyasının kaynağı', () => {
     }
   });
 
-  // AJA-790: G-62 rol ve yetki uçları.
+  // AJA-790: G-62 role and permission endpoints.
   it.each([
     '/platform_core.api.access.explain_permission:',
     '/platform_core.api.access.list_role_permissions:',
@@ -68,7 +68,7 @@ describe('sözleşme kopyasının kaynağı', () => {
     expect(contract('platform_core-access')).toContain(path);
   });
 
-  // AJA-791: G-98 kullanıcı daveti, Role Profile ataması ve Permission Log.
+  // AJA-791: G-98 user invitation, Role Profile assignment and Permission Log.
   it('erişim sözleşmesinde Permission Log ucu vardır', () => {
     expect(contract('platform_core-access')).toContain(
       '/platform_core.api.access.list_permission_logs:',
@@ -82,7 +82,7 @@ describe('sözleşme kopyasının kaynağı', () => {
     expect(contract('platform_core-identity')).toContain(path);
   });
 
-  // AJA-833: bayi uçları.
+  // AJA-833: reseller endpoints.
   it.each([
     '/platform_core.api.reseller.list_customers:',
     '/platform_core.api.reseller.customer_status:',

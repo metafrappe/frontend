@@ -3,7 +3,7 @@ import { Outlet } from 'react-router-dom';
 
 import { AppShell } from './AppShell';
 
-/** Kabuk düzeni. Sayfa yüklenirken yalnız içerik alanı bekler. */
+/** Shell layout. While a page loads, only the content area waits. */
 export function ShellLayout() {
   return (
     <AppShell>

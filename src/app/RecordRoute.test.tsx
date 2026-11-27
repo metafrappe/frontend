@@ -21,7 +21,7 @@ const { default: RecordRoute } = await import('./RecordRoute');
 
 const META_PATH = '/api/method/platform_core.api.meta.get_doctype';
 
-/** Kayıt türlerinin sunucudaki modülü. Listede olmayan türün şeması 403 döner. */
+/** Server-side module of each record type. The schema of a type not in the list returns 403. */
 const MODULES: Record<string, string> = {
   'Örnek Kayıt': 'Ornek',
   'Leave Application': 'HR',
@@ -79,7 +79,7 @@ describe('RecordRoute', () => {
     render(
       <RecordRoute api={api} module="hr" doctype="leave-application" name="HR-LAP-2026-00001" />,
     );
-    // Dil sağlayıcısı yoksa yedek dil geçerlidir. Yedek dil İngiliz İngilizcesidir (AJA-1407).
+    // Without a language provider the fallback language applies. The fallback is British English (AJA-1407).
     expect(screen.getByText('Leave Application|HR-LAP-2026-00001|en')).toBeInTheDocument();
   });
 

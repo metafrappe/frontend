@@ -8,18 +8,18 @@ export const ASSIST_PANEL_ID = 'shell-assist';
 
 interface AssistPanelProps {
   open: boolean;
-  /** Telefon kabuğunda panel alttan tam boy açılan iletişim kutusudur. */
+  /** In the phone shell the panel is a full-height dialog that opens from the bottom. */
   compact: boolean;
   onClose: () => void;
   panelRef: Ref<HTMLDivElement>;
   closeRef: Ref<HTMLButtonElement>;
-  /** Panelin içeriği. İçerik `ai-studio` işinindir. Kabuk yalnız yeri kurar. */
+  /** Panel content. The content belongs to the `ai-studio` work; the shell only provides the slot. */
   children?: ReactNode;
 }
 
 /**
- * Yardımcı panelin yeri. Geniş ekranda sağdaki ızgara sütunudur ve içeriği örtmez.
- * Telefonda alttan tam boy açılır. Odak perdesi kullanılmaz.
+ * Assist panel slot. On wide screens it is the right-hand grid column and does not cover the content.
+ * On phones it opens full height from the bottom. The focus dim is not used.
  */
 export function AssistPanel({
   open,
@@ -42,7 +42,7 @@ export function AssistPanel({
       className="shell-assist"
       aria-labelledby={titleId}
       data-open={open ? 'true' : 'false'}
-      // Geniş ekranda kapalı panel ızgarada yer tutmaz.
+      // On wide screens a closed panel takes no space in the grid.
       hidden={!compact && !open}
       onKeyDown={onKeyDown}
       {...(compact ? { role: 'dialog', 'aria-modal': true } : { role: 'complementary' })}

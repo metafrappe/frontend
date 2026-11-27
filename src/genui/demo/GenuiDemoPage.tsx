@@ -1,13 +1,13 @@
 /**
- * Yapay zekâ yüzeyleri deneme sayfası. Yalnız e2e derlemesinde `/_demo/genui` yolunda açılır.
- * Rota satırı `src/shell/routes.ts` içindedir. Veriler örnektir. Yapay zekâ çalışmaz.
+ * AI surfaces demo page. Opens at `/_demo/genui` only in the e2e build.
+ * The route line is in `src/shell/routes.ts`. The data are samples. No AI runs.
  */
 import { GenUI } from '../GenUI';
 import { parseBlocks } from '../schema';
 import type { GenUIActionResult } from '../types';
 import { SURFACE_SAMPLES, SURFACE_STATES } from './samples';
 
-/** Kayıtta olmayan bir blok. Ekran bu bloğu çizmemelidir. */
+/** An unregistered block. The screen must not draw it. */
 const UNREGISTERED = { type: 'kayitsiz_blok', body: 'kayitsiz_blok içeriği' };
 
 const blocks = parseBlocks([...SURFACE_SAMPLES, UNREGISTERED]);

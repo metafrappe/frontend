@@ -1,5 +1,5 @@
-// Geliştirmede tarayıcıda çalışan sahte sunucu.
-// Yalnız `import.meta.env.DEV` koşulunda dinamik olarak yükleyin. Üretim paketine girmez.
+// Mock server that runs in the browser during development.
+// Load it dynamically only under `import.meta.env.DEV`. It is not in the production bundle.
 import { setupWorker } from 'msw/browser';
 
 import { SAMPLE_CSRF_TOKEN } from './fixtures';
@@ -9,31 +9,34 @@ import { applyMockScenario, readMockScenario } from './scenarios';
 import { isMockedApiRequest } from './start';
 import { mockWorkerOptions } from './worker-url';
 
-/** Sahte sunucuyu başlatır. Dönen CSRF değeri örnektir ve yalnız sahte sunucuda geçerlidir. */
+/**
+ * Starts the mock server. The returned CSRF value is a sample and is valid only on the mock server.
+ */
 export async function startMockWorker(): Promise<{ csrfToken: string }> {
-  // Tarayıcı testi bir senaryo seçtiyse sahte sunucu ona göre yanıt verir.
+  // If a browser test chose a scenario, the mock server answers according to it.
   applyMockScenario(readMockScenario());
   const worker = setupWorker(...handlers);
   await worker.start({
     quiet: true,
-    // İşçi panel yolundadır: kökte `/mockServiceWorker.js`, canlı yolda `/panel/mockServiceWorker.js`.
+    // The worker is on the panel path: `/mockServiceWorker.js` at the root,
+    // `/panel/mockServiceWorker.js` live.
     serviceWorker: mockWorkerOptions(import.meta.env.BASE_URL),
     /**
-     * Yalnız `/api/` istekleri sahte sunucuya aittir. Karşılığı yoksa istek hata alır ve ağa
-     * çıkmaz. Sayfa ve statik dosya istekleri işçiden olduğu gibi geçer. Hazır "error" kuralı
-     * sayfa yenilemesini de hataya düşürüyordu: işçi sayfayı denetlerken sayfa isteği kuralı
-     * karşılamıyor, ekranda yalnız bir JSON hata metni kalıyordu.
+     * Only `/api/` requests belong to the mock server. A request with no handler fails and does
+     * not reach the network. Page and static file requests pass through the worker unchanged.
+     * The built-in "error" rule also broke page reloads: when the worker checked the page, the
+     * page request did not match the rule, and only a JSON error text was left on screen.
      *
-     * `atonota.net` isteği ağa geçmez. İşçi isteği ağ hatasına düşürür ve günlüğe yazar.
-     * WebKit'te Playwright işçinin geçirdiği isteği görmez. Tarayıcı testleri bu kaydı okur:
-     * `tests/setup/playwright-fixtures.ts`.
+     * An `atonota.net` request does not reach the network. The worker turns it into a network
+     * error and writes it to the log. In WebKit, Playwright does not see requests the worker
+     * passes on. Browser tests read this log entry: `tests/setup/playwright-fixtures.ts`.
      */
     onUnhandledFrame({ frame, defaults }) {
       if (frame.protocol !== 'http') return;
       const { request } = frame.data as { request: Request };
       if (isGuardedUrl(new URL(request.url))) {
         console.error(realServerLogLine(request.method, request.url));
-        // MSW, fırlatılan yanıtı istemciye verir. `Response.error()` ağ hatasıdır.
+        // MSW sends a thrown response to the client. `Response.error()` is a network error.
         throw Response.error();
       }
       if (!isMockedApiRequest(request.url)) return;

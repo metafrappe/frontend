@@ -1,7 +1,7 @@
 import type { PromptProps } from '@ant-design/x';
 import { Lightning, Package, ChartBar, Sparkle } from '@phosphor-icons/react';
 
-/** Boş durumdaki kategorili öneriler (Prompts, iç içe). */
+/** Categorised suggestions in the empty state (Prompts, nested). */
 export const WELCOME_PROMPTS: PromptProps[] = [
   {
     key: 'report',
@@ -39,7 +39,7 @@ export const WELCOME_PROMPTS: PromptProps[] = [
   },
 ];
 
-/** "/" komutları (Suggestion). */
+/** "/" commands (Suggestion). */
 export const SLASH_COMMANDS = [
   {
     label: '/rapor: Satış özeti',
@@ -58,7 +58,7 @@ export const SLASH_COMMANDS = [
   },
 ];
 
-/** Model geçidi bağlantısı kurulmadığında AI Studio'nun yazdığı metin. Sahte ajan çalışmaz. */
+/** Text AI Studio shows when no model gateway connection is set up. No mock agent runs. */
 export const NOT_CONNECTED = {
   title: 'AI Studio bağlantısı kurulmadı',
   body: 'Bu panel henüz model geçidine bağlı değil. Bu yüzden asistan yanıt veremez.',

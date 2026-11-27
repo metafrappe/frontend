@@ -1,21 +1,21 @@
 /*
- * Uygulama kabuğu stilleri.
- * Bütün değerler `--shell-*` değişkenlerinden gelir. Kaynaklı değişkenler
- * `tokens.ts` ve antd tema tokenlarından üretilir. Kaynakta karşılığı olmayan
- * değerler aşağıdaki adlı değer bölümündedir. Bölüm dışında sabit renk,
- * ölçü ya da süre yazılmaz. `shellCss.node.test.ts` bunu denetler.
+ * Application shell styles.
+ * All values come from `--shell-*` variables. Source-backed variables are
+ * generated from `tokens.ts` and antd theme tokens. Values with no source
+ * counterpart live in the named-values section below. Outside that section no
+ * hard-coded colour, size or duration is written. `shellCss.node.test.ts` checks this.
  */
 
 /* @adli-degerler:basla */
 /*
- * Adlı değerler. Kaynak dosyada karşılığı olmayan ölçü ve süreler buradadır.
- * Kaynakta karşılığı olan değerler `tokens.ts` ile gelir. Örnek: satır kutusu.
- * GEÇİCİ: `foundation` boşluk ve hareket tokenlarını `src/design/` içine
- * koyunca bu değerler oraya taşınır ve bu bölüm silinir.
+ * Named values. Sizes and durations with no counterpart in the source file live here.
+ * Values with a source counterpart come via `tokens.ts`. Example: line box.
+ * TEMPORARY: once `foundation` puts spacing and motion tokens under `src/design/`,
+ * these values move there and this section is deleted.
  */
 .shell,
 .shell-dd {
-  /* Boşluk ölçeği. Değerler kaynak örnek sayfadaki (engine) boşluklardır. */
+  /* Spacing scale. Values are the spacings on the source sample page (engine). */
   --shell-space-2xs: 2px;
   --shell-space-xs: 4px;
   --shell-space-sm: 6px;
@@ -28,7 +28,7 @@
   --shell-gutter: var(--shell-space-xl);
   --shell-pad: var(--shell-space-lg);
 
-  /* Çizgi ve işaret ölçüleri. */
+  /* Line and marker sizes. */
   --shell-hairline: 1px;
   --shell-focus-line: 2px;
   --shell-focus-offset: 3px;
@@ -43,7 +43,7 @@
   --shell-hit: 48px;
   --shell-z-topbar: 10;
 
-  /* Yerleşim eşikleri. İçerik okunur kalsın diye seçildi. */
+  /* Layout thresholds. Chosen so content stays readable. */
   --shell-drawer-gap: 32px;
   --shell-hd-main-basis: 240px;
   --shell-err-basis: 160px;
@@ -54,19 +54,19 @@
   --shell-kb-col: 240px;
   --shell-stat-min: 200px;
   --shell-form-max: 560px;
-  /* Yatay telefonda sol çubuğun en küçük genişliği. Kaynak: onaylı taslak, `--rail-w`. */
+  /* Minimum width of the left bar on a landscape phone. Source: approved draft, `--rail-w`. */
   --shell-bar-rail-w: 5.5rem;
-  /* Yardımcı panelin geniş ekran genişliği. Onaylı taslakta 26rem'dir. */
+  /* Assist panel width on wide screens. It is 26rem in the approved draft. */
   --shell-assist-w: 416px;
-  /* "Örnek veri" notunun görünen yüksekliği. Kabuk ölçer ve satır içi yazar. Not yoksa 0'dır. */
+  /* Visible height of the sample data note. The shell measures it and writes it inline. 0 without a note. */
   --shell-note-h: 0px;
   --shell-zero: 0px;
-  /* Ana sayfa: özet sayı kutusunun en dar hâli (taslak: 10rem). */
+  /* Home page: narrowest width of the summary number box (draft: 10rem). */
   --shell-home-kpi-min: 160px;
 
-  /* Hareket. Süre ve eğriler merkezi tokenlardır (src/design/motion.ts). Değerler kaynak örnek
-     sayfanın `.glide`, iskelet ve dönme kurallarından gelir. Solma eğrisi genel S eğrisidir;
-     kaynaktaki anahtar sözcük eğrisi merkezi eğriyle değiştirildi. */
+  /* Motion. Durations and easings are central tokens (src/design/motion.ts). Values come from the
+     source sample page's `.glide`, skeleton and spin rules. The fade easing is the general S curve;
+     the source's keyword easing was replaced with the central easing. */
   --shell-glide-dur: var(--motion-duration-glide);
   --shell-glide-ease: var(--motion-easing-standard);
   --shell-glide-fade-dur: var(--motion-duration-glide-fade);
@@ -116,8 +116,8 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* ---------- Odak göstergesi: çevrelemeyen alt çizgi ---------- */
-/* Çizgi kutu kenarına değmez. Bu yüzden kavisli kenar oluşmaz. */
+/* ---------- Focus indicator: non-enclosing underline ---------- */
+/* The line does not touch the box edge, so no curved edge appears. */
 .shell
   :is(
     .shell-item,
@@ -159,13 +159,13 @@ html[data-focus-mode='keyboard'] .shell-bar-item:focus-visible::after {
   opacity: 1;
 }
 
-/* Alt çubuğun tek göstergesi alt çizgidir. Genel odak gölgesi ikinci gösterge olmaz. */
+/* The bottom bar's only indicator is the underline. The general focus shadow does not become a second indicator. */
 html[data-focus-mode='keyboard'] .shell-bar-item:focus-visible {
   box-shadow: none;
 }
 
-/* Panel düğmelerinin tek göstergesi ortak alt kenar çizgisidir (iç gölge).
-   Kabuğun ikinci alt çizgisi bu düğmelerde açılmaz. */
+/* The panel buttons' only indicator is the shared bottom edge line (inset shadow).
+   The shell's second underline is not enabled on these buttons. */
 html[data-focus-mode='keyboard']
   :is(.shell-assist-btn, .shell-assist .shell-iconbtn):focus-visible::after {
   opacity: 0;
@@ -192,7 +192,7 @@ html[data-focus-mode='keyboard']
   }
 }
 
-/* ---------- Yerleşim: geniş ekran ---------- */
+/* ---------- Layout: wide screen ---------- */
 .shell[data-layout='wide'] {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
@@ -234,8 +234,8 @@ html[data-focus-mode='keyboard']
   overflow: auto;
 }
 
-/* ---------- Yardımcı panel ---------- */
-/* Geniş ekranda panel sağdaki ızgara sütunudur. Sayfa içeriği daralır, örtülmez. */
+/* ---------- Assist panel ---------- */
+/* On wide screens the panel is the right-hand grid column. Page content narrows and is not covered. */
 .shell[data-layout='wide'][data-assist='open'] {
   grid-template-columns: auto minmax(0, 1fr) var(--shell-assist-w);
 }
@@ -276,9 +276,9 @@ html[data-focus-mode='keyboard']
   overflow-wrap: break-word;
 }
 
-/* Telefonda panel alttan açılır. Panel "Örnek veri" notunun altından ekranın altına uzanır.
-   `--shell-note-h` notun görünen yüksekliğidir. Kabuk ölçer.
-   Kapanış hareketi bitince panel gizlenir. */
+/* On phones the panel opens from the bottom. It spans from below the sample data note to the bottom of the screen.
+   `--shell-note-h` is the note's visible height. The shell measures it.
+   The panel is hidden once the closing animation ends. */
 .shell[data-layout='compact'] .shell-assist {
   position: fixed;
   inset: var(--shell-note-h) 0 0 0;
@@ -302,7 +302,7 @@ html[data-focus-mode='keyboard']
     visibility var(--shell-instant);
 }
 
-/* Telefonda düğme ilk satırda kalır. Kimlik alanları ikinci satıra iner. */
+/* On phones the button stays on the first row. Identity fields move to the second row. */
 .shell[data-layout='compact'] .shell-assist-btn {
   order: 1;
 }
@@ -311,7 +311,7 @@ html[data-focus-mode='keyboard']
   order: 2;
 }
 
-/* ---------- Yerleşim: telefon kabuğu ---------- */
+/* ---------- Layout: phone shell ---------- */
 .shell-identity {
   grid-column: 1 / -1;
   display: flex;
@@ -407,7 +407,7 @@ html:has(.shell[data-layout='compact']) {
   display: flex;
   align-items: center;
   gap: var(--shell-space-md);
-  /* Yükseklik kaydırma payıyla aynı tokendır: orta buton ve iki küçük boşluk. */
+  /* Height uses the same token as the scroll offset: middle button plus two small gaps. */
   min-height: var(--topbar-height);
   padding: var(--shell-space-xs) var(--shell-gutter);
   padding-left: max(var(--shell-gutter), env(safe-area-inset-left));
@@ -498,10 +498,10 @@ html:has(.shell[data-layout='compact']) {
   z-index: 1;
 }
 
-/* ---------- Telefon alt çubuğu ---------- */
-/* Dikey telefonda çubuk ekranın altındadır. Yatay telefonda sol kenara geçer.
-   Çubuğun gerçek boyu `--shell-bar-block` ve `--shell-bar-inline` ile ölçülür.
-   Böylece büyütülmüş yazıda da içerik çubuğun altında kalmaz. */
+/* ---------- Phone bottom bar ---------- */
+/* On a portrait phone the bar is at the bottom of the screen. On a landscape phone it moves to the left edge.
+   The bar's real size is measured into `--shell-bar-block` and `--shell-bar-inline`.
+   So even with enlarged text, content does not end up under the bar. */
 .shell-bar {
   position: fixed;
   inset-inline: 0;
@@ -515,9 +515,9 @@ html:has(.shell[data-layout='compact']) {
   box-shadow: 0 calc(-1 * var(--shell-hairline)) 0 var(--shell-bd);
 }
 
-/* Sanal klavye açılınca çubuk yalnız dikey telefonda gizlenir. Kaynak: onaylı taslak,
-   `body.kbd-open .bottombar` kuralı dikey telefon bölümündedir. Yatay telefonda sol çubuk
-   yerinde kalır. Böylece kabuğun sol payı sıfırlanmaz ve sayfa sola kaymaz. */
+/* When the virtual keyboard opens, the bar hides only on a portrait phone. Source: approved draft,
+   the `body.kbd-open .bottombar` rule is in the portrait phone section. On a landscape phone the left bar
+   stays in place, so the shell's left offset is not reset and the page does not shift left. */
 @media not ((orientation: landscape) and (max-height: 499px)) {
   .shell-bar[data-keyboard='open'] {
     display: none;
@@ -711,7 +711,7 @@ html:has(.shell[data-layout='compact']) {
   color: var(--shell-tx);
 }
 
-/* S2: etkin öğe. Zemin primary %12 (koyu %16), primary ikon, 3 px gösterge. */
+/* S2: active item. Background primary 12% (dark 16%), primary icon, 3 px indicator. */
 .shell-item[aria-current='page'],
 .shell-item[data-active='true'] {
   background: color-mix(in srgb, var(--shell-pri) calc(var(--shell-tint) * 100%), transparent);
@@ -723,7 +723,7 @@ html:has(.shell[data-layout='compact']) {
   color: var(--shell-pri);
 }
 
-/* Gösterge sidebar'ın düz sol kenarına değer. Gösterge radiussuzdur. */
+/* The indicator touches the sidebar's straight left edge. The indicator has no radius. */
 .shell-sb > .shell-sb-scroll .shell-list > li > .shell-item[aria-current='page']::before,
 .shell-sb > .shell-sb-scroll .shell-list > li > .shell-item[data-active='true']::before {
   content: '';
@@ -814,7 +814,7 @@ html:has(.shell[data-layout='compact']) {
   transform: none;
 }
 
-/* Hover yoksa ok her zaman görünür. Hover bir eylemin tek yolu değildir. */
+/* Without hover the arrow is always visible. Hover is never the only way to an action. */
 @media (hover: none) {
   .shell-chev {
     opacity: 1;
@@ -826,7 +826,7 @@ html:has(.shell[data-layout='compact']) {
   transform: rotate(90deg);
 }
 
-/* Rail: yalnız ikonlar. Adlar erişilebilir ad olarak kalır. */
+/* Rail: icons only. Names remain as accessible names. */
 .shell-sb[data-variant='rail'] .shell-list > li > .shell-item {
   justify-content: center;
   padding: 0;
@@ -840,7 +840,7 @@ html:has(.shell[data-layout='compact']) {
   display: none;
 }
 
-/* RT4: geniş görünüme dönünce etiketler süzülür. */
+/* RT4: labels glide in when returning to the wide view. */
 .shell-sb[data-variant='solid'] :is(.shell-lb, .shell-lb2, .shell-ws-t, .shell-sec) {
   animation: shell-label-in var(--shell-rail-dur) var(--shell-ease) both;
 }
@@ -856,7 +856,7 @@ html:has(.shell[data-layout='compact']) {
   }
 }
 
-/* Ajan durum noktası */
+/* Agent status dot */
 .shell-st {
   position: absolute;
   right: calc(-1 * var(--shell-focus-offset));
@@ -900,7 +900,7 @@ html:has(.shell[data-layout='compact']) {
   border: 0;
 }
 
-/* ---------- Çalışma alanı seçici ---------- */
+/* ---------- Workspace picker ---------- */
 .shell-ws {
   all: unset;
   position: relative;
@@ -922,7 +922,7 @@ html:has(.shell[data-layout='compact']) {
   background: var(--shell-ghost);
 }
 
-/* Tek çalışma alanında seçici düğme değildir. Üzerine gelince zemin değişmez. */
+/* With a single workspace the picker is not a button. The background does not change on hover. */
 .shell-ws[data-static] {
   cursor: default;
 }
@@ -975,7 +975,7 @@ html:has(.shell[data-layout='compact']) {
   color: var(--shell-tx3);
 }
 
-/* Açıklamalı dropdown: satır 48 px, ikon kutusu 32 px. */
+/* Described dropdown: row 48 px, icon box 32 px. */
 .shell-dd-desc {
   display: flex;
   align-items: center;
@@ -1006,7 +1006,7 @@ html:has(.shell[data-layout='compact']) {
   font-size: var(--shell-fs-min);
 }
 
-/* ---------- Rail anahtarı (RT1–RT4) ---------- */
+/* ---------- Rail toggle (RT1–RT4) ---------- */
 .shell-tg {
   all: unset;
   position: relative;
@@ -1058,7 +1058,7 @@ html:has(.shell[data-layout='compact']) {
   transform: rotate(180deg);
 }
 
-/* ---------- Komut alanı ---------- */
+/* ---------- Command field ---------- */
 .shell-cmd {
   display: flex;
   flex-direction: column;
@@ -1086,9 +1086,9 @@ html:has(.shell[data-layout='compact']) {
   gap: var(--shell-space-sm);
 }
 
-/* Ant Design X etiketi `h6` öğesiyle çizer. Bileşenin kendi stili sayfaya geç eklenir.
-   O ana kadar tarayıcının `h6` boyutu (0.67em, 9.38 px) geçerli kalırdı. Bu kural kabuk
-   stiliyle birlikte baştan yüklenir. Değerler bileşen stiliyle aynıdır ve tokendan gelir. */
+/* Ant Design X renders the label with an `h6` element. The component's own style is added to the page late.
+   Until then the browser's `h6` size (0.67em, 9.38 px) would apply. This rule loads up front with the
+   shell styles. The values match the component style and come from tokens. */
 .shell-chips :is(.ant-prompts-label) {
   margin: 0;
   padding: 0;
@@ -1221,7 +1221,7 @@ html:has(.shell[data-layout='compact']) {
   }
 }
 
-/* Telefonda panel öğenin altında, akış içinde açılır. */
+/* On phones the panel opens below the item, in the flow. */
 .shell-fly[data-compact='true'] {
   position: static;
   width: auto;
@@ -1325,7 +1325,7 @@ html:has(.shell[data-layout='compact']) {
   );
 }
 
-/* ---------- Sayfa başlığı (HD1–HD6, VT1–VT3) ---------- */
+/* ---------- Page header (HD1–HD6, VT1–VT3) ---------- */
 .shell-page {
   container-type: inline-size;
   min-width: 0;
@@ -1372,7 +1372,7 @@ html:has(.shell[data-layout='compact']) {
   color: var(--shell-tx2);
 }
 
-/* K5: görünen kutu metin satırı kadar kalır. Dokunma alanı en az dokunma tokenı kadardır. */
+/* K5: the visible box stays one text line tall. The touch area is at least the touch-target token. */
 .shell-hd-crumbs a::before {
   content: '';
   position: absolute;
@@ -1466,7 +1466,7 @@ html:has(.shell[data-layout='compact']) {
   line-height: calc(var(--shell-fs-min) + var(--shell-lh-add));
 }
 
-/* Renk yalnız işarette. Metin okunur renkte kalır. */
+/* Colour only on the marker. Text keeps a readable colour. */
 .shell-hd-sync[data-kind='live'] > :first-child {
   color: var(--shell-ok);
 }
@@ -1587,7 +1587,7 @@ html:has(.shell[data-layout='compact']) {
   font-size: var(--shell-item-icon);
 }
 
-/* Dokunma katmanı büyür. Kontrollerin görünen boyutu aynı kalır. */
+/* The touch layer grows. The controls' visible size stays the same. */
 @media (any-pointer: coarse) {
   .shell-iconbtn::before,
   .shell-hd-search::after,
@@ -1602,10 +1602,10 @@ html:has(.shell[data-layout='compact']) {
     transform: translate(-50%, -50%);
   }
 
-  /* Kayan kutu, dokunma katmanının üstünü ve altını kırpmaz. */
+  /* The scrolling box does not clip the top and bottom of the touch layer. */
   .shell-hd-vsw {
     padding: var(--shell-space-md) var(--shell-space-xs);
-    /* WebKit kaydırma çubuğu, son sekmenin dokunma alanını örtmesin. */
+    /* The WebKit scrollbar must not cover the last tab's touch area. */
     padding-bottom: var(--shell-space-2xl);
     scroll-padding-inline: var(--shell-space-xs);
   }
@@ -1615,7 +1615,7 @@ html:has(.shell[data-layout='compact']) {
     overflow: visible;
   }
 
-  /* Yan yana duran hedefler birbirinin dokunma alanını örtmez. */
+  /* Adjacent targets do not cover each other's touch areas. */
   .shell-hd-vsw .ant-segmented-group {
     column-gap: var(--shell-space-xs);
   }
@@ -1642,7 +1642,7 @@ html:has(.shell[data-layout='compact']) {
   margin: 0;
 }
 
-/* Dar kapsayıcı: kenar boşluğu telefona iner. */
+/* Narrow container: edge padding drops to the phone value. */
 @container (max-width: 599px) {
   .shell-hd {
     padding: var(--shell-space-lg) var(--shell-gutter);
@@ -1657,7 +1657,7 @@ html:has(.shell[data-layout='compact']) {
   }
 }
 
-/* ---------- Sayfa gövdesi ---------- */
+/* ---------- Page body ---------- */
 .shell-body {
   display: flex;
   flex-direction: column;
@@ -1772,8 +1772,8 @@ html:has(.shell[data-layout='compact']) {
   background: var(--shell-bg-e);
 }
 
-/* ---------- Ana sayfa: Bekleyenler (taslak AJA-880, "2. ANA SAYFA") ---------- */
-/* Bölümler kart çerçevesi almaz. Ayrım boşluk ve yüzey tonuyla kurulur. */
+/* ---------- Home page: Pending (draft AJA-880, screen 2 "Home page") ---------- */
+/* Sections get no card frame. Separation comes from spacing and surface tone. */
 .shell-home .shell-body {
   gap: var(--shell-space-2xl);
 }
@@ -1800,7 +1800,7 @@ html:has(.shell[data-layout='compact']) {
   list-style: none;
 }
 
-/* Satırları düz çizgi ayırır. Satırın köşesi yuvarlak değildir. */
+/* A straight line separates rows. Row corners are not rounded. */
 .shell-home-item {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -1853,7 +1853,7 @@ html:has(.shell[data-layout='compact']) {
   font-size: var(--shell-fs);
 }
 
-/* Durum etiketi: çerçevesiz, tonlu zemin. Metin ana metin renginde kalır (kontrast). */
+/* Status label: no border, tinted background. Text keeps the main text colour (contrast). */
 .shell-home-tag {
   display: inline-flex;
   align-items: center;
@@ -1896,7 +1896,7 @@ html:has(.shell[data-layout='compact']) {
   min-width: 0;
 }
 
-/* Süs simgesi (taslak AJA-880): ölçü menü simgesi tokenından gelir. Ekran okuyucu okumaz. */
+/* Decorative icon (draft AJA-880): size comes from the menu icon token. Screen readers skip it. */
 .shell-home-ic {
   flex: none;
   font-size: var(--shell-item-icon);
@@ -1939,7 +1939,7 @@ html:has(.shell[data-layout='compact']) {
   line-height: calc(var(--shell-fs-lg) + var(--shell-lh-add));
 }
 
-/* Dar kapsayıcıda düğmeler metnin altına iner. */
+/* In a narrow container the buttons move below the text. */
 @container (max-width: 599px) {
   .shell-home-item {
     grid-template-columns: minmax(0, 1fr);
@@ -1952,7 +1952,7 @@ html:has(.shell[data-layout='compact']) {
   }
 }
 
-/* Dokunmalı işaretçi: düğmenin dokunma alanı merkezi tokendır (`--hit-target`, 48 px). */
+/* Coarse pointer: the button's touch area is a central token (`--hit-target`, 48 px). */
 @media (any-pointer: coarse) {
   .shell-home .ant-btn {
     min-width: var(--hit-target);
@@ -1967,8 +1967,8 @@ html:has(.shell[data-layout='compact']) {
   .shell *::after,
   .shell-dim,
   .shell-fly {
-    animation: none !important; /* Kullanıcı tercihi bütün hareketi durdurur. */
-    transition: none !important; /* Kullanıcı tercihi bütün hareketi durdurur. */
+    animation: none !important; /* The user preference stops all motion. */
+    transition: none !important; /* The user preference stops all motion. */
   }
 }
 
@@ -1998,13 +1998,13 @@ html:has(.shell[data-layout='compact']) {
   opacity: 1;
 }
 
-/* G2: dışarıdan girişte konum hareketsiz değişir. Yalnız görünürlük solar. */
+/* G2: on entry from outside, the position changes without motion. Only visibility fades. */
 .shell-glide[data-jump='true'] {
   transition: opacity var(--shell-glide-fade-dur) var(--shell-glide-fade-ease);
 }
 
-/* Öğeler zeminin üstündedir. Hover zemini artık kayan katmandır.
-   Flyout paneli de kendi zeminini taşır (kaynak: .sb-fly .glide). */
+/* Items sit above the background. The hover background is now the gliding layer.
+   The flyout panel carries its own background too (source: .sb-fly .glide). */
 .shell-glide-host :where(.shell-list > li > .shell-item, .shell-fly-list > li > .shell-item) {
   z-index: 1;
 }
@@ -2014,7 +2014,7 @@ html:has(.shell[data-layout='compact']) {
   background: transparent;
 }
 
-/* Kaydırma bölgeleri: odakta alt kenarda düz çizgi. Bölgelerin köşesi yoktur. */
+/* Scroll regions: a straight line on the bottom edge when focused. The regions have no corners. */
 .shell-table,
 .shell-kanban {
   outline: none;

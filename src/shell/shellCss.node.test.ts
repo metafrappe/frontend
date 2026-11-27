@@ -1,13 +1,13 @@
-// Vitest `css: false` ayarıyla `?raw` boş döner. Dosya Node ile okunur.
-// Ad `.node.test.ts` ile biter. Böylece Node türleri yalnız bu testte geçerlidir.
+// With Vitest `css: false`, `?raw` returns empty. The file is read with Node.
+// The name ends in `.node.test.ts`, so Node types apply only to this test.
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
 const css = readFileSync(`${process.cwd()}/src/shell/shell.css`, 'utf8');
 
 /**
- * Önemli 2 ve 3: stil dosyasında sabit değer yazılmaz.
- * Sabit değerler yalnız dosya başındaki adlı değer bölümünde durur.
+ * Important 2 and 3: no hard-coded values are written in the stylesheet.
+ * Hard-coded values live only in the named-values section at the top of the file.
  */
 
 const START = '/* @adli-degerler:basla */';
@@ -19,8 +19,8 @@ function body(): string {
   expect(a).toBeGreaterThanOrEqual(0);
   expect(b).toBeGreaterThan(a);
   const rest = css.slice(0, a) + css.slice(b + END.length);
-  // Yorumlar denetlenmez. Sorgu koşulları denetlenmez: CSS değişkeni
-  // `@media` ve `@container` koşulunda çalışmaz.
+  // Comments are not checked. Query conditions are not checked: CSS variables
+  // do not work in `@media` and `@container` conditions.
   return rest.replace(/\/\*[\s\S]*?\*\//g, '').replace(/@(media|container)[^{]*\{/g, '{');
 }
 
@@ -51,8 +51,8 @@ describe('shell.css', () => {
 });
 
 /**
- * İnceleme 2, Küçük 1: kayan zeminin eğrisi ve solma süresi kaynak örnekten gelir.
- * Kaynak: `.glide{transition:transform .2s cubic-bezier(.2,0,0,1), ..., opacity .15s ease}`.
+ * Review 2, Minor 1: the gliding background's easing and fade duration come from the source sample.
+ * Source: `.glide{transition:transform .2s cubic-bezier(.2,0,0,1), ..., opacity .15s ease}`.
  */
 describe('kayan zemin hareketi', () => {
   const decl = (name: string) =>
@@ -60,11 +60,11 @@ describe('kayan zemin hareketi', () => {
       .exec(css)?.[1]
       ?.trim()
       .replace(/\s+/g, '')
-      // Biçimlendirici `.2` değerini `0.2` yazar. İkisi aynı sayıdır.
+      // The formatter writes `.2` as `0.2`. Both are the same number.
       .replace(/(?<![\d.])0\./g, '.');
 
   it('adlı değerler merkezi hareket tokenlarına bağlıdır', () => {
-    // Süreler kaynakta kalır. Kabuk onaylı simetrik eğriyi kullanır.
+    // Durations stay as in the source. The shell uses the approved symmetric easing.
     expect(decl('--shell-glide-dur')).toBe('var(--motion-duration-glide)');
     expect(decl('--shell-glide-ease')).toBe('var(--motion-easing-standard)');
     expect(decl('--shell-glide-fade-dur')).toBe('var(--motion-duration-glide-fade)');
@@ -96,7 +96,7 @@ describe('kayan zemin hareketi', () => {
   });
 });
 
-/** AJA-1222: ana sayfa simgelerinin ölçüsü ve rengi merkezi tokendan gelir. */
+/** AJA-1222: home page icon size and colour come from a central token. */
 describe('ana sayfa simgeleri', () => {
   const rule = (selector: string) => {
     const esc = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

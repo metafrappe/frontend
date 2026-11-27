@@ -1,9 +1,9 @@
 import { expect, test } from '../setup/playwright-fixtures';
 
 /**
- * Tarayıcı testleri gerçek sunucuya istek atmaz. Ortak fixture `atonota.net` isteklerini yakalar.
- * Testin kendi yönlendirmesi yoksa istek kesilir ve test düşer.
- * `test.fail` bu düşmeyi bekler. Fixture çalışmazsa test "beklenmedik geçti" diye düşer.
+ * Browser tests do not send requests to the real server. The shared fixture catches `atonota.net` requests.
+ * If the test has no route of its own, the request is aborted and the test fails.
+ * `test.fail` expects this failure. If the fixture does not work, the test fails as "unexpectedly passed".
  */
 const LOGIN_PROBE = 'https://api.login.atonota.net/__e2e-koruma-denemesi';
 const ENV_PROBE = 'https://api.login.alpha.atonota.net/__e2e-koruma-denemesi';
@@ -24,11 +24,11 @@ test.describe('gerçek sunucu koruması', () => {
   });
 
   /**
-   * Panel incelemesi 2, K-1: uygulama sayfasında sahte sunucunun servis işçisi istekleri yönetir.
-   * WebKit'te Playwright, işçinin ağa geçirdiği isteği görmez. Bu yüzden sahte sunucu
-   * `atonota.net` isteğini işçide keser ve tarayıcı günlüğüne yazar. Fixture bu kaydı okur.
-   * Test `test.fail` kullanmaz. Böylece başka bir hata testi geçirmez (inceleme e5-1, K-1).
-   * Fixture kaydı boş değilse testi düşürür. Bu yolu yukarıdaki iki deneme sınar.
+   * Panel review 2, K-1: on the app page, the mock server's service worker handles requests.
+   * In WebKit, Playwright does not see a request the worker passes to the network. So the mock server
+   * aborts the `atonota.net` request in the worker and writes it to the browser console. The fixture reads this record.
+   * The test does not use `test.fail`. So another error cannot make the test pass (review e5-1, K-1).
+   * The fixture fails the test if the record is not empty. The two tests above cover this path.
    */
   test('uygulama sayfasında servis işçisi gerçek sunucu isteğini ağ hatasına düşürür', async ({
     page,
@@ -44,9 +44,9 @@ test.describe('gerçek sunucu koruması', () => {
         return 'ağ hatası';
       }
     }, ENV_PROBE);
-    // İstek ağa çıkmaz. Sayfa yanıt değil, ağ hatası alır.
+    // The request does not reach the network. The page gets a network error, not a response.
     expect(outcome).toBe('ağ hatası');
-    // Fixture kesilen isteği kaydeder. Test kaydı kendisi okur. Böylece test düşmez.
+    // The fixture records the aborted request. The test reads the record itself. So the test does not fail.
     await expect.poll(() => gercekSunucuIstekleri.peek()).toEqual([`GET ${ENV_PROBE}`]);
     gercekSunucuIstekleri.take();
   });

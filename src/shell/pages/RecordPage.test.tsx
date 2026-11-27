@@ -29,7 +29,7 @@ describe('RecordPage', () => {
   });
 
   it('canlı kaydı kabuğun sayfa çerçevesi içinde çizer', () => {
-    // Kayıt bileşeni yalnız içeriği verir. Sayfa çerçevesi kabuğundur (inceleme 2, K3).
+    // The record component supplies only the content. The page frame belongs to the shell (review 2, K3).
     mount({ record: { Component: LiveRecord } }, '/hr/leave-application/HR-LAP-2026-00001');
     const text = screen.getByText('canlı hr leave-application HR-LAP-2026-00001');
     expect(text.closest('.shell-page > .shell-body')).not.toBeNull();

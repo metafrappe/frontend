@@ -9,22 +9,22 @@ import type { ShellWorkspace, ShellWorkspaceData } from '../view-data';
 
 interface WorkspaceSwitcherProps {
   rail: boolean;
-  /** Sunucudan gelen çalışma alanları. Yoksa yalnız logo görünür; örnek şirket gösterilmez. */
+  /** Workspaces from the server. If absent, only the logo is shown. No sample company is shown. */
   data?: ShellWorkspaceData | undefined;
 }
 
 type FocusTarget = 'first' | 'last';
 
-/** Liste çizilene kadar beklenecek en çok kare sayısı. */
+/** Maximum number of frames to wait for the list to render. */
 const MAX_FOCUS_FRAMES = 30;
 
 const ITEM_SELECTOR = '[role="menuitem"]:not([aria-disabled="true"])';
 
 /**
- * Oklar, Home ve End odağı hemen taşır. Son öğeden sonra ilk öğeye dönülür.
- * antd menüsü odağı bir kare sonra ve koşullu taşır. Yavaş cihazda bu ok basışını yutabilir.
- * Bu yüzden bu tuşlar menüye ulaşmadan burada karşılanır. Enter ve Space menüde kalır.
- * Escape bileşenin içinde ayrıca karşılanır.
+ * Arrows, Home and End move focus at once. After the last item it wraps to the first.
+ * The antd menu moves focus one frame later and conditionally. On a slow device that can swallow the arrow press.
+ * So these keys are handled here before they reach the menu. Enter and Space stay with the menu.
+ * Escape is handled separately inside the component.
  */
 function moveMenuFocus(event: KeyboardEvent<HTMLDivElement>) {
   const { key } = event;
@@ -50,12 +50,12 @@ function moveMenuFocus(event: KeyboardEvent<HTMLDivElement>) {
   items[next]?.focus();
 }
 
-/** Düğmede ya da gövdede basılan okun hedefi. Aşağı ok ilk öğeye, yukarı ok son öğeye gider. */
+/** Target of an arrow pressed on the button or the body. Down goes to the first item, up to the last. */
 function arrowTarget(key: string): FocusTarget | null {
   return key === 'ArrowDown' ? 'first' : key === 'ArrowUp' ? 'last' : null;
 }
 
-/** Açık listenin ilk ya da son öğesine odak verir. Liste çizilmediyse `false` döner. */
+/** Focuses the first or last item of the open list. Returns `false` if the list has not rendered. */
 function focusMenuItem(menuId: string, target: FocusTarget): boolean {
   const items = document.getElementById(menuId)?.querySelectorAll<HTMLElement>(ITEM_SELECTOR);
   const item = items && (target === 'first' ? items[0] : items[items.length - 1]);
@@ -65,9 +65,9 @@ function focusMenuItem(menuId: string, target: FocusTarget): boolean {
 }
 
 /**
- * W1: çalışma alanı seçici. Veri sunucudan gelir (oturumun kiracısı).
- * Veri yoksa yalnız logo görünür. Tek çalışma alanı varsa ad açılır liste olmadan sade görünür.
- * Birden çok çalışma alanı varsa açılır liste olur.
+ * W1: workspace switcher. Data comes from the server (the session's tenant).
+ * Without data only the logo is shown. With one workspace the name is shown plainly, without a dropdown.
+ * With more than one workspace it becomes a dropdown.
  */
 export function WorkspaceSwitcher({ rail, data }: WorkspaceSwitcherProps) {
   const items = data?.items ?? [];
@@ -88,7 +88,7 @@ export function WorkspaceSwitcher({ rail, data }: WorkspaceSwitcherProps) {
   );
 }
 
-/** Seçicideki ad ve kısa not. Not yoksa not satırı çizilmez. */
+/** Name and short note in the switcher. Without a note, the note line is not rendered. */
 function WorkspaceLabel({ ws }: { ws: ShellWorkspace }) {
   return (
     <span className="shell-ws-t">
@@ -100,12 +100,12 @@ function WorkspaceLabel({ ws }: { ws: ShellWorkspace }) {
 }
 
 /**
- * Birden çok çalışma alanı: tıklanınca "Açıklamalı" stilde liste açar. Odak perdesi uygulanır.
- * Klavye APG menü düğmesi kalıbına uyar (Ö8):
- * Enter, Space ve aşağı ok listeyi açar ve ilk öğeye gider. Yukarı ok son öğeye gider.
- * Oklar öğeler arasında gezer. Escape listeyi kapatır ve odağı düğmeye verir.
- * Tab ve Shift+Tab listeyi kapatır. Odak düğmeden sonraki ya da önceki öğeye geçer.
- * Liste fareyle açıldıysa aşağı ok ilk öğeye, yukarı ok son öğeye gider.
+ * Several workspaces: a click opens a list in the "with descriptions" style. The focus dim is applied.
+ * Keyboard follows the APG menu button pattern (Ö8):
+ * Enter, Space and Down open the list and go to the first item. Up goes to the last item.
+ * Arrows move between items. Escape closes the list and focuses the button.
+ * Tab and Shift+Tab close the list. Focus moves to the element after or before the button.
+ * If the list was opened with the mouse, Down goes to the first item, Up to the last.
  */
 function WorkspaceMenu({ rail, data }: { rail: boolean; data: ShellWorkspaceData }) {
   const workspaces = data.items;
@@ -115,7 +115,7 @@ function WorkspaceMenu({ rail, data }: { rail: boolean; data: ShellWorkspaceData
   const buttonRef = useRef<HTMLButtonElement>(null);
   const pendingFocus = useRef<FocusTarget | null>(null);
 
-  // Liste klavyeyle açıldıysa çizilince odak istenen öğeye gider.
+  // If the list was opened by keyboard, focus goes to the requested item once rendered.
   useEffect(() => {
     if (!open || !pendingFocus.current) return undefined;
     const target = pendingFocus.current;
@@ -133,9 +133,9 @@ function WorkspaceMenu({ rail, data }: { rail: boolean; data: ShellWorkspaceData
     return () => cancelAnimationFrame(handle);
   }, [open, menuId]);
 
-  // Kapanış hareketi sürerken liste ekran okuyucuya ve klavyeye kapalıdır.
-  // Hareket karelere bağlıdır; yavaş cihazda saniyelerce sürebilir. Anlamsal durum beklemez.
-  // Açılır katman kapanırken içeriğini dondurur. Bu yüzden nitelikler burada yazılır.
+  // While the closing animation runs, the list is closed to screen readers and the keyboard.
+  // The animation depends on frames and can take seconds on a slow device. Semantic state does not wait.
+  // The dropdown layer freezes its content while closing, so the attributes are written here.
   useLayoutEffect(() => {
     const surface = document.getElementById(`${menuId}-surface`);
     if (!surface) return;
@@ -148,11 +148,11 @@ function WorkspaceMenu({ rail, data }: { rail: boolean; data: ShellWorkspaceData
     }
   }, [open, menuId]);
 
-  // Liste fareyle açıldıysa odak menüde değildir (K-1).
-  // Chromium'da odak düğmededir. Bu durumu düğmenin kendi tuş işleyicisi karşılar.
-  // WebKit tıklanan düğmeye odak vermez. Odak sayfa gövdesinde kalır. Bu dinleyici o durumu karşılar.
-  // Tab ve Shift+Tab listeyi kapatır (inceleme 2, K-1). Olay pencereye ulaşmaz.
-  // Böylece antd'nin pencere dinleyicisi Tab'ı engelleyemez. Tarayıcı odağı yine kendisi taşır.
+  // If the list was opened with the mouse, focus is not in the menu (K-1).
+  // In Chromium focus is on the button. The button's own key handler covers that case.
+  // WebKit does not focus a clicked button. Focus stays on the page body. This listener covers that case.
+  // Tab and Shift+Tab close the list (review 2, K-1). The event does not reach the window.
+  // So antd's window listener cannot block Tab. The browser still moves focus itself.
   useEffect(() => {
     if (!open) return undefined;
     const onKey = (event: globalThis.KeyboardEvent) => {
@@ -183,10 +183,10 @@ function WorkspaceMenu({ rail, data }: { rail: boolean; data: ShellWorkspaceData
 
   const onButtonKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
     if (open) {
-      // Liste fareyle açıldı ve odak düğmede kaldı. Oklar odağı hemen menüye taşır (K-1).
-      // Enter ve Space burada karşılanmaz. Tıklama olarak listeyi kapatır.
-      // Tab ve Shift+Tab listeyi kapatır. Tarayıcı odağı düğmeden sonraki ya da önceki öğeye taşır.
-      // Olay antd'nin pencere dinleyicisine ulaşmaz. O dinleyici ilk Tab'ı engellerdi (inceleme 2, K-1).
+      // The list was opened with the mouse and focus stayed on the button. Arrows move focus into the menu at once (K-1).
+      // Enter and Space are not handled here. They close the list as a click.
+      // Tab and Shift+Tab close the list. The browser moves focus to the element after or before the button.
+      // The event does not reach antd's window listener, which would block the first Tab (review 2, K-1).
       if (event.key === 'Tab') {
         event.stopPropagation();
         pendingFocus.current = null;
@@ -204,7 +204,7 @@ function WorkspaceMenu({ rail, data }: { rail: boolean; data: ShellWorkspaceData
           ? 'last'
           : null;
     if (!target) return;
-    // Tarayıcının tıklama olayı listeyi ikinci kez açıp kapatmasın.
+    // Stop the browser's click event from toggling the list a second time.
     event.preventDefault();
     pendingFocus.current = target;
     setOpen(true);
@@ -241,13 +241,13 @@ function WorkspaceMenu({ rail, data }: { rail: boolean; data: ShellWorkspaceData
         onClick: ({ key, domEvent }) => {
           setCurrent(key);
           if (key !== current) data.select?.(key);
-          // Klavyeyle seçilince odak düğmeye döner.
-          // Aynı Enter tuşu odaktaki düğmeye tıklama olarak geçmesin; yoksa liste yeniden açılır.
+          // After a keyboard selection, focus returns to the button.
+          // The same Enter key must not pass to the focused button as a click, or the list reopens.
           const byKeyboard = domEvent.type === 'keydown';
           if (byKeyboard) domEvent.preventDefault();
-          // Fareyle seçimde odak listedeyse düğmeye döner (inceleme 1, K-3).
-          // Chromium tıklanan öğeye odak verir. Liste hemen `inert` olur; odak gövdeye düşerdi.
-          // Odak listede değilse (örneğin WebKit) odağa dokunulmaz.
+          // On a mouse selection, if focus is in the list it returns to the button (review 1, K-3).
+          // Chromium focuses the clicked item. The list becomes `inert` at once, so focus would fall to the body.
+          // If focus is not in the list (e.g. WebKit), focus is left alone.
           const surface = document.getElementById(`${menuId}-surface`);
           const focusInMenu = surface?.contains(document.activeElement) ?? false;
           close(byKeyboard || focusInMenu);
@@ -258,16 +258,16 @@ function WorkspaceMenu({ rail, data }: { rail: boolean; data: ShellWorkspaceData
         <div
           id={`${menuId}-surface`}
           onKeyDownCapture={(event) => {
-            // Escape listeyi kapatır ve odağı hemen düğmeye verir.
+            // Escape closes the list and focuses the button at once.
             if (event.key === 'Escape') {
               event.preventDefault();
               close(true);
               return;
             }
-            // Tab ve Shift+Tab listeyi kapatır (Ö-1). Tarayıcının Tab davranışı engellenmez.
-            // Odak önce düğmeye döner. Tarayıcı sonraki ya da önceki öğeyi düğmeden sayar.
-            // antd açılır listesi pencereye bir Tab dinleyicisi bağlar. O dinleyici ilk Tab'da
-            // odağı listeye geri çeker. Olay burada durdurulur. Böylece o dinleyiciye ulaşmaz.
+            // Tab and Shift+Tab close the list (Ö-1). The browser's Tab behaviour is not prevented.
+            // Focus first returns to the button. The browser counts the next or previous element from the button.
+            // The antd dropdown binds a Tab listener to the window. On the first Tab that listener
+            // pulls focus back into the list. The event is stopped here so it never reaches that listener.
             if (event.key === 'Tab') {
               event.stopPropagation();
               close(true);
@@ -280,7 +280,7 @@ function WorkspaceMenu({ rail, data }: { rail: boolean; data: ShellWorkspaceData
         </div>
       )}
       overlayClassName="shell-dd shell-dd-described"
-      // Liste kabuğun içinde açılır. Böylece kabuk değişkenlerini görür.
+      // The list opens inside the shell, so it sees the shell's variables.
       getPopupContainer={(node) => node.closest<HTMLElement>('.shell') ?? document.body}
       placement="bottomLeft"
     >

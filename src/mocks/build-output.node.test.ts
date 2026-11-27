@@ -14,7 +14,7 @@ async function buildWith(mocks: string | undefined, mode = 'production'): Promis
   const saved = { mocks: process.env.VITE_API_MOCKS, nodeEnv: process.env.NODE_ENV };
   if (mocks === undefined) delete process.env.VITE_API_MOCKS;
   else process.env.VITE_API_MOCKS = mocks;
-  // Vitest NODE_ENV değerini `test` yapar. Gerçek üretim derlemesi `production` kullanır.
+  // Vitest sets NODE_ENV to `test`. A real production build uses `production`.
   process.env.NODE_ENV = 'production';
   try {
     await build({ logLevel: 'silent', mode, build: { outDir, emptyOutDir: true } });
@@ -48,7 +48,7 @@ describe('üretim çıktısı', () => {
   }, 60_000);
 
   it('e2e kipinde ortam değişkeni olmadan da işçi dosyasını ve sahte sunucu kodunu üretir', async () => {
-    // Değer vite/e2e-env.ts dosyasından gelir. Depoda .env.e2e dosyası yoktur.
+    // The value comes from vite/e2e-env.ts. The repository has no .env.e2e file.
     const outDir = await buildWith(undefined, 'e2e');
     expect(existsSync(join(outDir, 'mockServiceWorker.js'))).toBe(true);
     expect(readdirSync(join(outDir, 'assets')).some((name) => name.startsWith('browser-'))).toBe(

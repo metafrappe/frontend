@@ -1,13 +1,13 @@
 import { createContext, useContext } from 'react';
 
 /**
- * Yardımcı panelin açık durumu. Kabuk durumu tutar.
- * Başka bir düğme de paneli açabilir. Örneğin telefonun alt çubuğu.
- * Panel kapanınca odak paneli açan düğmeye döner.
+ * Open state of the assist panel. The shell holds the state.
+ * Another button can also open the panel, e.g. the phone bottom bar.
+ * When the panel closes, focus returns to the button that opened it.
  */
 export interface AssistPanelApi {
   open: boolean;
-  /** Paneli açar ya da kapatır. `opener` odağın döneceği düğmedir. */
+  /** Opens or closes the panel. `opener` is the button focus returns to. */
   toggle: (opener?: HTMLElement | null) => void;
   close: () => void;
 }

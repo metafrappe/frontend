@@ -16,13 +16,13 @@ if (!container) {
 }
 const root = container;
 
-// Sunucu CSP nonce verdiyse çalışma anında eklenen stil ve betik öğeleri onu taşır.
+// If the server supplied a CSP nonce, style and script elements added at runtime carry it.
 installCspNonce();
 
-// Sahte sunucu açıksa API isteklerinden önce başlar.
+// If the mock server is enabled, it starts before any API requests.
 const mocks = await startApiMocks();
 
-// Oturum bir kez kurulur. Tarayıcı erişim belirteci tutmaz (bkz. src/auth/README.md).
+// The session is created once. The browser holds no access token (see src/auth/README.md).
 const session = createPlatformSession({
   env: {
     VITE_SITE_URL: import.meta.env.VITE_SITE_URL ?? '',
@@ -35,14 +35,14 @@ const session = createPlatformSession({
   document,
   navigate: (url) => window.location.assign(url),
   currentPath: () => window.location.pathname + window.location.search,
-  // Sahte sunucu açıkken örnek CSRF değeri buradan gelir.
+  // When the mock server is enabled, the sample CSRF value comes from here.
   ...(mocks.active ? { csrfToken: mocks.csrfToken } : {}),
 });
 
 createRoot(root).render(
   <StrictMode>
     {mocks.active ? <SampleDataNotice /> : null}
-    {/* Sahte sunucu açıkken modüller "Örnek veri" kipindedir. Örnek veri canlı gibi gösterilmez. */}
+    {/* When the mock server is enabled, modules run in sample-data mode. Sample data is never shown as live. */}
     <Root session={session} dataMode={mocks.active ? 'example' : 'live'} />
   </StrictMode>,
 );

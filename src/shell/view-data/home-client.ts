@@ -4,7 +4,7 @@ import { ApiError, userMessage } from '@/api';
 import type { ShellHomeData } from './home-data';
 import { HomeDataError } from './home-data';
 
-/** Bilinmeyen hatanın metni. Ortak hata metinleriyle aynıdır. */
+/** Text for an unknown error. Same as the shared error texts. */
 const UNKNOWN = 'Bir sorun çıktı. Daha sonra yeniden deneyin.';
 
 function toHomeError(error: unknown): HomeDataError {
@@ -15,13 +15,13 @@ async function guarded<T>(run: () => Promise<T>): Promise<T> {
   try {
     return await run();
   } catch (error) {
-    // İptal hatası olduğu gibi geçer. Sayfa iptali hata saymaz.
+    // An abort error passes through unchanged. The page does not treat an abort as an error.
     if (error instanceof DOMException && error.name === 'AbortError') throw error;
     throw toHomeError(error);
   }
 }
 
-/** Ana sayfa bağlantısını ortak API istemcisinden kurar. */
+/** Builds the home page connection from the shared API client. */
 export function createShellHomeData(
   api: Pick<ApiClient, 'getHomeSummary' | 'approveLeave' | 'rejectLeave'>,
 ): ShellHomeData {

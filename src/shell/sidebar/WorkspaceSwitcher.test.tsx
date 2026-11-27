@@ -4,13 +4,13 @@ import { describe, expect, it } from 'vitest';
 import { sampleWorkspaces } from '../sampleData';
 import { WorkspaceSwitcher } from './WorkspaceSwitcher';
 
-/** Deneme sayfasının örnek çalışma alanları. Birden çok alan açılır liste kurar. */
+/** Sample workspaces of the demo page. More than one workspace builds a dropdown. */
 const data = { items: sampleWorkspaces, current: 'a' };
 
 /**
- * Kapanan liste hemen anlamsal olarak gizlenir (Linux WebKit kararsızlığı, 23 Kasım 2026).
- * Kapanış hareketi tarayıcının karelerine bağlıdır. Yavaş cihazda kareler saniyelerce gecikebilir.
- * Hareket sürerken liste ekran okuyucuya ve klavyeye kapalı olmalıdır.
+ * A closing list is semantically hidden at once (Linux WebKit flakiness, 23 November 2026).
+ * The closing animation depends on browser frames. On a slow device frames can lag by seconds.
+ * While the animation runs, the list must be closed to screen readers and the keyboard.
  */
 describe('WorkspaceSwitcher kapanan liste', () => {
   it('kapanınca liste aria-hidden ve inert olur', () => {
@@ -36,9 +36,9 @@ describe('WorkspaceSwitcher kapanan liste', () => {
 });
 
 /**
- * İnceleme 1, K-3: fareyle seçimden sonra odak sayfa gövdesine düşmez.
- * Kapanan liste hemen `inert` olur. Odak listedeyse önce tetik düğmesine döner.
- * Odak listede değilse odağa dokunulmaz.
+ * Review 1, K-3: after a mouse selection, focus does not fall to the page body.
+ * The closing list becomes `inert` at once. If focus is in the list, it first returns to the trigger button.
+ * If focus is not in the list, focus is left alone.
  */
 describe('WorkspaceSwitcher fareyle seçim', () => {
   function openWithMouse() {
@@ -58,7 +58,7 @@ describe('WorkspaceSwitcher fareyle seçim', () => {
 
   it('odak listedeyse seçimden sonra tetik düğmesine döner', () => {
     const { button, item } = openWithMouse();
-    // Chromium tıklanan öğeye odak verir.
+    // Chromium focuses the clicked item.
     act(() => item.focus());
     expect(document.activeElement).toBe(item);
 

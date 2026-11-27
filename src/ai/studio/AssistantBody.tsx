@@ -20,9 +20,9 @@ function StepSection({ group, children }: { group: StepGroup; children: ReactNod
 }
 
 /**
- * Asistan yanıtı: akış adımları, akan metin ve GenUI blokları.
- * Her adım onaylı yüzeyle çizilir. Örnek: plan adımında kapsam şeridi ve araç olayları.
- * Araç olayı yalnız sunucu bildirince görünür. Modelin iç düşüncesi gösterilmez (AX-3).
+ * Assistant reply: flow steps, streaming text and GenUI blocks.
+ * Each step renders with an approved surface. Example: the scope strip and tool events at the plan step.
+ * A tool event shows only when the server reports it. The model's inner thought is not shown (AX-3).
  */
 export function AssistantBody({
   message,
@@ -36,7 +36,7 @@ export function AssistantBody({
   message: AssistantMessage;
   onAction: GenUIActionHandler;
   onRetry: () => void;
-  /** `status`: önceki mesaj onaydır. Yeniden deneme işlemin durumunu sorar. */
+  /** `status`: the previous message is an approval. Retry asks for the operation's status. */
   retryKind: 'status' | 'retry';
   busy: boolean;
   decisions: GenUIDecisions;
@@ -44,7 +44,7 @@ export function AssistantBody({
 }) {
   const streaming = message.phase === 'streaming';
   const done = message.phase === 'done';
-  // Akış bitmeden gelen bloklar gösterilmez (U5). Araç olayları sunucu gönderdikçe görünür.
+  // Blocks that arrive before the stream ends are not shown (U5). Tool events show as the server sends them.
   const { groups, rest } = groupBySteps(done ? message.ui : [], message.steps);
   return (
     <div className="ai-answer">

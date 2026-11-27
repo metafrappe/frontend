@@ -1,23 +1,23 @@
 #!/usr/bin/env bash
-# Playwright sistem bağımlılıkları + tarayıcılar.
-# Kaynak: frappesetup deposundaki aynı betik (AJA-364, AJA-382, AJA-389).
-# atonota-web bulgusu (24 Kasım 2026, PR 7): `playwright install --with-deps webkit` adımı
-# 30 dakikalık iş sınırında bitmedi; Chromium işinde kurulum yüzünden iş 23 dakika sürdü.
-# frappesetup ölçümü (23 Kasım 2026): aynı adım 42 sn ile 1453 sn arasında sürdü;
-# süre apt ayna sunucusunun hızına bağlıydı (bir koşuda `apt-get update` 24 dk takıldı).
-# Önbellek varsa .deb dosyaları ağsız kurulur; `apt-get update` hiç çalışmaz.
-# Paket kümesi `--with-deps` ile aynıdır: önbellek yalnız `playwright install-deps`
-# komutunun indirdiği dosyalardır.
+# Playwright system dependencies + browsers.
+# Source: the same script in the frappesetup repository (AJA-364, AJA-382, AJA-389).
+# atonota-web finding (24 November 2026, PR 7): the `playwright install --with-deps webkit` step
+# did not finish within the 30-minute job limit; in the Chromium job installation made the job take 23 minutes.
+# frappesetup measurement (23 November 2026): the same step took between 42 s and 1453 s;
+# the duration depended on the apt mirror's speed (in one run `apt-get update` hung for 24 min).
+# With a cache, the .deb files are installed without the network; `apt-get update` never runs.
+# The package set is the same as with `--with-deps`: the cache holds only the files
+# downloaded by `playwright install-deps`.
 #
-# frappesetup bulgusu (AJA-364): `apt-get install --no-download` arşiv klasörü dışındaki
-# .deb dosyalarını kurmaz ("Unable to fetch some archives"). Önbellek bu yüzden hiç
-# kullanılmadı; her iş ağdan kurdu. Yavaş aynaya düşen iş (234 kB/s) 20 dakikada bitmedi.
-# Çözüm: dosyalar önce apt arşiv klasörüne kopyalanır, kurulum oradan yapılır.
+# frappesetup finding (AJA-364): `apt-get install --no-download` does not install .deb files
+# outside the archive folder ("Unable to fetch some archives"). So the cache was never
+# used; every job installed from the network. A job that hit a slow mirror (234 kB/s) did not finish in 20 minutes.
+# Fix: the files are first copied into the apt archive folder, and installation runs from there.
 set -euo pipefail
 
-# Kurulacak tarayıcılar action girdisinden gelir (boşlukla ayrılmış). Firefox bu depoda koşulmaz.
+# Browsers to install come from the action input (space-separated). Firefox is not run in this repository.
 read -r -a BROWSERS <<< "${PW_BROWSERS:-}"
-# Doğrudan çalıştırılınca liste boş olamaz; denetim sistem ayarına dokunmadan önce yapılır.
+# When run directly the list must not be empty; the check runs before any system setting is touched.
 if [ "${BASH_SOURCE[0]}" = "$0" ] && ((${#BROWSERS[@]} == 0)); then
   echo "PW_BROWSERS boş: kurulacak tarayıcı verilmedi" >&2
   exit 1
@@ -25,28 +25,28 @@ fi
 DEBS="$HOME/.cache/pw-debs"
 ARCHIVES=/var/cache/apt/archives
 MIRRORS=/etc/apt/apt-mirrors.txt
-# Bir ağ denemesinin süre sınırı ve deneme sayısı. İş sınırı 30 dk; 3 deneme en çok 12 dk sürer.
+# Time limit and attempt count for one network attempt. The job limit is 30 min; 3 attempts take at most 12 min.
 NET_ATTEMPT_SECONDS="${PW_APT_ATTEMPT_SECONDS:-240}"
 NET_ATTEMPTS="${PW_APT_ATTEMPTS:-3}"
-# Süre dolunca süreçlere önce TERM gider; bu kadar saniye sonra KILL gider.
+# When time runs out, processes get TERM first; KILL follows after this many seconds.
 KILL_AFTER="${PW_APT_KILL_AFTER_SECONDS:-15}"
-# Yeni denemeden önce apt kilidinin bırakılması en çok bu kadar beklenir.
+# Before a new attempt, wait at most this long for the apt lock to be released.
 LOCK_WAIT="${PW_APT_LOCK_WAIT_SECONDS:-60}"
-# frappesetup bulgusu (AJA-382, 24 Kasım 2026): GNU `timeout` yalnız kendi süreç grubunu durdurdu.
-# `sudo` komutu ayrı bir oturumda (pty) çalıştırır; içteki `apt-get` grupta değildi.
-# Süre dolunca `apt-get` çalışmayı sürdürdü ve dpkg kilidini tuttu. Sonraki denemeler
-# "Could not get lock /var/lib/dpkg/lock-frontend" hatasıyla hemen düştü.
-# AJA-389: süreçler adla durdurulmaz. Ad deseni betiğin başlatmadığı apt işlerini de
-# durdururdu. Süre dolunca betik yalnız kendi başlattığı komutun süreç ağacını durdurur.
-# Ağaç üst süreç kimliğinden (ppid) bulunur; ayrı oturumdaki `apt-get` de ağaçtadır.
-# Kilit beklemesi apt süreçlerini yalnız tam adla arar ve yalnız bekler.
+# frappesetup finding (AJA-382, 24 November 2026): GNU `timeout` stopped only its own process group.
+# `sudo` runs the command in a separate session (pty); the inner `apt-get` was not in the group.
+# After the timeout `apt-get` kept running and held the dpkg lock. Later attempts
+# failed at once with "Could not get lock /var/lib/dpkg/lock-frontend".
+# AJA-389: processes are not stopped by name. A name pattern would also stop apt jobs the script
+# did not start. On timeout the script stops only the process tree of the command it started.
+# The tree is found from parent process IDs (ppid); `apt-get` in a separate session is in the tree too.
+# The lock wait looks for apt processes by exact name only, and only waits.
 APT_PROC_NAMES='apt-get|apt|dpkg'
-# `dpkg --configure -a` komutunun süre sınırı.
+# Time limit for `dpkg --configure -a`.
 DPKG_CONFIGURE_SECONDS="${PW_DPKG_CONFIGURE_SECONDS:-120}"
 APT_LOCK_FILES="/var/lib/dpkg/lock-frontend /var/lib/dpkg/lock /var/cache/apt/archives/lock /var/lib/apt/lists/lock"
 
-# Ağ yavaşsa beklemek yerine zaman aşımı ve yeniden deneme; indirilen paketler silinmesin.
-# Kesilen bir denemeden sonra dpkg kilidi için bir süre beklenir.
+# On a slow network, time out and retry instead of waiting; do not delete downloaded packages.
+# After an interrupted attempt, wait a while for the dpkg lock.
 sudo tee /etc/apt/apt.conf.d/80playwright-ci >/dev/null <<'EOF'
 Acquire::Retries "5";
 Acquire::http::Timeout "30";
@@ -60,7 +60,7 @@ list_archives() {
   find "$ARCHIVES" -maxdepth 1 -name '*.deb' -printf '%f\n' | sort
 }
 
-# Önbellekten kopyalanan ve kurulum bozulunca geri silinecek dosyalar.
+# Files copied from the cache, to be removed again if installation fails.
 COPIED=()
 
 install_from_cache() {
@@ -78,7 +78,7 @@ install_from_cache() {
     fi
     targets+=("$ARCHIVES/$name")
   done
-  # Eski sürüme inme istenirse apt -y ile durur (--allow-downgrades yok); ağdan kurulum başlar.
+  # If a downgrade is requested, apt -y stops (no --allow-downgrades); network installation starts.
   sudo apt-get install -y --no-install-recommends --no-download "${targets[@]}"
 }
 
@@ -88,12 +88,12 @@ undo_cache_copy() {
     sudo rm -f "$ARCHIVES/$name"
   done
   COPIED=()
-  # Yarım kalan dpkg işi varsa tamamlanır; ağdan kurulum temiz durumdan başlar.
+  # Any half-finished dpkg work is completed; network installation starts from a clean state.
   configure_dpkg
 }
 
-# Yarım kalan dpkg işini süre sınırıyla tamamlar. dpkg hatası yutulur; sonraki
-# kurulum sorunu yeniden gösterir. Süre dolarsa açık hata yazar ve 1 döner.
+# Completes half-finished dpkg work with a time limit. dpkg errors are swallowed; the next
+# installation shows the problem again. On timeout it prints a clear error and returns 1.
 configure_dpkg() {
   local rc=0
   run_with_deadline "$DPKG_CONFIGURE_SECONDS" sudo dpkg --configure -a || rc=$?
@@ -104,8 +104,8 @@ configure_dpkg() {
   return 0
 }
 
-# Ayna listesindeki ilk aynayı sona alır. Yavaş ama yanıt veren ayna apt'ye hata
-# vermez; apt bir sonraki aynaya kendiliğinden geçmez.
+# Moves the first mirror in the mirror list to the end. A slow but responding mirror gives apt no
+# error; apt does not move to the next mirror by itself.
 demote_first_mirror() {
   [ -s "$MIRRORS" ] || return 0
   local tmp
@@ -124,7 +124,7 @@ demote_first_mirror() {
   rm -f "$tmp"
 }
 
-# Verilen süreçleri ve onların bütün alt süreçlerini yazar (ppid ağacı).
+# Prints the given processes and all their descendants (ppid tree).
 process_tree() {
   ps -A -o pid= -o ppid= | awk -v roots="$*" '
     BEGIN { n = split(roots, r, " "); for (i = 1; i <= n; i++) keep[r[i]] = 1 }
@@ -141,7 +141,7 @@ process_tree() {
     }'
 }
 
-# Listedeki süreçlerden yaşayan var mı?
+# Is any process in the list still alive?
 any_alive() {
   local p
   for p in "$@"; do
@@ -150,8 +150,8 @@ any_alive() {
   return 1
 }
 
-# Komutu kendi süreç grubunda çalıştırır. Süre dolunca yalnız bu komutun süreç
-# ağacını durdurur ve 124 döner. `sudo` alt süreci ayrı oturumda da olsa ağaçtadır.
+# Runs the command in its own process group. On timeout it stops only this command's process
+# tree and returns 124. The `sudo` child is in the tree even in a separate session.
 run_with_deadline() {
   local secs="$1" pid rc=0 start tree
   shift
@@ -162,14 +162,14 @@ run_with_deadline() {
   start=$SECONDS
   while kill -0 "$pid" 2>/dev/null; do
     if ((SECONDS - start >= secs)); then
-      # Ağaç TERM'den önce okunur: üst süreç ölünce alt süreç ondan kopar.
+      # The tree is read before TERM: when a parent dies, its child detaches from it.
       tree=$(process_tree "$pid")
       # shellcheck disable=SC2086
       sudo kill -TERM -- "-$pid" $tree 2>/dev/null || true
       start=$SECONDS
       # shellcheck disable=SC2086
       while any_alive $tree && ((SECONDS - start < KILL_AFTER)); do sleep 1; done
-      # TERM sırasında doğan alt süreçler de ağaca eklenir.
+      # Children spawned during TERM are added to the tree too.
       # shellcheck disable=SC2086
       tree=$(process_tree $tree)
       # shellcheck disable=SC2086
@@ -186,7 +186,7 @@ run_with_deadline() {
   return "$rc"
 }
 
-# apt ya da dpkg çalışıyorsa veya bir apt kilidi tutuluyorsa başarılı döner.
+# Succeeds if apt or dpkg is running or an apt lock is held.
 apt_busy() {
   local f
   pgrep -x -- "$APT_PROC_NAMES" >/dev/null 2>&1 && return 0
@@ -224,13 +224,13 @@ install_from_network() {
       return "$rc"
     fi
     wait_for_apt_lock || return 1
-    # Yarım kalan kurulum varsa tamamlanır; yeni deneme temiz durumdan başlar.
+    # Any half-finished installation is completed; the next attempt starts from a clean state.
     configure_dpkg || return 1
     demote_first_mirror
   done
   after=$(mktemp)
   list_archives > "$after"
-  # apt dosya zamanını sunucudan aldığı için zaman yerine ad listesi karşılaştırılır.
+  # apt takes file times from the server, so name lists are compared instead of times.
   rm -rf "$DEBS"
   mkdir -p "$DEBS"
   comm -13 "$before" "$after" | while IFS= read -r f; do cp "$ARCHIVES/$f" "$DEBS/"; done
@@ -241,7 +241,7 @@ main() {
   local before
   before=$(mktemp)
   list_archives > "$before"
-  # DEBS_HIT: "true" tam anahtar, "false" eski imajın anahtarı, boş değer önbellek yok.
+  # DEBS_HIT: "true" exact key, "false" an older image's key, empty value no cache.
   if [ -n "${DEBS_HIT:-}" ]; then
     if [ "$DEBS_HIT" != "true" ]; then
       echo "apt önbelleği tam anahtarla gelmedi; eski imajın paketleri deneniyor"
@@ -257,6 +257,6 @@ main() {
 
 if [ "${BASH_SOURCE[0]}" = "$0" ]; then
   main
-  # Önbellekte tarayıcı varsa bu komut yalnız doğrular; yoksa indirir.
+  # If the browser is in the cache this command only verifies it; otherwise it downloads it.
   npx playwright install "${BROWSERS[@]}"
 fi

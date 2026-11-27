@@ -1,25 +1,25 @@
 /// <reference types="vite/client" />
 
-/** Derleme zamanı ortam değişkenleri. Değerler .env dosyalarından ya da komut satırından gelir. */
+/** Build-time environment variables. Values come from .env files or the command line. */
 interface ImportMetaEnv {
-  /** Kiracı sitesinin kökü. Varsayılan sayfanın kökü. */
+  /** Origin of the tenant site. Defaults to the page origin. */
   readonly VITE_SITE_URL?: string;
-  /** Keycloak kökü. Varsayılan https://api.login.atonota.net */
+  /** Keycloak origin. Default https://api.login.atonota.net */
   readonly VITE_KEYCLOAK_URL?: string;
-  /** Keycloak realm adı. Varsayılan platform */
+  /** Keycloak realm name. Default platform */
   readonly VITE_KEYCLOAK_REALM?: string;
   readonly VITE_AI_ROUTE?: string;
-  /** CSRF belirtecini taşıyan meta öğesinin adı. Varsayılan csrf-token */
+  /** Name of the meta element carrying the CSRF token. Default csrf-token */
   readonly VITE_CSRF_META_NAME?: string;
-  /** Sahte sunucu: "on" derlemede açar, "off" geliştirmede kapatır. */
+  /** Mock server: "on" enables it in the build, "off" disables it in development. */
   readonly VITE_API_MOCKS?: 'on' | 'off' | string;
-  /** Yalnız geliştirme sunucusu: yerel Frappe arka ucunun adresi. Bkz. vite/dev-backend.ts */
+  /** Dev server only: address of the local Frappe backend. See vite/dev-backend.ts */
   readonly VITE_DEV_BACKEND?: string;
-  /** Yalnız geliştirme sunucusu: Frappe socket.io adresi. */
+  /** Dev server only: Frappe socket.io address. */
   readonly VITE_DEV_SOCKET?: string;
-  /** Yalnız geliştirme sunucusu: Frappe site adı (X-Frappe-Site-Name). */
+  /** Dev server only: Frappe site name (X-Frappe-Site-Name). */
   readonly VITE_DEV_SITE_NAME?: string;
-  /** Yalnız geliştirme sunucusu: "browser" ya da "target" Host kipi. */
+  /** Dev server only: Host mode, "browser" or "target". */
   readonly VITE_DEV_BACKEND_HOST?: string;
 }
 

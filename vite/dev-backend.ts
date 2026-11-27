@@ -1,9 +1,9 @@
-// Geliştirme sunucusunu yerel Frappe arka ucuna bağlar.
+// Connects the dev server to the local Frappe backend.
 //
-// Ayar yalnız geliştirme sunucusunda çalışır. Üretim derlemesine girmez.
-// Tarayıcı aynı kökte kalır: Frappe yolları (`/api`, `/login`, `/assets` ...) vekille arka uca gider.
-// Belirteç tarayıcıda tutulmaz. Frappe oturum çerezi ve CSRF belirteci kullanılır (src/auth/README.md).
-// CSRF belirteci arka ucun `/panel` sayfasındaki `meta` öğesinden alınır ve uygulama sayfasına konur.
+// This setup runs only in the dev server. It stays out of the production build.
+// The browser stays on the same origin: Frappe paths (`/api`, `/login`, `/assets` ...) are proxied to the backend.
+// No token is held in the browser. The Frappe session cookie and CSRF token are used (src/auth/README.md).
+// The CSRF token is taken from the `meta` element on the backend's `/panel` page and put into the app page.
 import { readFileSync } from 'node:fs';
 import type { IncomingMessage } from 'node:http';
 import { resolve } from 'node:path';
@@ -11,18 +11,18 @@ import { resolve } from 'node:path';
 import type { Plugin, ProxyOptions } from 'vite';
 
 export interface DevBackendEnv {
-  /** Kiracı sitesinin arka uç adresi. Örnek: `http://127.0.0.1:7401`. Boşsa vekil kapalıdır. */
+  /** Backend address of the tenant site. Example: `http://127.0.0.1:7401`. If empty, the proxy is off. */
   VITE_DEV_BACKEND?: string;
-  /** Frappe socket.io sunucusunun adresi. Boşsa socket.io da `VITE_DEV_BACKEND` adresine gider. */
+  /** Address of the Frappe socket.io server. If empty, socket.io also goes to `VITE_DEV_BACKEND`. */
   VITE_DEV_SOCKET?: string;
-  /** Frappe site adı. Verilirse `X-Frappe-Site-Name` başlığıyla gönderilir. */
+  /** Frappe site name. If set, it is sent in the `X-Frappe-Site-Name` header. */
   VITE_DEV_SITE_NAME?: string;
   /**
-   * Host başlığı. `browser` tarayıcının kökünü korur; Frappe dönüş adresini bu köke göre kurar.
-   * `target` arka ucun adresini gönderir. Varsayılan `browser`.
+   * Host header. `browser` keeps the browser's origin; Frappe builds redirect URLs from that origin.
+   * `target` sends the backend's address. Default `browser`.
    */
   VITE_DEV_BACKEND_HOST?: string;
-  /** CSRF `meta` öğesinin adı. Varsayılan `csrf-token`. */
+  /** Name of the CSRF `meta` element. Default `csrf-token`. */
   VITE_CSRF_META_NAME?: string;
 }
 
@@ -59,7 +59,7 @@ export function readDevBackend(env: DevBackendEnv): DevBackend | undefined {
   };
 }
 
-/** Frappe'nin sunduğu yol önekleri. Uygulamanın rotaları bunlarla başlamaz. */
+/** Path prefixes served by Frappe. The app's routes never start with these. */
 const BACKEND_PREFIXES = [
   '/api',
   '/login',
@@ -85,7 +85,7 @@ export function isBackendPath(url: string): boolean {
   );
 }
 
-/** Uygulama sayfası isteği mi? Vite yolları, dosyalar ve arka uç yolları sayfa değildir. */
+/** Is this an app page request? Vite paths, files and backend paths are not pages. */
 export function isSpaNavigation(
   method: string | undefined,
   url: string,
@@ -101,7 +101,7 @@ export function isSpaNavigation(
   return !isBackendPath(path);
 }
 
-/** Arka uç girişten sonra `/panel` adresine dönebilir. Uygulama kökte çalışır. */
+/** After sign-in the backend may redirect to `/panel`. The app runs at the root. */
 export function panelRedirect(url: string): string | undefined {
   const path = pathOf(url);
   return path === '/panel' || path === '/panel/' ? '/' : undefined;
@@ -140,7 +140,7 @@ export function injectCsrfMeta(html: string, metaName: string, token: string): s
   return html.replace(/<\/head>/i, `    ${meta}\n  </head>`);
 }
 
-/** Arka ucun ya da tarayıcının kökündeki yönlendirmeyi göreli yola çevirir. Başka kök değişmez. */
+/** Turns a redirect on the backend or browser origin into a relative path. Other origins are left as is. */
 export function rewriteLocation(location: string, backend: string, browserOrigin: string): string {
   let url: URL;
   try {
@@ -167,13 +167,13 @@ function backendHeaders(backend: DevBackend, request: IncomingMessage): Record<s
   return headers;
 }
 
-/** Vite `server.proxy` ayarı. Bütün Frappe önekleri arka uca gider. */
+/** Vite `server.proxy` config. All Frappe prefixes go to the backend. */
 export function devBackendProxy(backend: DevBackend): Record<string, ProxyOptions> {
   const options: ProxyOptions = {
     target: backend.target,
     changeOrigin: backend.host === 'target',
     ws: true,
-    // Çerez alan adı silinir. Çerez tarayıcının köküne yazılır.
+    // The cookie domain is removed. The cookie is set on the browser's origin.
     cookieDomainRewrite: '',
     configure(proxy) {
       proxy.on('proxyReq', (proxyReq, request) => {
@@ -190,7 +190,7 @@ export function devBackendProxy(backend: DevBackend): Record<string, ProxyOption
             browserOriginOf(request),
           );
         }
-        // Yerel http adresinde `Secure` çerez yazılmaz. Bayrak yalnız geliştirmede silinir.
+        // A `Secure` cookie cannot be set on a local http address. The flag is stripped only in development.
         const cookies = proxyRes.headers['set-cookie'];
         if (Array.isArray(cookies)) {
           proxyRes.headers['set-cookie'] = cookies.map((cookie) =>
@@ -203,7 +203,7 @@ export function devBackendProxy(backend: DevBackend): Record<string, ProxyOption
   const patternOf = (prefixes: string[]) =>
     `^(${prefixes.map((p) => p.replace(/[.]/g, '\\.')).join('|')})(/|\\?|$)`;
   if (!backend.socketTarget) return { [patternOf(BACKEND_PREFIXES)]: options };
-  // socket.io ayrı süreçtir (Frappe `socketio`). Gerçek zamanlı istekler oraya gider.
+  // socket.io is a separate process (Frappe `socketio`). Realtime requests go there.
   return {
     [patternOf(['/socket.io'])]: { ...options, target: backend.socketTarget },
     [patternOf(BACKEND_PREFIXES.filter((p) => p !== '/socket.io'))]: options,
@@ -216,7 +216,7 @@ async function fetchCsrfToken(
   metaName: string,
 ): Promise<string | undefined> {
   const cookie = request.headers.cookie;
-  // Oturum çerezi yoksa arka uç `/panel` isteğini girişe yönlendirir. Sormaya gerek yoktur.
+  // Without a session cookie the backend redirects `/panel` to sign-in. No need to ask.
   if (!cookie || !/(?:^|;\s*)sid=(?!Guest)/.test(cookie)) return undefined;
   const headers: Record<string, string> = { cookie, accept: 'text/html' };
   Object.assign(headers, backendHeaders(backend, request));
@@ -231,8 +231,8 @@ async function fetchCsrfToken(
 }
 
 /**
- * Geliştirme sunucusu eklentisi. Uygulama sayfasına CSRF `meta` öğesini koyar ve
- * `/panel` adresini köke yönlendirir. Vekil ayarı `devBackendProxy` ile verilir.
+ * Dev server plugin. Puts the CSRF `meta` element into the app page and
+ * redirects `/panel` to the root. The proxy config comes from `devBackendProxy`.
  */
 export function devBackendPlugin(backend: DevBackend | undefined, metaName = 'csrf-token'): Plugin {
   return {

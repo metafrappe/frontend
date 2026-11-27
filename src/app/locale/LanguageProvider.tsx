@@ -7,17 +7,17 @@ import { localeBundle, type LocaleBundle } from './locale-map';
 
 interface LanguageState {
   language: AppLanguage;
-  /** Açılış verisindeki ham dili alır. Boş dil yedek dile düşer. */
+  /** Takes the raw language from the boot data. An empty language falls back to the fallback language. */
   setLanguage: (raw: string | null | undefined) => void;
-  /** Açılış verisindeki saat dilimi ve para birimi (IC-13). */
+  /** Time zone and currency from the boot data (IC-13). */
   formatting: SiteFormatting;
-  /** Açılış verisi gelince saat dilimini ve para birimini kaydeder. */
+  /** Stores the time zone and currency when the boot data arrives. */
   setFormatting: (formatting: SiteFormatting) => void;
 }
 
 /**
- * Sağlayıcı yoksa yedek dil geçerlidir. Örnek: bileşen tek başına sınanır.
- * Bu durumda dil değiştirilemez.
+ * Without a provider, the fallback language applies. Example: a component tested on its own.
+ * In that case the language cannot be changed.
  */
 const LanguageContext = createContext<LanguageState>({
   language: FALLBACK_LANGUAGE,
@@ -27,8 +27,8 @@ const LanguageContext = createContext<LanguageState>({
 });
 
 /**
- * Uygulamanın tek dil bağlamı. Dil, açılış verisindeki kullanıcı dilinden gelir.
- * Oturum açılmadan önce dil yedek dildir.
+ * The application's single language context. The language comes from the user language in the boot data.
+ * Before sign-in, the language is the fallback language.
  */
 export function LanguageProvider({
   initialLanguage,
@@ -36,13 +36,13 @@ export function LanguageProvider({
   children,
 }: {
   initialLanguage?: string | null | undefined;
-  /** Başlangıç saat dilimi ve para birimi. Testler buradan verir. */
+  /** Initial time zone and currency. Tests pass them in here. */
   initialFormatting?: SiteFormatting | undefined;
   children: ReactNode;
 }) {
   const [language, setResolved] = useState<AppLanguage>(() => resolveLanguage(initialLanguage));
   const [formatting, setFormattingState] = useState<SiteFormatting>(() => initialFormatting ?? {});
-  // İşlevler sabit kalır. Dil değişince açılış verisi yeniden istenmez.
+  // The functions stay stable. Boot data is not re-requested when the language changes.
   const setLanguage = useCallback<LanguageState['setLanguage']>(
     (raw) => setResolved(resolveLanguage(raw)),
     [],
@@ -58,8 +58,8 @@ export function LanguageProvider({
     () => ({ language, setLanguage, formatting, setFormatting }),
     [language, setLanguage, formatting, setFormatting],
   );
-  // Day.js dili genel bir ayardır. Çocuklar çizilmeden önce kurulur; tarih seçici ilk çizimde doğru dili alır.
-  // Çağrı aynı dille tekrarlansa da sonuç değişmez.
+  // The Day.js locale is a global setting. It is set before children render, so the date picker gets the right locale on first render.
+  // Repeating the call with the same locale does not change the result.
   dayjs.locale(localeBundle(language).dayjs);
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
 }
@@ -68,24 +68,24 @@ function useLanguageState(): LanguageState {
   return useContext(LanguageContext);
 }
 
-/** Arayüzün geçerli dili. */
+/** The current UI language. */
 export function useLanguage(): AppLanguage {
   return useLanguageState().language;
 }
 
-/** Açılış verisi gelince dili değiştiren işlev. */
+/** Function that changes the language when the boot data arrives. */
 export function useSetLanguage(): LanguageState['setLanguage'] {
   return useLanguageState().setLanguage;
 }
 
-/** Açılış verisi gelince saat dilimini ve para birimini kaydeden işlev. */
+/** Function that stores the time zone and currency when the boot data arrives. */
 export function useSetFormatting(): LanguageState['setFormatting'] {
   return useLanguageState().setFormatting;
 }
 
 /**
- * Geçerli dilin, saat diliminin ve para biriminin biçimleyicisi (IC-13).
- * Örnek: `useFormat().date('2026-11-27')`.
+ * Formatter for the current language, time zone and currency (IC-13).
+ * Example: `useFormat().date('2026-11-27')`.
  */
 export function useFormat(): Formatter {
   const { language, formatting } = useLanguageState();
@@ -96,7 +96,7 @@ export function useFormat(): Formatter {
   );
 }
 
-/** Geçerli dilin antd, Ant Design X ve Day.js nesneleri. */
+/** The antd, Ant Design X and Day.js objects for the current language. */
 export function useLocaleBundle(): LocaleBundle {
   return localeBundle(useLanguage());
 }

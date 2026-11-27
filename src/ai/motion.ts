@@ -14,7 +14,7 @@ function subscribe(onChange: () => void): () => void {
   return () => media.removeEventListener('change', onChange);
 }
 
-/** Kullanıcı azaltılmış hareket istiyorsa `true` döner. Ayar değişince güncellenir. */
+/** Returns `true` if the user prefers reduced motion. Updates when the setting changes. */
 export function usePrefersReducedMotion(): boolean {
   return useSyncExternalStore(
     subscribe,

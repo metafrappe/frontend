@@ -1,18 +1,18 @@
 import { defineConfig, devices } from '@playwright/test';
 
-// Birden çok çalışma ağacı aynı makinede test koşabilir. Kapı E2E_PORT ile değişir.
+// Several worktrees can run tests on the same machine. The port is changed with E2E_PORT.
 const PORT = Number(process.env['E2E_PORT'] ?? 4173);
 const BASE_URL = `http://127.0.0.1:${PORT}`;
 
 /**
- * Kabul sırası: 320, 360, 375, 390 px, yatay telefon, tablet, masaüstü.
- * Firefox koşulmaz (proje kararı). Genişlikler CSS px'tir.
+ * Acceptance order: 320, 360, 375, 390 px, landscape phone, tablet, desktop.
+ * Firefox is not run (project decision). Widths are CSS px.
  */
 const chromium = devices['Desktop Chrome'];
 const webkit = devices['Desktop Safari'];
 
 export default defineConfig({
-  // Tek test kapısı: kök testleri ve her işin kendi e2e klasörü. Ayrı Playwright ayarı gerekmez.
+  // Single test gate: root tests and each feature's own e2e folder. No separate Playwright config needed.
   testDir: '.',
   testMatch: ['tests/e2e/**/*.spec.ts', 'src/**/e2e/**/*.spec.ts'],
   testIgnore: ['**/node_modules/**', '**/dist/**', '**/.pane/**', '**/.serena/**', '**/.git/**'],
@@ -26,12 +26,12 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
   webServer: {
-    // Tarayıcı testleri gerçek arka uca bağlanmaz. Derleme sahte sunucuyu (MSW) açar.
-    // Deneme sayfaları yalnız e2e derlemesinde açılır (vite --mode e2e). Üretim derlemesine girmez.
-    // Önizleme de e2e kipindedir. Böylece kök yolda sunar; üretim kipi `/panel/` yolunu kullanır.
+    // Browser tests do not connect to the real backend. The build enables the mock server (MSW).
+    // Harness pages are only included in the e2e build (vite --mode e2e). They stay out of the production build.
+    // Preview also runs in e2e mode, so it serves at the root path; production mode uses `/panel/`.
     command: `npm run build:e2e && npx vite preview --mode e2e --port ${PORT} --strictPort --host 127.0.0.1`,
-    // Sahte sunucu ve Keycloak kökü `vite/e2e-env.ts` dosyasından gelir. Vite onları e2e kipinde verir.
-    // Böylece `npm run dev:e2e` ile açılan sunucu da aynı ayarı kullanır (inceleme 2, K-3).
+    // The mock server and Keycloak origin come from `vite/e2e-env.ts`. Vite provides them in e2e mode.
+    // So the server started with `npm run dev:e2e` uses the same settings too (review 2, K-3).
     url: BASE_URL,
     reuseExistingServer: !process.env['CI'],
     timeout: 120_000,

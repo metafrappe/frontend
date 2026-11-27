@@ -1,12 +1,12 @@
-// CSP nonce. Sunucu her sayfa için yeni bir değer üretir ve şu öğeye yazar:
+// CSP nonce. The server makes a new value for each page and writes it to this element:
 // `<meta property="csp-nonce" nonce="...">` (frappesetup backend: platform_core/www/panel.html).
-// Vite de bu öğeyi okur ve tembel parçaların stil bağlantılarına aynı değeri verir.
-// Arayüz çalışma anında eklenen stil ve betik öğelerine bu değeri verir. Değer yoksa arayüz yine çalışır.
+// Vite also reads this element and gives the same value to the style links of lazy chunks.
+// The UI gives this value to style and script elements added at runtime. Without a value the UI still works.
 
-/** Sayfadaki nonce değerini okur. Değer yoksa ya da boşsa `undefined` döner. */
+/** Reads the nonce value on the page. Returns `undefined` if it is missing or empty. */
 export function readCspNonce(doc: Document | undefined = globalThis.document): string | undefined {
   const meta = doc?.querySelector<HTMLMetaElement>('meta[property="csp-nonce"]');
-  // Tarayıcı nonce özniteliğini gizler; değer `nonce` özelliğinden okunur.
+  // The browser hides the nonce attribute; the value is read from the `nonce` property.
   const value = meta?.nonce || meta?.getAttribute('nonce') || '';
   return value === '' ? undefined : value;
 }
@@ -15,12 +15,12 @@ const NONCE_TAGS = new Set(['style', 'script']);
 const installed = new WeakMap<Document, string>();
 
 /**
- * Belgede oluşturulan her `<style>` ve `<script>` öğesine nonce değerini verir.
+ * Gives the nonce value to every `<style>` and `<script>` element created in the document.
  *
- * Neden: antd 5 (`@ant-design/cssinjs` 1.24) CSS değişkeni stillerini nonce olmadan ekler.
- * ConfigProvider `csp` ayarı bu öğelere ulaşmaz. Tarayıcı nonce değerini öğe belgeye girerken
- * denetler. Bu yüzden değer öğe oluşturulurken verilir. Nonce yoksa hiçbir şey değişmez.
- * Çağrı tekrarlanabilir. Aynı belgeye ikinci kez kurulmaz.
+ * Why: antd 5 (`@ant-design/cssinjs` 1.24) adds CSS variable styles without a nonce.
+ * The ConfigProvider `csp` setting does not reach these elements. The browser checks the nonce
+ * when the element enters the document, so the value is set when the element is created.
+ * Without a nonce nothing changes. The call can be repeated; it is not installed twice on one document.
  */
 export function installCspNonce(doc: Document | undefined = globalThis.document): string | undefined {
   if (!doc) return undefined;

@@ -1,5 +1,5 @@
-// Sahte sunucunun örnek verisi. Bütün değerler örnektir (SZ-12).
-// Türler sözleşmeden üretilir. Sözleşme değişirse tür denetimi bu dosyada hata verir.
+// Sample data for the mock server. All values are samples (SZ-12).
+// Types are generated from the contract. If the contract changes, type checking fails in this file.
 import type { components as HrmsComponents } from '@/api/generated/hrms_tr';
 import type { components as AccessComponents } from '@/api/generated/platform_core-access';
 import type { components as AiComponents } from '@/api/generated/platform_core-ai';
@@ -19,8 +19,8 @@ type ConnectionStatus = GatewayComponents['schemas']['ConnectionCheck']['status'
 export const SAMPLE_USER = 'ornek.kisi@example.test';
 export const SAMPLE_CSRF_TOKEN = 'ornek-csrf-belirteci';
 /**
- * Sahte sunucunun Keycloak kökü. Bu kök AtonotA Login giriş adresidir.
- * Tarayıcı testleri bu adresin yanıtını taklit eder.
+ * The mock server's Keycloak origin. This origin is the AtonotA Login sign-in address.
+ * Browser tests fake this address's response.
  */
 export const SAMPLE_KEYCLOAK_URL = 'https://api.login.atonota.net';
 export const SAMPLE_DIGEST = 'a'.repeat(64);
@@ -36,8 +36,10 @@ export const sampleLoginUrl: LoginUrl = {
 };
 
 /**
- * Sahte sunucunun giriş platformu kayıtları (G-159). Gerçek sunucuda bu kayıtlar veri dosyasından gelir.
- * `enabled: false` olan kayıt kapalıdır. Kapalı kayıt yanıta girmez. Sıra yanıtın sırasıdır.
+ * The mock server's sign-in platform records (G-159). On the real server they come from a data
+ * file.
+ * A record with `enabled: false` is disabled. Disabled records are not in the response.
+ * The order is the response order.
  */
 export const sampleLoginProviders: readonly {
   alias: string;
@@ -48,11 +50,11 @@ export const sampleLoginProviders: readonly {
   { alias: 'facebook', display_name: 'Facebook', enabled: true },
   { alias: 'linkedin', display_name: 'LinkedIn', enabled: true },
   { alias: 'x', display_name: 'X', enabled: true },
-  // Sırrı olmayan platform kapalı kalır. Giriş ekranında görünmez.
+  // A platform with no secret stays disabled. It does not appear on the sign-in screen.
   { alias: 'github', display_name: 'GitHub', enabled: false },
 ];
 
-/** Örnek kullanıcının bağlı platformları. Parola ya da geçiş anahtarı yoktur. */
+/** The sample user's linked platforms. There is no password or passkey. */
 export const sampleLinkedProviders: readonly string[] = ['google', 'linkedin'];
 export const SAMPLE_LOCAL_SIGN_IN_METHODS = 0;
 
@@ -60,7 +62,10 @@ export const sampleLogoutUrl: LogoutUrl = {
   logout_url: `${SAMPLE_KEYCLOAK_URL}/realms/platform/protocol/openid-connect/logout?client_id=site-tenant1`,
 };
 
-/** Başka kökenli çıkış adresi. Panel bu adrese gitmez. Senaryo `cikis-yabanci-adres` bunu verir. */
+/**
+ * A sign-out address on another origin. The panel does not go there. Scenario `cikis-yabanci-adres`
+ * returns it.
+ */
 export const FOREIGN_LOGOUT_URL =
   'https://baska.example.test/realms/platform/protocol/openid-connect/logout?client_id=site-tenant1';
 
@@ -123,7 +128,7 @@ export const sampleDocTypeMeta: Meta = {
         component: 'input',
         sensitivity: 'standard',
       },
-      // Çok satırlı metin. Arka uç Small Text alanına `text-area` bileşen adını verir
+      // Multi-line text. The backend gives a Small Text field the component name `text-area`
       // (frappesetup backend: platform_core/shell/catalog.py).
       {
         fieldname: 'aciklama',
@@ -133,7 +138,7 @@ export const sampleDocTypeMeta: Meta = {
         component: 'text-area',
         sensitivity: 'standard',
       },
-      // Bağlantı alanları. Arka uç Link alanına `link-select` bileşen adını verir
+      // Link fields. The backend gives a Link field the component name `link-select`
       // (frappesetup backend: platform_core/shell/catalog.py).
       {
         fieldname: 'ilgili_kayit',
@@ -153,7 +158,7 @@ export const sampleDocTypeMeta: Meta = {
         component: 'link-select',
         sensitivity: 'standard',
       },
-      // Hedef tür için sahte sunucu yetki reddi verir. Arama kayıt göstermez.
+      // The mock server denies permission for the target type. The search shows no records.
       {
         fieldname: 'gizli_kayit',
         fieldtype: 'Link',
@@ -239,7 +244,7 @@ export function sampleCompletion(overrides: Partial<GatewayResult> = {}): Gatewa
   };
 }
 
-// HRMS izin başvuruları. Bütün değerler örnektir.
+// HRMS leave applications. All values are samples.
 type LeaveApplication = HrmsComponents['schemas']['LeaveApplication'];
 type AccessSummary = AccessComponents['schemas']['AccessSummary'];
 
@@ -271,8 +276,8 @@ export const sampleLeaves: LeaveApplication[] = [
 ];
 
 /**
- * "ana-sayfa-iki-bekleyen" senaryosunun ikinci açık başvurusu.
- * Varsayılan listede yoktur. Böylece öteki testlerin satır sayısı değişmez.
+ * The second open application of the "ana-sayfa-iki-bekleyen" scenario.
+ * It is not in the default list, so the row count of other tests does not change.
  */
 export const sampleSecondOpenLeave: LeaveApplication = {
   name: 'ORNEK-IZIN-0003',
@@ -290,7 +295,7 @@ export const sampleSecondOpenLeave: LeaveApplication = {
 type HomeProblem = HrmsComponents['schemas']['HomeProblem'];
 type RecentChange = HrmsComponents['schemas']['RecentChange'];
 
-/** Ana sayfanın sorunlu kayıtları. Çakışmalar önce, çalışan kayıtları sonra gelir. */
+/** The home page's problem records. Conflicts come first, then employee records. */
 export const sampleHomeProblems: HomeProblem[] = [
   {
     kind: 'overlap',
@@ -313,7 +318,7 @@ export const sampleHomeProblems: HomeProblem[] = [
   { kind: 'missing_joining_date', employee: 'ORNEK-CALISAN-08', employee_name: 'Örnek Kişi 8' },
 ];
 
-/** Ana sayfanın son değişiklikleri. En yeni önce gelir. */
+/** The home page's recent changes. Newest first. */
 export const sampleRecentChanges: RecentChange[] = [
   {
     name: 'ORNEK-IZIN-0002',
@@ -331,7 +336,7 @@ export const sampleRecentChanges: RecentChange[] = [
   },
 ];
 
-/** Ana sayfanın sabit sayıları. Bekleyen ve sorunlu sayısı sahte sunucuda hesaplanır. */
+/** The home page's fixed counts. The pending and problem counts are computed in the mock server. */
 export const sampleHomeCounts = { on_leave_today: 1, opened_this_month: 3 };
 
 export const sampleAccessSummary: AccessSummary = {
@@ -347,7 +352,7 @@ export const sampleAccessSummary: AccessSummary = {
   },
 };
 
-// Telefon ve PWA kurulumları. Kimlikler örnektir.
+// Phone and PWA installations. The IDs are samples.
 export const sampleInstallations = [
   {
     installation_id: '20000000-0000-4000-8000-000000000001',
@@ -366,17 +371,17 @@ export const sampleInstallations = [
   },
 ];
 
-// Press ayrı bir köktür. Panel yalnız Press'in hesap silme sayfasına yönlendirir.
+// Press is a separate origin. The panel only redirects to Press's account deletion page.
 export const SAMPLE_PRESS_URL = 'https://press.example.test';
 
-// views-collection için örnek kayıtlar (Frappe API v2 liste ucu).
+// Sample records for views-collection (Frappe API v2 list endpoint).
 export const SAMPLE_COLLECTION_DOCTYPE = sampleDocTypeMeta.schema.name;
-/** Bu kayıt türü için sahte sunucu yetki reddi verir. */
+/** The mock server denies permission for this record type. */
 export const RESTRICTED_SAMPLE_DOCTYPE = 'Gizli Örnek Kayıt';
 /**
- * Örnek kullanıcının okuyabildiği modül türleri. Menü bu türleri tanım ucuyla dener (G-94).
- * Sahte sunucu izin başvurularını ve yapay zekâ bağlantılarını zaten verir.
- * Liste `src/modules/registry.ts` içindeki `requires` alanlarıyla aynıdır. Test eşitliği denetler.
+ * Module types the sample user can read. The menu probes them with the definition endpoint (G-94).
+ * The mock server already serves leave applications and AI connections.
+ * The list matches the `requires` fields in `src/modules/registry.ts`. A test checks this.
  */
 export const MENU_READABLE_DOCTYPES: readonly string[] = [
   'PLT AI API',
@@ -386,20 +391,21 @@ export const MENU_READABLE_DOCTYPES: readonly string[] = [
 ];
 
 /**
- * Bayi hesabının tanım ucunda okuduğu modül türleri. Liste boştur (AJA-945).
- * Gerçek sunucu bağ türüne (`Reseller Customer Link`) bayiye de 403 verir.
- * Panel bayi hesabını müşteri listesi ucuyla tanır (`list_customers`).
+ * Module types the reseller account reads at the definition endpoint. The list is empty (AJA-945).
+ * The real server returns 403 for the link type (`Reseller Customer Link`), also to resellers.
+ * The panel recognises a reseller account by the customer list endpoint (`list_customers`).
  */
 export const RESELLER_READABLE_DOCTYPES: readonly string[] = [];
 
 /**
- * Dört panel rolünün sahte sunucu verisi (AJA-831). Senaryolar `scenarios.ts` dosyasındadır.
- * `roles` açılış verisine yazılır. `readable` tanım ucunun 200 verdiği türlerdir.
+ * Mock server data for the four panel roles (AJA-831). The scenarios are in `scenarios.ts`.
+ * `roles` goes into the boot data. `readable` lists the types the definition endpoint answers with
+ * 200.
  */
 export const PANEL_ROLE_PROFILES: Record<string, { roles: string[]; readable: readonly string[] }> =
   {
     'Tenant Admin': { roles: ['Website User', 'Tenant Admin'], readable: MENU_READABLE_DOCTYPES },
-    // Yardımcı yapay zekâ sağlayıcılarını göremez (G-168).
+    // The assistant cannot see AI providers (G-168).
     'Tenant Admin Assistant': {
       roles: ['Website User', 'Tenant Admin Assistant'],
       readable: ['Leave Application'],
@@ -414,7 +420,7 @@ export const PANEL_ROLE_PROFILES: Record<string, { roles: string[]; readable: re
     },
   };
 
-/** Bayinin bağlı örnek müşterileri. Adlar uydurmadır ve `example.test` ile biter. */
+/** The reseller's linked sample customers. The names are made up and end with `example.test`. */
 export const sampleResellerCustomers: readonly { customer_tenant: string; status: string }[] = [
   { customer_tenant: 'musteri-a.example.test', status: 'active' },
   { customer_tenant: 'musteri-b.example.test', status: 'pending' },
@@ -431,10 +437,10 @@ export const sampleCollection = Array.from({ length: 23 }, (_unused, index) => {
   };
 });
 
-// Yapay zekâ sağlayıcı bağlantıları (model geçidi sözleşmesi: provider_catalog, save_connection,
-// check_connection). Katalog, arka uçtaki `provider_catalog.json` dosyasının sözleşmeye göre
-// süzülmüş hâlidir: `adapter`, `default_url` ve `target` alanları tarayıcıya gitmez. Etiketler
-// oturum diline çevrilmiş gelir; örnek oturum Türkçedir.
+// AI provider connections (model gateway contract: provider_catalog, save_connection,
+// check_connection). The catalogue is the backend `provider_catalog.json`, filtered by the
+// contract: the `adapter`, `default_url` and `target` fields are not sent to the browser. Labels
+// arrive translated into the session language; the sample session is Turkish.
 const secretField = {
   name: 'api_key',
   label: 'API anahtarı',
@@ -544,7 +550,7 @@ export const sampleProviderCatalog: ProviderCatalog = {
   ],
 };
 
-/** Frappe kayıt türleri. Adlar arka uçtaki DocType adlarıdır. */
+/** Frappe record types. The names are the backend DocType names. */
 export const AI_PROVIDER_DOCTYPE = 'PLT AI Provider';
 export const AI_ACCOUNT_DOCTYPE = 'PLT AI Account';
 export const AI_API_DOCTYPE = 'PLT AI API';
@@ -563,7 +569,7 @@ export interface SampleAiAccount {
   enabled: 0 | 1;
   modified: string;
 }
-/** API kaydının okunan alanları. Parola alanı (`api_key`) listede hiç yoktur. */
+/** The readable fields of the API record. The password field (`api_key`) is never in the list. */
 export interface SampleAiConnection {
   name: string;
   api_name: string;
@@ -617,8 +623,8 @@ export const sampleAiConnections: SampleAiConnection[] = [
 ];
 
 /**
- * Sahte canlı denemenin sonucu gizli anahtarın değerinden gelir. Böylece testler her sonucu
- * sahte sunucuyla sınar. Gerçek sağlayıcıya istek gitmez. Anahtar yanıta hiç yazılmaz.
+ * The result of the mock live check comes from the secret key value, so tests can cover every
+ * result with the mock server. No request goes to a real provider. The key is never in a response.
  */
 export const SAMPLE_SECRET_RESULTS: Record<string, ConnectionStatus> = {
   'gecersiz-anahtar': 'invalid_credentials',
@@ -628,5 +634,5 @@ export const SAMPLE_SECRET_RESULTS: Record<string, ConnectionStatus> = {
   'saglayici-hatasi': 'provider_error',
   'kayit-eksik': 'configuration_error',
 };
-/** Bu adres onaylı adres listesinde değildir. */
+/** This address is not on the approved address list. */
 export const SAMPLE_UNAPPROVED_URL = 'https://onaysiz.example.test';

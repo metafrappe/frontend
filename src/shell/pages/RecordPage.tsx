@@ -21,11 +21,11 @@ export default function RecordPage() {
   const row = rows[index];
   const leaf = findLeaf(module, doctype);
   const group = findGroup(module);
-  // Uygulama girişi kayıt görünümünü bağladıysa kayıt sunucudan gelir. Örnek kayıt yalnız
-  // bağlantı yokken (deneme sayfaları) gösterilir.
+  // If the app entry has connected the record view, the record comes from the server. The sample record is
+  // shown only when there is no connection (test pages).
   const Live = useViewData()?.record?.Component;
 
-  // Sayfa çerçevesini kabuk çizer. Kayıt bileşeni yalnız içeriği verir.
+  // The shell renders the page frame. The record component supplies only the content.
   if (Live) {
     return (
       <div className="shell-page">
@@ -126,7 +126,7 @@ function RecordForm({ row, index, total, crumbs, onGo, onViewChange }: RecordFor
             />
           </Form.Item>
           <Form.Item label="Tutar" htmlFor="rec-amount">
-            {/* antd'nin kendi okları İngilizce adlıdır ve küçüktür. Türkçe adlı düğmeler kullanılır (K4). */}
+            {/* antd's own arrows have English names and are small. Buttons with Turkish names are used (K4). */}
             <Space.Compact block>
               <InputNumber<number>
                 id="rec-amount"

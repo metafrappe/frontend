@@ -1,19 +1,19 @@
 import { defineConfig, devices } from '@playwright/test';
 
 /**
- * Gerçek yığın kapısı (AJA-945). Dört panel rolü testi yerel yığındaki gerçek panelde koşar.
- * Sahte sunucu yoktur. Test, rolün inceleme hesabıyla AtonotA Login'e girer.
+ * Real stack gate (AJA-945). The four panel role tests run against the real panel on the local stack.
+ * There is no mock server. Each test signs in to AtonotA Login with the role's review account.
  *
- * Gerekenler:
- * 1. Yerel yığın açıktır: `backend/e2e/stack up` ve `backend/e2e/stack review-accounts`.
- * 2. Panel `npm run dev:yerel` ile açıktır. Keycloak dönüşü `http://localhost:5180` adresine gelir.
- * 3. Denenen panel aynı ya da başka bir porttadır. Örnek: `vite --mode yerel --port 5181`.
+ * Requirements:
+ * 1. The local stack is up: `backend/e2e/stack up` and `backend/e2e/stack review-accounts`.
+ * 2. The panel is running via `npm run dev:yerel`. The Keycloak redirect returns to `http://localhost:5180`.
+ * 3. The panel under test is on the same or another port. Example: `vite --mode yerel --port 5181`.
  *
- * Komut:
+ * Command:
  * `PANEL_GERCEK_URL=http://localhost:5181/ PANEL_HESAPLAR=<yol>/review-accounts.json \
  *   npx playwright test -c playwright.gercek.config.ts`
  *
- * Bu kapı canlı sunucuya bağlanmaz. Adres `localhost` değilse kapı durur.
+ * This gate never connects to a live server. If the host is not `localhost`, the gate stops.
  */
 const url = process.env['PANEL_GERCEK_URL'];
 if (!url) throw new Error('PANEL_GERCEK_URL değişkeni gerekir. Örnek: http://localhost:5181/');
@@ -27,7 +27,7 @@ export default defineConfig({
   testDir: 'tests/e2e',
   testMatch: ['rol-*.spec.ts'],
   fullyParallel: true,
-  // Her işçi her hesapla bir kez girer. Az işçi Keycloak'u yormaz.
+  // Each worker signs in once per account. Few workers keep the load on Keycloak low.
   workers: 2,
   retries: 0,
   reporter: [['list']],

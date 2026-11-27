@@ -1,6 +1,6 @@
 import type { AssistMode, ResultOutcome, RiskLevel, ToolEventStatus } from '../types';
 
-/** Yüzeylerdeki sabit ekran yazıları. Sunucu yalnız kodu gönderir, yazı burada kalır. */
+/** Fixed on-screen text for the surfaces. The server sends only the code; the text lives here. */
 export const MODE_LABEL: Record<AssistMode, string> = {
   ask: 'Sor',
   search: 'Ara',
@@ -15,7 +15,7 @@ export const RISK_LABEL: Record<RiskLevel, string> = {
   R3: 'R3 Yüksek',
 };
 
-/** Rozet tonu. Renk tek başına anlam taşımaz: düzey her zaman yazıyla da yazar. */
+/** Badge tone. Colour never carries meaning alone: the level is always written as text too. */
 export const RISK_TONE: Record<RiskLevel, 'info' | 'warn' | 'danger'> = {
   R0: 'info',
   R1: 'info',

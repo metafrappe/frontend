@@ -24,14 +24,14 @@ describe('routeRegistry', () => {
       const mod = await r.load();
       expect(typeof mod.default).toBe('function');
     }
-    // Sayfa modülleri antd yükler. jsdom içinde ilk yükleme yavaştır.
+    // Page modules load antd. The first load in jsdom is slow.
   }, 30_000);
 
   it('router kayıtları tembel yüklenir', () => {
     const objs = toRouteObjects(routeRegistry);
     expect(objs).toHaveLength(routeRegistry.length);
     for (const o of objs) {
-      // React.lazy bileşeni. Kabuk beklemez, yalnız sayfa bekler.
+      // A React.lazy component. The shell does not wait; only the page waits.
       expect((o.Component as unknown as { $$typeof: symbol }).$$typeof).toBe(
         Symbol.for('react.lazy'),
       );

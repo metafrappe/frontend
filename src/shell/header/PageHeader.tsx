@@ -52,7 +52,7 @@ export interface PageHeaderProps {
   state: HeaderState;
   primaryAction?: HeaderAction;
   secondaryActions?: HeaderAction[];
-  /** Form görünümünde kayıt gezgini. */
+  /** Record navigator in the form view. */
   record?: { index: number; total: number; onPrev?: () => void; onNext?: () => void };
   search?: string;
   onSearchChange?: (q: string) => void;
@@ -62,13 +62,13 @@ export interface PageHeaderProps {
   savedViews?: { value: string; label: string }[];
   savedView?: string;
   onSavedViewChange?: (v: string) => void;
-  /** Arama, filtre ve görünüm türü çubuğu. Varsayılan açıktır. Ana sayfa çubuğu çizmez. */
+  /** Search, filter and view-type bar. On by default. The home page does not render the bar. */
   tools?: boolean;
 }
 
 /**
- * Sayfa başlığı. Varsayılan çeşit "Araç çubuklu" (HD1–HD6, VT1–VT3).
- * Bütün sayfalar bu bileşeni kullanır. İçerik veriyle dolar.
+ * Page header. Default variant is "with toolbar" (HD1–HD6, VT1–VT3).
+ * Every page uses this component. Content is filled from data.
  */
 export function PageHeader(p: PageHeaderProps) {
   const { state } = p;
@@ -77,8 +77,8 @@ export function PageHeader(p: PageHeaderProps) {
   const headerRef = useRef<HTMLElement>(null);
   const [stuck, setStuck] = useState(false);
 
-  // HD6: içerik kayınca alt gölge belirir. Geniş ekranda içerik
-  // başlığın kardeşi olan `.shell-body` içinde kayar.
+  // HD6: a bottom shadow appears when content scrolls. On wide screens content
+  // scrolls inside `.shell-body`, the header's sibling.
   useEffect(() => {
     const body = headerRef.current?.parentElement?.querySelector('.shell-body');
     if (!body) return undefined;
@@ -158,7 +158,7 @@ export function PageHeader(p: PageHeaderProps) {
 function StateLine({ state }: { state: HeaderState }) {
   const s = t.header.state;
   const format = useFormat();
-  // Durum satırı yoksa boş "Kayıt yok" yazılmaz. Sayfa durumu gövdede kendisi anlatır.
+  // Without a status line, an empty "no records" text is not written. The page explains its state in the body itself.
   if (state.kind === 'none') return null;
   let body: React.ReactNode;
   switch (state.kind) {

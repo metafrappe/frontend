@@ -1,10 +1,10 @@
 /**
- * "Reseller Assistant" rolü: bayi yöneticisi yardımcısı (G-170, AJA-831).
- * Test koddan önce yazıldı.
- * Yardımcı "Hesap", "Müşteriler" ve "Site ve plan" gruplarını görür.
- * "Müşteriler" ve "Site ve plan" yalnız okunur.
- * Örnek: yardımcı "Müşteriler" sayfasını açar. Yeni müşteri düğmesini görmez.
- * Sunucu testi: `backend/.../access/tests/test_role_reseller_assistant.py`.
+ * "Reseller Assistant" role: reseller administrator's assistant (G-170, AJA-831).
+ * The test was written before the code.
+ * The assistant sees the account, customers, and site and plan menu groups.
+ * The customers and site and plan groups are read-only.
+ * Example: the assistant opens the customers page. They do not see the new customer button.
+ * Server test: `backend/.../access/tests/test_role_reseller_assistant.py`.
  */
 import { describeRole } from '../setup/panel-rolleri';
 import { test } from '../setup/playwright-fixtures';

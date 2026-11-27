@@ -237,7 +237,7 @@ describe('createAuth', () => {
     'ftp://api.login.atonota.net/realms/platform/protocol/openid-connect/logout',
     'https://api.login.atonota.net/realms/platform/protocol/openid-connect/logout/ek',
     'https://api.login.atonota.net/realms/platform/protocol/openid-connect/auth',
-    // Kullanıcı bilgisi parçalı adres. Parçalar e-posta taramasına takılmasın diye birleştirilir.
+    // User info is a split address. The parts are joined so the e-mail scan does not flag them.
     [
       'https://kisi:parola',
       'api.login.atonota.net/realms/platform/protocol/openid-connect/logout',
@@ -256,7 +256,7 @@ describe('createAuth', () => {
 
     expect(navigate).not.toHaveBeenCalled();
     expect(csrf.get()).toBeUndefined();
-    // Keycloak oturumu açık kalmış olabilir. Giriş ekranı bunu bir notla söyler (K-3).
+    // The Keycloak session may still be open. The sign-in screen says so with a note (K-3).
     expect(auth.getState()).toEqual({ status: 'signed_out', notice: 'idp_session_may_remain' });
   });
 

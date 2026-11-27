@@ -1,11 +1,11 @@
 /**
- * Sidebar menüsü. Menü yalnız açılabilen sayfaları gösterir.
+ * Sidebar menu. The menu only shows pages that can be opened.
  *
- * 1. Rota kaydındaki parametresiz sayfalar gelir. Modül kayıtları da bu listededir.
- * 2. Sonra sunucunun açılış verisindeki sidebar grupları gelir. Gruplar liste sayfalarına gider.
- * 3. Bütün bağlantılar `permittedNav` süzgecinden geçer (G-94). Okunamayan sayfa menüde görünmez.
+ * 1. Parameterless pages from the route registry come first. Module entries are in this list too.
+ * 2. Then come the sidebar groups from the server's boot data. Groups lead to list pages.
+ * 3. All links pass through the `permittedNav` filter (G-94). An unreadable page does not appear in the menu.
  *
- * Örnek gruplar (`sampleNav`) yalnız deneme sayfasında görünür. Canlı menüde uydurma sayı yoktur.
+ * Sample groups (`sampleNav`) appear only on the test page. The live menu has no made-up counts.
  */
 import { FileText, Rows } from '@phosphor-icons/react';
 
@@ -17,8 +17,8 @@ import type { NavEntry, NavGroup, NavLeaf } from './sampleData';
 import type { ShellSidebar } from './view-data';
 import { workspaceText } from './workspaceMessages';
 
-/** Rota kaydındaki menü bağlantıları. Deneme sayfalarını `menuEntries` çıkarır. */
-/** Modül yolu ve okuma yetkisi gereken DocType adları. Kaynak: `src/modules/registry.ts`. */
+/** Menu links from the route registry. `menuEntries` removes the test pages. */
+/** Module path and the DocType names that need read permission. Source: `src/modules/registry.ts`. */
 const moduleRules = new Map(
   moduleRegistrations.map((m) => [
     m.path,
@@ -27,9 +27,9 @@ const moduleRules = new Map(
 );
 
 /**
- * Menünün tanım ucuna sorduğu DocType adları: `requires` ve `excludes`. Her ad bir kez geçer.
- * Bayi bağ türü bu listede yoktur (AJA-945). Tanım ucu bu türe bayiye de 403 verir.
- * Bayi hesabını müşteri listesi ucu tanır (`loadAccountKind`).
+ * DocType names the menu asks the definition endpoint about: `requires` and `excludes`. Each name appears once.
+ * The reseller link type is not in this list (AJA-945). The definition endpoint returns 403 for this type to resellers too.
+ * The customer list endpoint identifies a reseller account (`loadAccountKind`).
  */
 export const requiredDocTypes: readonly string[] = [
   ...new Set(moduleRegistrations.flatMap((m) => [...(m.requires ?? []), ...(m.excludes ?? [])])),
@@ -48,7 +48,7 @@ export const routeNav: NavEntry[] = menuEntries(routeRegistry).map((r): NavEntry
   };
 });
 
-/** Bağlantı kuralı: istenen türlerin hepsi okunur, dışlayan türlerin hiçbiri okunmaz. */
+/** Link rule: all required types are readable and none of the excluding types is readable. */
 function leafAllowed(
   rule: { requires?: readonly string[]; excludes?: readonly string[] },
   readable: ReadonlySet<string>,
@@ -60,8 +60,8 @@ function leafAllowed(
 }
 
 /**
- * Sayfa kapısı (G-94, G-169). Modül sayfası menüyle aynı kuralla açılır.
- * Modül olmayan yol bu kapıdan geçer. Örnek: bayi hesabı `/administration` sayfasını açamaz.
+ * Page gate (G-94, G-169). A module page opens under the same rule as the menu.
+ * A non-module path passes this gate. Example: a reseller account cannot open the `/administration` page.
  */
 export function moduleAllowed(path: string, readable: ReadonlySet<string>): boolean {
   const rule = moduleRules.get(path);
@@ -69,10 +69,10 @@ export function moduleAllowed(path: string, readable: ReadonlySet<string>): bool
 }
 
 /**
- * Menünün yetki süzgeci (G-94). Bağlantı yalnız istediği bütün DocType'lar okunabilirse kalır.
- * Dışlayan türlerden biri okunabilirse bağlantı düşer (G-169). Örnek: bayi kiracı sayfalarını görmez.
- * Bağlantısı kalmayan grup düşer. Yetki istemeyen bağlantı her zaman kalır.
- * Örnek: `readable` içinde `Leave Application` yoksa "İzin talepleri" görünmez.
+ * The menu's permission filter (G-94). A link stays only if all the DocTypes it requires are readable.
+ * If one of the excluding types is readable, the link is dropped (G-169). Example: a reseller does not see tenant pages.
+ * A group with no links left is dropped. A link that needs no permission always stays.
+ * Example: if `readable` lacks `Leave Application`, the Leave requests item is hidden.
  */
 export function permittedNav(
   entries: readonly NavEntry[],
@@ -87,10 +87,10 @@ export function permittedNav(
 }
 
 /**
- * Sunucunun sidebar verisini menü grubuna çevirir.
- * Ayrılmış önekli (`_demo`, `panel`) ya da bağlantısız grup menüye girmez.
- * Her DocType listesi menüde bir kez görünür. İlk bağlantı kalır, sonrakiler düşer (AJA-807).
- * Örnek: `User` hem "Kurulum" hem "Kullanıcılar" grubundaysa yalnız "Kurulum" grubunda kalır.
+ * Converts the server's sidebar data into menu groups.
+ * A group with a reserved prefix (`_demo`, `panel`) or without links does not enter the menu.
+ * Each DocType list appears once in the menu. The first link stays; later ones are dropped (AJA-807).
+ * Example: if `User` is in both Setup and Users, it stays only in Setup.
  */
 export function navFromSidebars(sidebars: readonly ShellSidebar[]): NavGroup[] {
   const seen = new Set<string>();
@@ -119,7 +119,7 @@ export function navFromSidebars(sidebars: readonly ShellSidebar[]): NavGroup[] {
     .filter((g) => g.children.length > 0);
 }
 
-/** Canlı menü: rota bağlantıları ve sunucu grupları. İkisi de yetki süzgecinden geçer. */
+/** Live menu: route links and server groups. Both pass through the permission filter. */
 export function buildShellNav(
   groups: readonly NavGroup[],
   readable: ReadonlySet<string>,
@@ -166,7 +166,7 @@ export function groupNavigation(entries: readonly NavEntry[]): NavigationSection
   return sections.filter((section) => section.children.length > 0);
 }
 
-/** Hızlı eylem. `to` varsa sayfaya gider. `prompt` varsa isteği asistana gönderir. */
+/** Quick action. With `to` it goes to the page. With `prompt` it sends the request to the assistant. */
 export interface QuickAction {
   key: string;
   label: string;
@@ -174,13 +174,13 @@ export interface QuickAction {
   prompt?: string;
 }
 
-/** Komut alanının altında en çok bu kadar hızlı eylem görünür. */
+/** At most this many quick actions appear below the command field. */
 export const QUICK_ACTION_LIMIT = 3;
 
 /**
- * Hızlı eylemler sunucunun sidebar gruplarından gelir.
- * Kabuk grupları önce `permittedNav` süzgecinden geçirir. Menü ve hızlı eylemler aynı süzgeci kullanır.
- * Böylece kullanıcının açamadığı sayfa hızlı eylem olmaz. Veri yoksa liste boştur.
+ * Quick actions come from the server's sidebar groups.
+ * The shell first passes the groups through the `permittedNav` filter. The menu and quick actions use the same filter.
+ * So a page the user cannot open never becomes a quick action. Without data the list is empty.
  */
 export function quickActionsFrom(groups: readonly NavGroup[], limit = QUICK_ACTION_LIMIT) {
   return groups

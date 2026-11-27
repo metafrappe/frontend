@@ -2,7 +2,7 @@ import { useContext, useEffect } from 'react';
 
 import { FocusDimContext } from './context';
 
-/** Etkinken odak perdesini açar. Birden çok kullanıcı sayılır. */
+/** Turns the focus dim on while active. Multiple users are reference-counted. */
 export function useFocusDim(active: boolean) {
   const api = useContext(FocusDimContext);
   useEffect(() => {

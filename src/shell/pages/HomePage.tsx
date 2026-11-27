@@ -18,8 +18,8 @@ const m = t.home;
 const noop = () => undefined;
 
 /**
- * "Yeni izin talebi" düğmesinin adresi: İnsan kaynakları modülü (`src/modules/registry.ts`, `hr`).
- * İzin talebi formu henüz yoktur. Düğme izin sayfasını açar.
+ * Address of the "New leave request" button: the human resources module (`src/modules/registry.ts`, `hr`).
+ * There is no leave request form yet. The button opens the leave page.
  */
 const NEW_LEAVE_PATH = '/hr';
 
@@ -38,28 +38,28 @@ function messageOf(error: unknown): string {
   return error instanceof HomeDataError ? error.message : m.loadFailed;
 }
 
-/** Ana sayfanın veri bağlantısı. Açık alan önce gelir, sonra modül ortamının bağlantısı. */
+/** The home page's data connection. The explicit field comes first, then the module environment's connection. */
 function useHomeData(): { data: ShellHomeData | undefined; waiting: boolean } {
   const view = useViewData();
   const data = view?.home ?? homeDataForModules(view?.modules);
-  // Uygulama girişi modül ortamını tembel kurar. Ortam gelene kadar sayfa bekler.
+  // The app entry sets up the module environment lazily. The page waits until the environment arrives.
   return { data, waiting: !data && view !== null };
 }
 
 /**
- * Ana sayfa: Bekleyenler. Taslak AJA-880, "2. ANA SAYFA".
- * Bölüm sırası: bekleyen onaylar, sorunlu kayıtlar, son değişiklikler, özet sayılar.
- * Kullanıcı talebi bu ekranda onaylar ya da reddeder. Sonuç aynı satırda görünür ve duyurulur.
- * Yüklemede sahte ilerleme, yüzde ya da uydurma saat yoktur.
+ * Home page: the Pending page. Mock-up AJA-880, screen 2 "Home page".
+ * Section order: pending approvals, problem records, recent changes, summary counts.
+ * The user approves or rejects a request on this screen. The result appears in the same row and is announced.
+ * Loading shows no fake progress, percentage or made-up time.
  */
 export default function HomePage() {
   const navigate = useNavigate();
   const { data: home, waiting } = useHomeData();
   const [attempt, setAttempt] = useState(0);
-  // Senkron saati sitenin saat diliminde ve kullanıcının dilinde yazılır (IC-13).
+  // The sync time is written in the site's time zone and the user's locale (IC-13).
   const format = useFormat();
-  // Sonuç, isteği başlatan bağlantı ve deneme numarasıyla saklanır.
-  // İkisinden biri değişince eski sonuç kullanılmaz; sayfa yeniden "yükleniyor" olur.
+  // The result is stored with the connection that started the request and the attempt number.
+  // When either changes, the old result is not used; the page goes back to "loading".
   const [result, setResult] = useState<{
     home: ShellHomeData;
     attempt: number;
@@ -284,7 +284,7 @@ function PendingRow({
   const done = decision?.kind === 'done';
   const working = decision?.kind === 'working';
 
-  // Düğmeler kaybolunca odak sonuca geçer. Böylece odak sayfanın başına düşmez.
+  // When the buttons disappear, focus moves to the result. So focus does not fall to the top of the page.
   useEffect(() => {
     const lost = document.activeElement === null || document.activeElement === document.body;
     if (done && lost) noteRef.current?.focus();

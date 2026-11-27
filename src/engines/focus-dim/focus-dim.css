@@ -1,4 +1,4 @@
-/* Odak perdesi. Değerler src/design CSS değişkenlerinden gelir; burada sabit değer yoktur. */
+/* Focus dim layer. Values come from src/design CSS variables; there are no fixed values here. */
 .focus-dim-overlay {
   position: fixed;
   inset: 0;
@@ -21,7 +21,7 @@ body.focus-dim-on .focus-dim-overlay {
   backdrop-filter: blur(var(--focus-dim-blur));
 }
 
-/* Perdeyi açan öğe perdenin üstünde kalır; odak nettir. */
+/* The element that opened the dim layer stays above it, so focus stays sharp. */
 body.focus-dim-on .focus-dim-source {
   position: relative;
   z-index: var(--z-dim-source);

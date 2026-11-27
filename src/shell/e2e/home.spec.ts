@@ -3,9 +3,9 @@ import type { Locator, Page } from '@playwright/test';
 import { expect, test } from '../../../tests/setup/playwright-fixtures';
 
 /**
- * Ana sayfa (Bekleyenler). Veri sahte sunucunun `get_home_summary` ucundan gelir.
- * Senaryo adı sayfa açılmadan önce `sessionStorage` içine yazılır (`src/mocks/scenarios.ts`).
- * Varsayılan veride tek açık talep vardır: ORNEK-IZIN-0001, Örnek Kişi.
+ * Home page ("Bekleyenler", pending items). Data comes from the mock server's `get_home_summary` endpoint.
+ * The scenario name is written to `sessionStorage` before the page opens (`src/mocks/scenarios.ts`).
+ * The default data has a single open request: ORNEK-IZIN-0001, owned by sample person 1.
  */
 const SCENARIO_KEY = 'atonota.mock-senaryo';
 
@@ -37,7 +37,7 @@ async function settle(page: Page) {
   });
 }
 
-/** Klavye kipini Tab ile açar, sonra hedefe odaklanır. WebKit düğmeye Tab ile varsayılan olarak gelmez. */
+/** Turns on keyboard mode with Tab, then focuses the target. By default WebKit does not reach the button with Tab. */
 async function keyboardFocus(page: Page, target: Locator) {
   await page.keyboard.press('Tab');
   await expect(page.locator('html')).toHaveAttribute('data-focus-mode', 'keyboard');
@@ -122,7 +122,7 @@ test.describe('ana sayfa: Bekleyenler', () => {
   });
 
   test('sahte ilerleme yoktur', async ({ page }) => {
-    // Sahte sunucu servis işçisindedir; istek bekletilemez. Bu yüzden gövdenin her hâli kaydedilir.
+    // The mock server runs in the service worker; the request cannot be held. So every state of the body is recorded.
     await page.addInitScript(() => {
       const w = window as unknown as { __homeSnapshots: string[] };
       w.__homeSnapshots = [];
@@ -206,7 +206,7 @@ test.describe('ana sayfa: Bekleyenler', () => {
       const cs = getComputedStyle(el);
       return { outline: cs.outlineStyle, shadow: cs.boxShadow };
     });
-    // Merkezi gösterge alttaki iç çizgidir (`src/design/css-variables.ts`). Halka yoktur.
+    // The central indicator is the inset bottom line (`src/design/css-variables.ts`). There is no ring.
     expect(s.outline).toBe('none');
     expect(s.shadow).toMatch(/inset/);
     expect(s.shadow).not.toMatch(/0px 0px 0px [1-9]/);
@@ -273,7 +273,7 @@ test.describe('ana sayfa: Bekleyenler', () => {
     await expect(clocks.first()).toBeVisible();
     expect(await clocks.count()).toBe(await recent.getByRole('listitem').count());
 
-    // Renk ve ölçü merkezi tokendan gelir: aynı tokenı kullanan bir ölçüm öğesiyle karşılaştırılır.
+    // Colour and size come from the central token: compared with a probe element that uses the same token.
     const measure = (loc: Locator) =>
       loc.evaluate((el) => {
         const probe = document.createElement('span');

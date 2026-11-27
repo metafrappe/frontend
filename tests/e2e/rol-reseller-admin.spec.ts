@@ -1,8 +1,8 @@
 /**
- * "Reseller Admin" rolü: bayi yöneticisi (G-169, AJA-831). Test koddan önce yazıldı.
- * Bayi yöneticisi "Hesap", "Site ve plan" ve "Müşteriler" gruplarını görür.
- * Yeni müşteri isteği gönderir. Müşterinin iş verisini göremez.
- * Sunucu testi: `backend/.../access/tests/test_role_reseller_admin.py`.
+ * "Reseller Admin" role: reseller administrator (G-169, AJA-831). The test was written before the code.
+ * The reseller administrator sees the account, site and plan, and customers menu groups.
+ * They send new customer requests. They cannot see the customer's business data.
+ * Server test: `backend/.../access/tests/test_role_reseller_admin.py`.
  */
 import { describeRole } from '../setup/panel-rolleri';
 import { test } from '../setup/playwright-fixtures';

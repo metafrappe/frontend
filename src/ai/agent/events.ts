@@ -12,9 +12,9 @@ function shortString(value: unknown, max = 500): value is string {
 }
 
 /**
- * Tek bir SSE `data` alanını doğrular (AX-5).
- * Geçersiz parça `null` döner ve yok sayılır.
- * Düşünce olayı (`thought`, `reasoning`) tanınmaz ve gösterilmez.
+ * Validates a single SSE `data` field (AX-5).
+ * An invalid chunk returns `null` and is ignored.
+ * Thought events (`thought`, `reasoning`) are not recognised and are not shown.
  */
 export function parseAgentEvent(data: unknown): AgentEvent | null {
   if (typeof data !== 'string') return null;
@@ -48,7 +48,7 @@ export function parseAgentEvent(data: unknown): AgentEvent | null {
   }
 }
 
-/** Olayı SSE satırına çevirir. Sahte sunucu ve testler kullanır. */
+/** Converts an event into an SSE line. Used by the mock server and the tests. */
 export function encodeAgentEvent(event: AgentEvent): string {
   return `data: ${JSON.stringify(event)}\n\n`;
 }

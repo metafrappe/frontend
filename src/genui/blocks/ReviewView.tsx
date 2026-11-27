@@ -4,8 +4,8 @@ import { SourceList } from './SourceList';
 import { RISK_LABEL, RISK_TONE } from './SurfaceLabels';
 
 /**
- * Değişiklik incelemesi: özet, risk düzeyi, hedef, geri alma ve önce-sonra tablosu.
- * Salt okunurdur. Onay düğmesi onay kartındadır (6b işi).
+ * Change review: summary, risk level, target, undo and a before/after table.
+ * Read-only. The approve button lives on the confirm card (task 6b).
  */
 export function ReviewView({ block }: { block: ReviewBlock }) {
   return (

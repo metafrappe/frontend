@@ -1,5 +1,5 @@
-# Sürekli bütünleştirme kapıları. Action'lar tam commit SHA'sına sabitlenir.
-# Firefox koşulmaz (proje kararı). Tarayıcılar: Chromium ve WebKit.
+# Continuous integration gates. Actions are pinned to full commit SHAs.
+# Firefox is not run (project decision). Browsers: Chromium and WebKit.
 name: CI
 
 on:
@@ -32,7 +32,7 @@ jobs:
           cache: npm
       - name: Bağımlılıkları kur
         run: npm ci
-      # Kopya frappesetup main dalındaki dosyayla bayt bayt aynı olmalı. Kaynak alınamazsa adım başarısız olur.
+      # The copy must be byte-for-byte identical to the file on frappesetup main. If the source cannot be fetched, the step fails.
       - name: Kural kopyası frappesetup ile aynı mı
         run: node scripts/standards-gate.mjs
       - name: Lint
@@ -44,9 +44,9 @@ jobs:
       - name: Derleme
         run: npm run build
 
-  # Tarayıcı testleri parçalara bölünür (AJA-961). Tek Chromium işi 26 ile 27 dakika
-  # sürüyordu ve 30 dakikalık sınıra takılıyordu. Her parça testlerin bir dilimini koşar.
-  # Parça sayısı değişirse toplam test sayısını `npx playwright test --list` ile denetleyin.
+  # Browser tests are split into shards (AJA-961). A single Chromium job took 26 to 27 minutes
+  # and hit the 30-minute limit. Each shard runs a slice of the tests.
+  # If the shard count changes, check the total test count with `npx playwright test --list`.
   e2e:
     name: Playwright (${{ matrix.browser }} ${{ matrix.shard }}/${{ matrix.total }})
     runs-on: ubuntu-latest
@@ -73,7 +73,7 @@ jobs:
           cache: npm
       - name: Bağımlılıkları kur
         run: npm ci
-      # Önbellek, deneme başına süre sınırı, yeniden deneme ve ayna sırası:
+      # Cache, per-attempt time limit, retries and mirror order:
       # .github/actions/playwright-browsers/install.sh
       - name: Tarayıcıyı kur
         uses: ./.github/actions/playwright-browsers
@@ -95,8 +95,8 @@ jobs:
           path: blob-report/
           retention-days: 1
 
-  # Toplayıcı iş. Parçalardan biri düşerse, kesilirse ya da atlanırsa bu iş de düşer.
-  # Böylece atlanan bir parça yeşil sayılmaz. Parça raporları tek HTML raporunda birleşir.
+  # Aggregator job. If any shard fails, is cancelled or is skipped, this job fails too.
+  # So a skipped shard is not counted as green. Shard reports are merged into one HTML report.
   e2e-result:
     name: Playwright
     runs-on: ubuntu-latest

@@ -9,21 +9,21 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { E2E_ENV } from '../../vite/e2e-env.ts';
 import { DEFAULT_KEYCLOAK_URL } from '../api/config';
 
-/** Deneme sayfasının yalnız orada geçen metni. Üretim paketinde bulunmamalıdır. */
+/** Text that appears only on the demo page. It must not be in the production bundle. */
 const DEMO_PAGE_MARKER = 'Arayüz temeli hazır';
 
-/** MSW kitaplığının paketteki izleri: kayıt çağrısı, günlük öneki ve işçi dosya adı. */
+/** Traces of the MSW library in a bundle: registration call, log prefix and worker file name. */
 const MSW_MARKERS = ['setupWorker', '[MSW]', 'mockServiceWorker'];
 
-/** Deneme rotası: `/_demo/<iş>`. Önekin kendisi (`/_demo/`) yönlendiricide kalabilir. */
+/** Demo route: `/_demo/<work-item>`. The prefix itself (`/_demo/`) may remain in the router. */
 const DEMO_ROUTE = /\/_demo\/[\w-]+/;
 
-/** Deneme sayfalarının parça adları. Üretim çıktısında bu adlarla dosya bulunmamalıdır. */
+/** Chunk names of the demo pages. The production output must contain no files with these names. */
 const DEMO_CHUNK = /^(DemoPage|ControlsDemoPage)-/;
 
 /**
- * Örnek alan adları (`*.example.test`). Sahte sunucu ve e2e değerleri bunları kullanır.
- * Üretim paketine girmezler.
+ * Example domain names (`*.example.test`). The mock server and e2e values use them.
+ * They do not enter the production bundle.
  */
 const SAMPLE_HOST = /[\w.-]+\.example\.test/;
 
@@ -33,8 +33,8 @@ const DEV_ENV = {
 };
 
 /**
- * Tembel parçalar: kabuk (`App.tsx` içinde `import()`; parça adı `shell-` ya da `ShellApp-` olur),
- * yönlendirici ve ikon kitaplığı. Hiçbiri index.html'nin hemen yüklediği listede olamaz.
+ * Lazy chunks: the shell (`import()` in `App.tsx`; chunk name is `shell-` or `ShellApp-`),
+ * the router and the icon library. None of them may be in the list index.html loads immediately.
  */
 const LAZY_CHUNKS = [
   { name: 'kabuk', test: /^(shell|ShellApp)-/ },
@@ -52,7 +52,7 @@ async function buildProduction(): Promise<string> {
   const savedSiteName = process.env.VITE_DEV_SITE_NAME;
   delete process.env.VITE_API_MOCKS;
   Object.assign(process.env, DEV_ENV);
-  // Vitest NODE_ENV değerini `test` yapar. Gerçek üretim derlemesi `production` kullanır.
+  // Vitest sets NODE_ENV to `test`. A real production build uses `production`.
   process.env.NODE_ENV = 'production';
   try {
     await build({
@@ -76,7 +76,7 @@ function assetFiles(dir: string, ext: string): string[] {
   return readdirSync(join(dir, 'assets')).filter((name) => name.endsWith(ext));
 }
 
-/** index.html'nin hemen yüklediği dosyalar: script ve modulepreload bağlantıları. */
+/** Files index.html loads immediately: script and modulepreload links. */
 function initialAssets(dir: string): string[] {
   const html = readFileSync(join(dir, 'index.html'), 'utf8');
   const refs = [...html.matchAll(/(?:src|href)="(?:\/panel)?\/?(assets\/[^"]+)"/g)].map(
@@ -119,7 +119,7 @@ describe('üretim derlemesi (vite build)', () => {
   });
 
   it('e2e kipinin Keycloak kökü üretim varsayılanıyla aynıdır', () => {
-    // e2e kipi AtonotA Login adresini kullanır. Tarayıcı testleri bu alana giden isteği keser.
+    // e2e mode uses the AtonotA Login URL. Browser tests intercept requests to this domain.
     expect(E2E_ENV.VITE_KEYCLOAK_URL).toBe(DEFAULT_KEYCLOAK_URL);
   });
 
@@ -138,7 +138,7 @@ describe('üretim derlemesi (vite build)', () => {
       const text = readFileSync(join(outDir, 'assets', name), 'utf8');
       expect(text.includes(DEMO_PAGE_MARKER), `${name}: deneme sayfası metni`).toBe(false);
       expect(text.match(DEMO_ROUTE)?.[0], `${name}: deneme rotası`).toBeUndefined();
-      // MSW kitaplığı da pakete girmez: işçi kaydı, kitaplık günlük öneki ve işçi dosya adı yoktur.
+      // The MSW library does not enter the bundle either: no worker registration, library log prefix or worker file name.
       for (const marker of MSW_MARKERS) {
         expect(text.includes(marker), `${name}: sahte sunucu izi "${marker}"`).toBe(false);
       }
@@ -151,7 +151,7 @@ describe('üretim derlemesi (vite build)', () => {
   });
 
   it('koleksiyon ve kayıt kaynağı zinciri ilk yükte değildir (orkestratör eki: ilk yük paketi)', () => {
-    // Bu metinler yalnız koleksiyon modelinde ve kayıt bağdaştırıcısında geçer.
+    // These strings appear only in the collection model and the record adapter.
     const markers = ['Kayıt tanımı desteklenmiyor.', 'Alan adı yineleniyor.', 'RecordApiError'];
     for (const name of initialAssets(outDir).filter((file) => file.endsWith('.js'))) {
       const text = readFileSync(join(outDir, name), 'utf8');
@@ -166,7 +166,7 @@ describe('üretim derlemesi (vite build)', () => {
     const initial = initialAssets(outDir).filter((p) => p.endsWith('.js'));
     expect(initial.length).toBeGreaterThan(0);
     const lazy = js.filter((name) => !initial.includes(`assets/${name}`));
-    // En az üç tembel parça: kabuk, yönlendirici ve ikonlar (kabuk oturum kurulunca iner).
+    // At least three lazy chunks: shell, router and icons (the shell is fetched once the session is set up).
     expect(lazy.length, lazy.join(', ')).toBeGreaterThanOrEqual(3);
     for (const chunk of LAZY_CHUNKS) {
       expect(
@@ -178,7 +178,7 @@ describe('üretim derlemesi (vite build)', () => {
         `${chunk.name} parçası ilk yükte değildir`,
       ).toBe(false);
     }
-    // antd bileşenleri kullanım yerine göre bölünür. React ayrı kalır.
+    // antd components are split by where they are used. React stays separate.
     expect(js.some((name) => name.startsWith('react-'))).toBe(true);
     const total = js.reduce((sum, name) => sum + statSync(join(outDir, 'assets', name)).size, 0);
     const initialBytes = initial.reduce((sum, p) => sum + statSync(join(outDir, p)).size, 0);

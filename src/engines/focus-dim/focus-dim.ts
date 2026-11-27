@@ -1,7 +1,7 @@
 /**
- * Odak perdesi (kaynak: focusDim). Açılan panel dışındaki her şey perde altındadır.
- * Birden çok tetikleyici anahtarla açılır; son anahtar kapanınca perde kalkar.
- * Renk, opaklık, blur, süre ve eğri CSS değişkenlerinden gelir (src/design).
+ * Focus dim layer (source: focusDim). Everything outside the open panel sits under the dim layer.
+ * Several trigger keys can open it; the layer lifts when the last key closes.
+ * Colour, opacity, blur, duration and curve come from CSS variables (src/design).
  */
 export const FOCUS_DIM_CLASS = 'focus-dim-on';
 export const FOCUS_DIM_OVERLAY_CLASS = 'focus-dim-overlay';
@@ -20,7 +20,7 @@ function emit(): void {
   for (const l of listeners) l(active, [...keys]);
 }
 
-/** Bir tetikleyiciyi açar veya kapatır. Örnek anahtarlar: "sidebar-flyout", "dropdown:menu-1". */
+/** Turns one trigger on or off. Example keys: "sidebar-flyout", "dropdown:menu-1". */
 export function setFocusDim(key: string, on: boolean): void {
   const had = keys.has(key);
   if (on === had) return;
@@ -44,7 +44,7 @@ export function subscribeFocusDim(listener: Listener): () => void {
   };
 }
 
-/** Testler ve tam sıfırlama için. */
+/** For tests and a full reset. */
 export function resetFocusDim(): void {
   keys.clear();
   emit();

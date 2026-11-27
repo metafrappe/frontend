@@ -5,8 +5,8 @@ import { AGENT_MODES, MODE_LABELS } from '../agent';
 import type { AgentMode } from '../agent';
 
 /**
- * Kip seçici. Yerel radyo düğmeleridir: oklar kipi değiştirir, Tab gruptan çıkar.
- * Seçilen kip bir sonraki işe uygulanır. Yalnız "İşlem yap" kipi değişiklik önerir.
+ * Mode picker. Native radio buttons: arrow keys change the mode, Tab leaves the group.
+ * The chosen mode applies to the next task. Only `act` mode proposes changes.
  */
 export function ModePicker({
   value,

@@ -1,18 +1,18 @@
 #!/usr/bin/env node
 /* global process, console, fetch */
 /**
- * Kural kopyası kapısı.
+ * Rule copy gate.
  *
- * Bu depodaki `docs/standards/headless-frontend-standartlari.md` bir kopyadır.
- * Kaynak frappesetup deposunun `main` dalındaki dosyadır.
- * Kapı iki dosyayı bayt bayt karşılaştırır. Dosyalar farklıysa 1 ile çıkar.
+ * `docs/standards/headless-frontend-standartlari.md` in this repository is a copy.
+ * The source is the file on the `main` branch of the frappesetup repository.
+ * The gate compares the two files byte for byte. If the files differ it exits with 1.
  *
- * Kaynak alınamazsa kapı yine 1 ile çıkar. Ağ hatası "aynı" sayılmaz.
+ * If the source cannot be fetched, the gate also exits with 1. A network error does not count as "identical".
  *
- * Kopyayı güncellemek için kaynağı indirip dosyanın üstüne yazın:
+ * To update the copy, download the source and overwrite the file:
  *   curl -fsSL <SOURCE_URL> -o docs/standards/headless-frontend-standartlari.md
  *
- * Kullanım: node scripts/standards-gate.mjs [--copy <dosya>] [--source-url <adres>]
+ * Usage: node scripts/standards-gate.mjs [--copy <file>] [--source-url <url>]
  */
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
@@ -27,7 +27,7 @@ export const COPY_PATH = resolve(root, 'docs/standards/headless-frontend-standar
 const TIMEOUT_MS = 30_000;
 
 /**
- * Kopyayı kaynakla karşılaştırır.
+ * Compares the copy with the source.
  * @param {{ copyPath?: string, sourceUrl?: string, fetchImpl?: typeof fetch }} [options]
  * @returns {Promise<{ ok: boolean, problems: string[] }>}
  */

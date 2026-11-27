@@ -1,4 +1,4 @@
-// AtonotA Login: platform listesi, giriş adresi ve hesap bağlama (G-159, G-160).
+// AtonotA Login: platform list, sign-in URL and account linking (G-159, G-160).
 import { http, HttpResponse } from 'msw';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
@@ -135,7 +135,7 @@ describe('sahte sunucu ve istemci', () => {
   it('yalnız açık platformlar gelir, kapalı platform gelmez', async () => {
     const list = await client().listLoginProviders();
     expect(list.map((p) => p.display_name)).toEqual(['Google', 'Facebook', 'LinkedIn', 'X']);
-    // Örnek veride kapalı bir kayıt vardır. Bu kayıt yanıta girmez.
+    // The sample data has a disabled entry. That entry is not in the response.
     expect(sampleLoginProviders.some((p) => !p.enabled)).toBe(true);
   });
 

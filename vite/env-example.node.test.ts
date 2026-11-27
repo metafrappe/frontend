@@ -4,7 +4,7 @@ import { resolve } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-/** `.env.example` dosyasını okur. Dosya yerel arka uçla çalışmanın örnek ayarıdır. */
+/** Reads `.env.example`. The file is the sample config for working with a local backend. */
 function readExample(): Record<string, string> {
   const text = readFileSync(resolve(process.cwd(), '.env.example'), 'utf8');
   const entries = text
@@ -24,8 +24,8 @@ function isLocalHost(hostname: string): boolean {
 
 describe('.env.example: yerel arka uç ayarı', () => {
   it('Keycloak kökü yerel Keycloak adresidir', () => {
-    // Yerel arka uç çıkış adresini yerel Keycloak kökünde verir. Panel çıkış adresini bu kökle
-    // denetler. Kök üretim adresi kalırsa çıkış Keycloak'a gitmez ve Keycloak oturumu açık kalır.
+    // The local backend returns its logout URL on the local Keycloak origin. The panel checks the logout
+    // URL against this origin. If the origin stays the production one, logout never reaches Keycloak and its session stays open.
     const env = readExample();
     expect(isLocalHost(new URL(env['VITE_DEV_BACKEND'] ?? '').hostname)).toBe(true);
     const keycloak = env['VITE_KEYCLOAK_URL'];

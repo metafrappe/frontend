@@ -1,25 +1,25 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '../../../tests/setup/playwright-fixtures';
 
-/** Sahte sunucunun tanıdığı liste: tablo gerçekten çizilir. `/satis/teklif` hata ekranını açar. */
+/** A list the mock server knows: the table is really drawn. `/satis/teklif` opens the error screen. */
 const LIST = `/ornek/${encodeURIComponent('örnek-kayıt')}`;
 
-/** Sahte sunucunun tanıdığı kayıt: axe kayıt formunu denetler. */
+/** A record the mock server knows: axe checks the record form. */
 const RECORD = `${LIST}/ORNEK-0003`;
 
 for (const url of ['/', '/satis/teklif', LIST, '/satis/teklif/TEK-0003', RECORD]) {
   test(`axe: ${url}`, async ({ page }, testInfo) => {
     await page.goto(url);
     await expect(page.locator('.shell')).toBeVisible();
-    // Kayıt adresinde axe kayıt formunu denetler. Form sahte sunucudan gelince ölçülür.
+    // At the record URL, axe checks the record form. It is measured once the form arrives from the mock server.
     if (url === RECORD) {
       await expect(page.getByRole('textbox', { name: /Örnek başlık/ })).toHaveValue('Örnek veri 3');
     }
     await page.waitForTimeout(400);
-    // Açılıştaki renk geçişleri bitmeden axe karışmış renkleri ölçer ve kontrast bildirir.
-    // Yük altında (WebKit masaüstü) 400 ms yetmiyordu. Bütün hareketlerin bitmesi beklenir.
+    // If the opening colour transitions have not finished, axe measures blended colours and reports contrast.
+    // Under load (WebKit desktop) 400 ms was not enough. The test waits for all animations to finish.
     await page.evaluate(async () => {
-      // Sonsuz döngülü hareketin `finished` sözü dolmaz. Yalnız biten hareketler beklenir.
+      // An infinitely looping animation's `finished` promise never settles. Only finite animations are awaited.
       await Promise.all(
         document
           .getAnimations()
@@ -27,9 +27,9 @@ for (const url of ['/', '/satis/teklif', LIST, '/satis/teklif/TEK-0003', RECORD]
           .map((animation) => animation.finished.catch(() => undefined)),
       );
     });
-    // Koyu birincil düğme düzeltmesi (`b339770`) bu dalda. Dışlama kalktı; düğmeler de denetlenir.
+    // The dark primary button fix (`b339770`) is on this branch. The exclusion was removed; buttons are checked too.
     const r = await new AxeBuilder({ page }).include('.shell').analyze();
-    // Orta ve düşük düzey ihlaller testi düşürmez. Rapora not olarak yazılır.
+    // Moderate and minor violations do not fail the test. They are written to the report as notes.
     for (const v of r.violations.filter((x) => x.impact === 'moderate' || x.impact === 'minor')) {
       testInfo.annotations.push({
         type: `axe-${v.impact ?? 'bilinmiyor'}`,

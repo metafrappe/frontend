@@ -12,18 +12,18 @@ async function overflowX(page: Page) {
   );
 }
 
-/** Sahte sunucunun tanıdığı liste: tablo gerçekten çizilir. `/satis/teklif` hata ekranını açar. */
+/** A list the mock server knows: the table is really drawn. `/satis/teklif` opens the error screen. */
 const LIST = `/ornek/${encodeURIComponent('örnek-kayıt')}`;
 
-/** Sahte sunucunun tanıdığı kayıt: kayıt formu gerçekten çizilir. `/satis/teklif/TEK-0003` hata verir. */
+/** A record the mock server knows: the record form is really drawn. `/satis/teklif/TEK-0003` gives an error. */
 const RECORD = `${LIST}/ORNEK-0003`;
 
-/** Kabuk deneme sayfası. Kayıt bağlantısı yoktur; kayıt adresi kabuğun örnek formunu çizer. */
+/** Shell test page. There is no record connection; the record URL draws the shell's sample form. */
 const harness = (path: string) => `/src/shell/harness/?yol=${encodeURIComponent(path)}`;
 
 /**
- * Kabuğun deneme sayfası. Örnek menü grupları (Satış, Stok, Muhasebe) yalnız burada görünür.
- * Canlı menü sahte sunucuda olmayan türleri göstermez. Flyout ve kayan zemin burada denenir.
+ * The shell's test page. Sample menu groups (Sales, Stock, Accounting) appear only here.
+ * The live menu does not show types the mock server lacks. The flyout and sliding background are tested here.
  */
 const DEMO = '/_demo/shell';
 
@@ -63,18 +63,18 @@ test.describe('klavye ile flyout', () => {
     await parent.focus();
     const fly = page.getByRole('group', { name: 'Satış' });
     await expect(fly).toBeVisible();
-    // Odak perdesi yalnız iletişim kutusundadır. Alt menü perde açmaz.
+    // The focus overlay is only on the dialog. The submenu does not open an overlay.
     await expect(page.locator('body')).not.toHaveAttribute('data-focus-dim', 'on');
 
-    // F1: sidebar sağ kenarına 8 px boşlukla bitişir.
-    // F6 hareketi bitince ölçülür.
+    // F1: adjoins the sidebar's right edge with an 8 px gap.
+    // F6: measured once the animation finishes.
     await expect(fly).toHaveCSS('opacity', '1');
     await page.waitForTimeout(250);
     const sb = await page.locator('.shell-sb').boundingBox();
     const fb = await fly.boundingBox();
     expect(sb && fb && Math.round(fb.x - (sb.x + sb.width))).toBe(8);
 
-    // F2: panel merkezi üst öğe merkezine denk gelir (taşma yoksa).
+    // F2: the panel centre aligns with the parent item's centre (if there is no overflow).
     const pb = await parent.boundingBox();
     if (pb && fb) {
       expect(Math.abs(fb.y + fb.height / 2 - (pb.y + pb.height / 2))).toBeLessThanOrEqual(1);
@@ -94,11 +94,11 @@ test.describe('klavye ile flyout', () => {
   test('klavyeyle gezinince odak göstergesi halka değildir', async ({ page }) => {
     test.skip(isCompact(page), 'geniş ekran');
     await page.goto(DEMO);
-    // Tembel sayfa gelene kadar beklenir. Sonra odak denetlenir.
+    // Wait until the lazy page arrives. Then focus is checked.
     await expect(page.getByRole('heading', { level: 1, name: 'Kabuk denemesi' })).toBeVisible();
-    // Ok tuşları görsel odak modunu açmaz. Yalnız Tab ve Shift+Tab modu açar.
-    // Rota bağlantıları "Ana sayfa" ile "Satış" arasındadır. Rota listesinin son
-    // parametresiz satırı "AI Studio" bağlantısıdır. "Satış" düğmesi ondan hemen sonradır.
+    // Arrow keys do not turn on visual focus mode. Only Tab and Shift+Tab turn it on.
+    // Route links lie between the Home link and the Sales button. The last parameterless row of the
+    // route list is the "AI Studio" link. The Sales button comes right after it.
     await page.getByRole('link', { name: 'AI Studio' }).focus();
     await page.keyboard.press('ArrowDown');
     const next = page.getByRole('button', { name: 'Satış', exact: true });
@@ -135,8 +135,8 @@ test.describe('telefon kabuğu', () => {
     await page.getByRole('link', { name: 'Siparişler' }).click();
     await expect(page).toHaveURL(/\/satis\/siparis$/);
     await expect(drawer).toBeHidden();
-    // Liste rotası tanımı sunucudan ister. Menüdeki örnek gruplar sahte sunucuda kayıtlı değildir.
-    // Sahte sunucu yetki reddi verir. Sayfa tanım hatasını ve yeniden deneme düğmesini gösterir.
+    // The list route requests the definition from the server. The sample menu groups are not registered on the mock server.
+    // The mock server returns a permission denial. The page shows the definition error and the retry button.
     await expect(page.getByRole('alert')).toContainText('Liste tanımı alınamadı');
     await expect(page.getByRole('button', { name: 'Yeniden dene' })).toBeVisible();
   });
@@ -191,10 +191,10 @@ test.describe('yön değişimi', () => {
 
 test.describe('header ve sayfalar', () => {
   test('liste rotası views-collection görünümünü çizer', async ({ page }) => {
-    // Uygulama girişi liste rotasını ortak API istemcisine bağlar. Adres parçası DocType adına
-    // çevrilir: `örnek-kayıt` -> `Örnek Kayıt`. Sahte sunucu yalnız bu türü verir.
+    // The app entry connects the list route to the shared API client. The URL segment is converted
+    // to the DocType name: the slug becomes the title-cased name (sample record type). The mock server serves only this type.
     await page.goto(LIST);
-    // Başlık DocType'ın görünen adıdır; genel "Kayıtlar" yazmaz.
+    // The header is the DocType's display name; it does not say the generic "Records" title.
     await expect(page.getByRole('heading', { level: 1, name: 'Örnek Kayıt' })).toBeAttached();
     await expect(page.getByText('ORNEK-0001').first()).toBeVisible();
     await expect(page.getByText('TEK-0001')).toHaveCount(0);
@@ -220,9 +220,9 @@ test.describe('header ve sayfalar', () => {
   test('kayıt rotası views-record görünümünü çizer; kabuğun örnek formu çizilmez', async ({
     page,
   }) => {
-    // Uygulama girişi kayıt rotasını `RecordView` bileşenine bağlar. Adres parçası DocType adına
-    // çevrilir (`teklif` -> `Teklif`). Sahte sunucu bu türün tanımını vermez (403). Görünüm
-    // erişim reddi durumunu gösterir. Kabuğun örnek formu yalnız bağlantısız deneme sayfasındadır.
+    // The app entry connects the record route to the `RecordView` component. The URL segment is converted
+    // to the DocType name (`teklif` -> `Teklif`). The mock server does not serve this type's definition (403). The view
+    // shows the access-denied state. The shell's sample form is only on the unconnected test page.
     await page.goto('/satis/teklif/TEK-0003');
     const state = page.locator('.rv-state-card[role="alert"]');
     await expect(state).toContainText('Erişim izni yok');
@@ -232,7 +232,7 @@ test.describe('header ve sayfalar', () => {
   });
 
   test('kayıt rotası kaydı sahte sunucudan çizer', async ({ page }) => {
-    // Kayıt `Örnek Kayıt` türündendir. Değer sahte sunucunun kaydıdır; örnek formda yoktur.
+    // The record is of the sample record type. The value is the mock server's record; it is not in the sample form.
     await page.goto(RECORD);
     await expect(page.getByRole('textbox', { name: /Örnek başlık/ })).toHaveValue('Örnek veri 3');
     await expect(page.getByText('3 / 24')).toHaveCount(0);
@@ -250,8 +250,8 @@ test.describe('header ve sayfalar', () => {
   test('kayıt kaydedilince CSRF hatası çıkmaz; değişiklik sahte sunucuya yazılır', async ({
     page,
   }) => {
-    // Sahte sunucu sayfanın içinde çalışır; durumu sayfa yeniden yüklenince sıfırlanır.
-    // Bu yüzden kayda listeden girilir ve uygulama içinde geri ve ileri gidilir.
+    // The mock server runs inside the page; its state resets when the page reloads.
+    // So the record is opened from the list and navigation goes back and forward within the app.
     await page.goto(LIST);
     await page
       .getByRole('row', { name: /ORNEK-0003/ })
@@ -262,13 +262,13 @@ test.describe('header ve sayfalar', () => {
     await title.fill('Kaydedilen başlık');
     await expect(page.getByText('1 kaydedilmemiş değişiklik')).toBeVisible();
     await page.getByRole('button', { name: 'Kaydet' }).click();
-    // Sahte sunucu CSRF belirteci eksikse 400 `CSRFTokenError` verir. O zaman uyarı çıkar ve
-    // değişiklik kaydedilmemiş kalır.
+    // If the CSRF token is missing, the mock server returns 400 `CSRFTokenError`. Then a warning appears and
+    // the change stays unsaved.
     await expect(page.getByText('1 kaydedilmemiş değişiklik')).toHaveCount(0);
     await expect(page.getByText('Güncel')).toBeVisible();
     await expect(page.getByRole('heading', { level: 1, name: 'Kaydedilen başlık' })).toBeVisible();
     await expect(page.getByRole('alert')).toHaveCount(0);
-    // Kayıt yeniden açılınca değer sahte sunucudan okunur.
+    // When the record is reopened, the value is read from the mock server.
     await page.goBack();
     await expect(page.getByText('ORNEK-0001').first()).toBeVisible();
     await page.goForward();
@@ -280,7 +280,7 @@ test.describe('header ve sayfalar', () => {
   for (const url of ['/satis/teklif', LIST, RECORD]) {
     test(`metin boyutu kaynak alt sınırın altına inmez: ${url}`, async ({ page }) => {
       await page.goto(url);
-      // Kayıt adresinde ölçüm kayıt formu sahte sunucudan gelince yapılır.
+      // At the record URL, measurement happens once the record form arrives from the mock server.
       if (url === RECORD) {
         await expect(page.getByRole('textbox', { name: /Örnek başlık/ })).toHaveValue(
           'Örnek veri 3',
@@ -310,13 +310,13 @@ test.describe('komut kutusu önerileri', () => {
   test('öneri etiketi bileşen stili gelmeden de token boyutundadır (WebKit 9.38 px)', async ({
     page,
   }) => {
-    // Örnek hızlı eylemler yalnız deneme sayfasındadır. Canlı eylemler sunucu menüsünden gelir.
+    // Sample quick actions are only on the test page. Live actions come from the server menu.
     await page.goto(DEMO);
     if (isCompact(page)) await page.getByRole('button', { name: 'Menüyü aç' }).click();
     await expect(page.locator('.shell-chips .ant-prompts-label').first()).toBeVisible();
     const result = await page.evaluate(() => {
-      // Ant Design X stili sayfaya geç eklenir. O ana kadar `h6` öğesinin varsayılan boyutu
-      // geçerlidir. Bileşenin kendi stili kaldırılınca o ilk an ölçülür.
+      // The Ant Design X style is added to the page late. Until then the `h6` element's default size
+      // applies. With the component's own style removed, that first moment is measured.
       for (const style of document.querySelectorAll('style')) {
         if (style.textContent?.includes('.ant-prompts')) style.remove();
       }
@@ -328,7 +328,7 @@ test.describe('komut kutusu önerileri', () => {
         body: root.getPropertyValue('--font-body').trim(),
       };
     });
-    // Boyut sabit yazılmaz: etiket gövde metni tokenını izler (AJA-997: gövde 16 px).
+    // The size is not hard-coded: the label follows the body text token (AJA-997: body 16 px).
     expect(result.token).toBe(result.body);
     expect(parseFloat(result.token)).toBeGreaterThanOrEqual(14);
     expect(result.size).toBe(result.token);
@@ -348,7 +348,7 @@ test.describe('kayan hover zemini (G1–G3)', () => {
     return b ? b.y + b.height / 2 : -1;
   }
 
-  /** Yazı tipi gelmeden ölçülen öğe konumu sonra kayar. Zemin eski konuma yerleşmiş olur. */
+  /** An item position measured before the font loads shifts later. The background ends up at the old position. */
   async function fontsReady(page: Page) {
     await page.evaluate(() => document.fonts.ready.then(() => undefined));
   }
@@ -360,8 +360,8 @@ test.describe('kayan hover zemini (G1–G3)', () => {
     await page.getByRole('button', { name: 'Stok', exact: true }).hover();
     await expect(glide(page)).toHaveAttribute('data-on', 'true');
     await page.getByRole('button', { name: 'Muhasebe', exact: true }).hover();
-    // Hedef konum her adımda yeniden ölçülür. Yük altında yerleşim ilk ölçümden sonra kayabilir.
-    // Sınır aynıdır: zemin merkezi öğe merkezinden 0.5 px'ten az sapar.
+    // The target position is re-measured at each step. Under load the layout can shift after the first measurement.
+    // The limit is the same: the background centre deviates from the item centre by less than 0.5 px.
     await expect
       .poll(async () => Math.abs((await glideCenterY(page)) - (await centerY(page, 'Muhasebe'))))
       .toBeLessThan(0.5);
@@ -404,8 +404,8 @@ test.describe('kayan hover zemini (G1–G3)', () => {
     await page.getByRole('button', { name: 'Stok', exact: true }).focus();
     await page.keyboard.press('Escape');
     await expect(glide(page)).toHaveAttribute('data-on', 'true');
-    // Hedef konum her adımda yeniden ölçülür. Yük altında yerleşim ilk ölçümden sonra kayabilir
-    // (WebKit, 7 px). Sınır aynıdır: zemin merkezi öğe merkezinden 0.5 px'ten az sapar.
+    // The target position is re-measured at each step. Under load the layout can shift after the first measurement
+    // (WebKit, 7 px). The limit is the same: the background centre deviates from the item centre by less than 0.5 px.
     await expect
       .poll(async () => Math.abs((await glideCenterY(page)) - (await centerY(page, 'Stok'))))
       .toBeLessThan(0.5);

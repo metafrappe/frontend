@@ -16,17 +16,17 @@ import { encodeAgentEvent } from '../agent';
 import { MOCK_SOURCE } from '../agent';
 import { AiStudio } from './AiStudio';
 
-// `waitFor` ve `find*` denetimleri DOM değişince yeniden çalışır; sabit süre beklemez.
-// Üst sınır varsayılan 1 saniyedir. Sahte akış yüklü makinede bundan uzun sürer (inceleme 2, Ö4).
-// Bu dosyada üst sınır büyütülür. Koşul sağlanınca denetim hemen biter.
+// `waitFor` and `find*` checks rerun when the DOM changes. They do not wait a fixed time.
+// The default limit is 1 second. The mock stream takes longer on a loaded machine (review 2, Ö4).
+// This file raises the limit. The check ends as soon as the condition holds.
 const defaultAsyncTimeout = getConfig().asyncUtilTimeout;
 beforeAll(() => configure({ asyncUtilTimeout: 10_000 }));
 afterAll(() => configure({ asyncUtilTimeout: defaultAsyncTimeout }));
 
 beforeAll(() => {
-  // jsdom öğelerde kaydırma işlevi tanımlamaz. Bubble.List bunu çağırır.
+  // jsdom does not define a scroll function on elements. Bubble.List calls it.
   Element.prototype.scrollTo ??= () => undefined;
-  // jsdom ResizeObserver tanımlamaz. antd tablosu bunu kullanır.
+  // jsdom does not define ResizeObserver. The antd table uses it.
   globalThis.ResizeObserver ??= class {
     observe = () => undefined;
     unobserve = () => undefined;
@@ -35,8 +35,8 @@ beforeAll(() => {
 });
 
 /**
- * Test bitince bütün sahte akışlar durdurulur. Sahte sunucu durdurma sinyalinde zamanlayıcısını
- * hemen siler. Böylece sabit süre beklemeden bir sonraki teste zamanlayıcı kalmaz (inceleme 2, Ö4).
+ * All mock streams stop when a test ends. On the abort signal the mock server clears its timer
+ * at once. So no timer is left for the next test, without a fixed wait (review 2, Ö4).
  */
 let streams = new AbortController();
 beforeEach(() => {
@@ -47,13 +47,13 @@ afterEach(() => {
   cleanup();
 });
 
-/** Test sonunda durdurulan sahte sunucu. */
+/** Mock server that is stopped at the end of the test. */
 function mock(options: Parameters<typeof createMockTransport>[0] = {}): AgentTransport {
   const base = createMockTransport(options);
   return (request, signal) => base(request, AbortSignal.any([signal, streams.signal]));
 }
 
-/** Sahte sunucuyu sarar. Giden istekleri ve isteklerin iptal sinyallerini kaydeder. */
+/** Wraps the mock server. Records outgoing requests and their abort signals. */
 function recording(base: AgentTransport = mock({ delayMs: 1 })) {
   const requests: AgentRequest[] = [];
   const signals: AbortSignal[] = [];
@@ -65,7 +65,7 @@ function recording(base: AgentTransport = mock({ delayMs: 1 })) {
   return { requests, signals, transport };
 }
 
-/** Yük altında tuş başına zamanlayıcı beklenmez. Olay sırası aynı kalır. */
+/** Under load, no per-key timer is awaited. The event order stays the same. */
 function setupUser() {
   return userEvent.setup({ delay: null });
 }
@@ -77,7 +77,7 @@ async function approveDelayNotice(user: ReturnType<typeof setupUser>) {
   await user.click(within(block).getByRole('button', { name: 'Gönder' }));
 }
 
-/** Sohbet çekmecesinden bir sohbete geçer. */
+/** Switches to a conversation from the conversation drawer. */
 async function openConversation(user: ReturnType<typeof setupUser>, name: RegExp) {
   await user.click(screen.getByRole('button', { name: 'Sohbetleri aç' }));
   const nav = await screen.findByRole('navigation', { name: 'Sohbetler' });
@@ -98,8 +98,8 @@ async function send(text: string) {
   return user;
 }
 
-// Bu testler bütün stüdyoyu çizer ve sahte akışı sonuna kadar izler. Yüklü makinede tek test
-// birkaç saniye sürer. Süre bütçesi açıkça yazılır; beklentiler ve olay denetimleri aynı kalır.
+// These tests render the whole studio and follow the mock stream to the end. On a loaded machine
+// one test takes a few seconds. The time budget is explicit. Expectations and event checks stay the same.
 describe('AI Studio', { timeout: 30_000 }, () => {
   it('boş durumda karşılama ve kategorili önerileri gösterir', () => {
     render(<AiStudio transport={mock({ delayMs: 1 })} source={MOCK_SOURCE} />);
@@ -133,16 +133,16 @@ describe('AI Studio', { timeout: 30_000 }, () => {
     const stop = await screen.findByRole('button', { name: 'Yanıtı durdur' });
     await user.click(stop);
     expect(await screen.findByText('Yanıt durduruldu.')).toBeInTheDocument();
-    // Süre beklenmez. İsteğin iptal sinyali gelmiş olmalıdır. Sahte sunucu iptalde akışı
-    // hemen kapatır; sonradan blok gelemez.
+    // No time is awaited. The request's abort signal must have arrived. On abort the mock server
+    // closes the stream at once, so no block can arrive later.
     await waitFor(() => expect(signals[0]?.aborted).toBe(true));
     expect(container.querySelector('[data-genui]')).toBeNull();
     expect(screen.getByRole('button', { name: 'Mesajı gönder' })).toBeInTheDocument();
   });
 
   it('iptalden sonra gelen metni ve bloğu çizmez', async () => {
-    // Sahte sunucu iptal sinyalini yok sayar. İptalden sonra metin, blok ve bitiş olayı gönderir.
-    // Arayüz bu olayları çizmemelidir (inceleme 3, K2).
+    // The mock server ignores the abort signal. After abort it sends text, block and end events.
+    // The UI must not render these events (review 3, K2).
     const encode = (event: AgentEvent) => new TextEncoder().encode(encodeAgentEvent(event));
     let lateSent: (() => void) | undefined;
     const sent = new Promise<void>((resolve) => (lateSent = resolve));
@@ -174,7 +174,7 @@ describe('AI Studio', { timeout: 30_000 }, () => {
     expect(await screen.findByText('Yanıt durduruldu.')).toBeInTheDocument();
     await waitFor(() => expect(signals[0]?.aborted).toBe(true));
     await sent;
-    // Geç olaylar akışa girdi. Arayüzün onları işlemesi için birkaç görev turu beklenir.
+    // Late events entered the stream. A few task ticks are awaited so the UI can process them.
     for (let i = 0; i < 5; i += 1) await new Promise((resolve) => setTimeout(resolve, 0));
     expect(screen.queryByText(/Geç gelen metin/)).toBeNull();
     expect(container.querySelector('[data-genui]')).toBeNull();

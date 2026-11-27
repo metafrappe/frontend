@@ -94,9 +94,9 @@ describe('SidebarFooter oturumu kapatma (B1)', () => {
     });
     const text = 'Oturum kapatılamadı. Oturumunuz açık. Biraz sonra yeniden deneyin.';
     const visible = await screen.findAllByText(text);
-    // Metin en az bir yerde görünür durur. Yalnız ekran okuyucuya ayrılmış alanda kalmaz.
+    // The text is visible in at least one place, not only in a screen-reader-only region.
     expect(visible.some((node) => !node.closest('.shell-vh'))).toBe(true);
-    // Ekran okuyucu hatayı bir kez duyar.
+    // The screen reader announces the error once.
     expect(screen.getAllByRole('alert')).toHaveLength(1);
   });
 

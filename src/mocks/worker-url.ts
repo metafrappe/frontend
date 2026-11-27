@@ -1,5 +1,5 @@
-// Sahte sunucu işçisinin adresi ve kapsamı. İşçi dosyası derlemenin kökündedir.
-// Panel `/panel/` altında sunulursa işçi de orada olur (vite/mock-worker-plugin.ts).
+// Address and scope of the mock server worker. The worker file is at the build root.
+// If the panel is served under `/panel/`, the worker is there too (vite/mock-worker-plugin.ts).
 
 export const MOCK_WORKER_FILE = 'mockServiceWorker.js';
 

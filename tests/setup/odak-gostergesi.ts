@@ -1,21 +1,21 @@
 /**
- * Odak göstergesi denetimleri. Tarayıcı testleri ortak kullanır.
- * Kural: çevreleyen odak halkası yasaktır. Gösterge alt kenarda tek bir çizgidir.
+ * Focus indicator checks. Shared by browser tests.
+ * Rule: a surrounding focus ring is forbidden. The indicator is a single line on the bottom edge.
  */
 
-/** Hesaplanmış box-shadow listesini parçalara ayırır. */
+/** Splits the computed box-shadow list into parts. */
 export function splitShadows(value: string): string[] {
   if (!value || value === 'none') return [];
   return value.split(/,(?![^(]*\))/).map((s) => s.trim());
 }
 
-/** Gölge parçasının renk dışındaki px değerleri: x, y, bulanıklık, yayılma. */
+/** The px values of a shadow part other than colour: x, y, blur, spread. */
 function shadowLengths(shadow: string): number[] {
   const nums = shadow.replace(/rgba?\([^)]*\)/, '').match(/-?\d+(?:\.\d+)?px/g) ?? [];
   return nums.map((n) => parseFloat(n));
 }
 
-/** Tek kenarlı gösterge: iç gölge, x 0, y negatif, bulanıklık 0, yayılma 0, verilen renk. */
+/** Single-edge indicator: inset shadow, x 0, y negative, blur 0, spread 0, the given colour. */
 export function isBottomBarOnly(shadow: string, color: string): boolean {
   if (!shadow.includes(color) || !shadow.includes('inset')) return false;
   const [x, y, blur, spread] = shadowLengths(shadow);
@@ -23,27 +23,27 @@ export function isBottomBarOnly(shadow: string, color: string): boolean {
 }
 
 /**
- * Gölge parçası çevreleyen halka mı? Yayılması sıfırdan büyük ya da hem x hem y sıfırken
- * bulanıklığı olan parça öğenin dört kenarını sarar. Örnek: `0 0 0 2px` ve `0 0 4px`.
+ * Is the shadow part a surrounding ring? A part with spread above zero, or with blur while both
+ * x and y are zero, wraps all four edges of the element. Example: `0 0 0 2px` and `0 0 4px`.
  */
 export function isRingShadow(shadow: string): boolean {
   const [x = 0, y = 0, blur = 0, spread = 0] = shadowLengths(shadow);
   return spread > 0 || (x === 0 && y === 0 && blur > 0);
 }
 
-/** `page.evaluate` için en küçük sayfa arayüzü; Playwright tipine bağımlılık eklemez. */
+/** Minimal page interface for `page.evaluate`; adds no dependency on the Playwright type. */
 interface EvaluatingPage {
   evaluate<R, A>(fn: (arg: A) => R, arg: A): Promise<R>;
 }
 
 /**
- * CSS renk tokenının sayfadaki hesaplanmış değerini `rgb(...)` olarak verir.
- * Testler renk yazmaz, tokendan okur. Örnek: `await tokenColor(page, '--focus-indicator-color')`.
- * Değer o anki temaya göredir (`html[data-theme]`).
+ * Returns the computed value of a CSS colour token on the page as `rgb(...)`.
+ * Tests do not hard-code colours; they read them from the token. Example: `await tokenColor(page, '--focus-indicator-color')`.
+ * The value depends on the current theme (`html[data-theme]`).
  */
 export function tokenColor(page: EvaluatingPage, name: string): Promise<string> {
   return page.evaluate((token: string) => {
-    // Token sayfada henüz yoksa sessizce siyah dönmesin: test açık bir hatayla düşer.
+    // If the token is not on the page yet, do not silently return black: the test fails with a clear error.
     if (!getComputedStyle(document.documentElement).getPropertyValue(token).trim()) {
       throw new Error(`CSS tokenı sayfada yok: ${token}`);
     }

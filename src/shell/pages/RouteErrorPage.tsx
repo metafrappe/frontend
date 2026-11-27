@@ -7,10 +7,10 @@ import NotFoundPage from './NotFoundPage';
 import { reloadPage } from './reloadPage';
 
 /**
- * Rota hata ekranı.
- * 404 yanıtında "Sayfa bulunamadı" görünür.
- * Öteki hatalarda sayfa yüklenemedi demektir. Örneğin sayfa dosyası gelmedi.
- * Bu durumda "Yeniden dene" düğmesi sayfayı yeniden yükler.
+ * Route error screen.
+ * On a 404 response "page not found" appears.
+ * Other errors mean the page could not load. For example, the page file did not arrive.
+ * In that case the "Yeniden dene" (try again) button reloads the page.
  */
 export function RouteErrorPage() {
   const error = useRouteError();

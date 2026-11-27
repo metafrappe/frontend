@@ -1,5 +1,5 @@
-// Ayarı, CSRF deposunu, API istemcisini ve girişi tek yerde kurar.
-// Uygulama bunu bir kez çağırır. Örnek:
+// Sets up config, the CSRF store, the API client and sign-in in one place.
+// The app calls this once. Example:
 //   const session = createPlatformSession({
 //     env: import.meta.env,
 //     origin: window.location.origin,
@@ -19,7 +19,7 @@ export interface PlatformSessionDeps {
   document: Document;
   navigate: (url: string) => void;
   currentPath: () => string;
-  /** Sahte sunucu gibi başka bir kaynaktan gelen belirteç. Verilirse sayfadaki değerin yerine geçer. */
+  /** Token from another source, such as the mock server. If given, it replaces the value from the page. */
   csrfToken?: string;
 }
 
@@ -35,7 +35,7 @@ export function createPlatformSession(deps: PlatformSessionDeps): PlatformSessio
   const csrf = createCsrfStore(
     deps.csrfToken ?? readCsrfFromDocument(deps.document, config.csrfMetaName),
   );
-  // İstemci ile giriş birbirini kullanır. Bağı burada kurarız.
+  // The client and sign-in depend on each other. We wire them together here.
   const handlers: { onSessionExpired?: () => void } = {};
   const api = createApiClient({
     config,

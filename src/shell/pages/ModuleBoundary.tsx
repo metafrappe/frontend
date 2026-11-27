@@ -18,11 +18,11 @@ function Note({ text }: { text: string }) {
 }
 
 /**
- * Modül sayfasını `ModuleProvider` içinde açar.
- * Ortamı uygulama girişi `viewData.modules` alanıyla verir.
- * Ortam yoksa sayfa açılmaz. Sayfa bunun yerine durum yazar.
- * Sayfa menüyle aynı yetki kapısından geçer (G-94, G-169). Kapı kapalıysa yetki notu görünür.
- * Kapı yalnız ekranı düzenler. Yetkiyi sunucu her istekte yine denetler.
+ * Opens a module page inside `ModuleProvider`.
+ * The app entry provides the environment via the `viewData.modules` field.
+ * Without the environment the page does not open. It shows a status message instead.
+ * The page goes through the same permission gate as the menu (G-94, G-169). If the gate is closed, a permission note appears.
+ * The gate only shapes the screen. The server still checks permission on every request.
  */
 export function ModuleBoundary({ page: Page, path }: { page: ComponentType; path?: string }) {
   const env = useViewData()?.modules;

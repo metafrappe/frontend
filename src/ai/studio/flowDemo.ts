@@ -2,8 +2,8 @@ import { createMockTransport, planEvents } from '../agent';
 import type { AgentEvent, AgentMode, AgentRequest, MockTransportOptions } from '../agent';
 
 /**
- * Kipi taşıyan istek. Ekran seçilen kipi isteğe ekler.
- * Gerçek sunucu da bu alanı okur. Yalnız "İşlem yap" kipi değişiklik önerir.
+ * Request that carries the mode. The screen adds the chosen mode to the request.
+ * The real server also reads this field. Only `act` mode proposes changes.
  */
 export type ModedRequest = AgentRequest & { mode?: AgentMode };
 
@@ -11,7 +11,7 @@ export function modeOf(request: AgentRequest): AgentMode | undefined {
   return (request as ModedRequest).mode;
 }
 
-/** Sahte sunucu adım olayı da gönderir. Olay biçimi `flow.ts` içindeki `step` olayıdır. */
+/** The mock server also sends step events. The format is the `step` event in `flow.ts`. */
 type DemoEvent = AgentEvent | { type: 'step'; step: string };
 
 const FLOW_PREFIX = 'akis';
@@ -27,7 +27,7 @@ function words(text: string): DemoEvent[] {
   return (text.match(/\S+\s*/g) ?? [text]).map((delta) => ({ type: 'text', delta }));
 }
 
-/** "İşlem yap" kipinde yeni iş: plan, önizleme ve onay adımları. */
+/** New task in `act` mode: plan, preview and approval steps. */
 function proposal(text: string, newId: (prefix: string) => string): DemoEvent[] {
   const cancel = /iptal|sil/i.test(text);
   const scope = {
@@ -80,7 +80,7 @@ function proposal(text: string, newId: (prefix: string) => string): DemoEvent[] 
   ];
 }
 
-/** Akış onayı: uygulama adımı ve sonuç yüzeyi. Sunucu işi bir kez yapar. */
+/** Flow approval: apply step and result surface. The server does the work once. */
 function applied(): DemoEvent[] {
   return [
     { type: 'step', step: 'apply' },
@@ -97,8 +97,8 @@ function applied(): DemoEvent[] {
 }
 
 /**
- * Sahte sunucunun olay listesi. "İşlem yap" kipindeki yeni iş altı adımlı akışı izler.
- * Başka her istek mevcut sahte sunucuya gider.
+ * The mock server's event list. A new task in `act` mode follows the six-step flow.
+ * Every other request goes to the existing mock server.
  */
 export function flowDemoEvents(
   request: AgentRequest,
@@ -121,7 +121,7 @@ export function flowDemoEvents(
   return planEvents(request, received, newId);
 }
 
-/** Akış senaryolu sahte sunucu. Yalnız e2e derlemesinde ve testlerde kullanılır. */
+/** Mock server with a flow scenario. Used only in the e2e build and in tests. */
 export function createFlowDemoTransport(options: Pick<MockTransportOptions, 'delayMs'> = {}) {
   return createMockTransport({ ...options, events: flowDemoEvents });
 }

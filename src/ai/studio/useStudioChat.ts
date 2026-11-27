@@ -13,12 +13,12 @@ interface AgentInput {
   actionId?: string;
 }
 
-/** Yeniden üretme isteğinde görünen kullanıcı mesajı. Onay verisi taşımaz. */
+/** User message shown for a regenerate request. Carries no approval data. */
 export const REGENERATE_TEXT = 'Son yanıtı yeniden yaz.';
-/** Durum sorgusunda görünen kullanıcı mesajı. Onay verisi taşımaz. */
+/** User message shown for a status query. Carries no approval data. */
 export const STATUS_TEXT = 'İşlemin durumunu sor.';
 
-/** Kullanıcı kararını sohbette görünen yeni bir mesaja çevirir (U4). */
+/** Turns a user decision into a new message shown in the conversation (U4). */
 export function actionToMessage(action: GenUIAction): UserMessage {
   switch (action.kind) {
     case 'ask':
@@ -37,9 +37,9 @@ export function actionToMessage(action: GenUIAction): UserMessage {
 }
 
 /**
- * Mesajın bağlı olduğu işlem kimliği.
- * Onay ya da form kararında blok kimliğidir. Durum sorgusunda sorulan kimliktir.
- * Soru eyleminde kimlik yoktur.
+ * ID of the operation the message is tied to.
+ * For an approval or form decision it is the block ID. For a status query it is the queried ID.
+ * A question action has no ID.
  */
 export function actionIdOf(message: ChatMessage | undefined): string | undefined {
   if (message?.role !== 'user') return undefined;
@@ -48,7 +48,7 @@ export function actionIdOf(message: ChatMessage | undefined): string | undefined
   return message.action.blockId;
 }
 
-/** Sohbet geçmişindeki onay ve form kararlarını blok kimliğine göre toplar. */
+/** Collects approval and form decisions from the conversation history by block ID. */
 export function decisionsOf(messages: readonly ChatMessage[]): GenUIDecisions {
   const decisions: Record<string, 'approved' | 'rejected'> = {};
   for (const message of messages) {
@@ -58,7 +58,7 @@ export function decisionsOf(messages: readonly ChatMessage[]): GenUIDecisions {
   return decisions;
 }
 
-/** Geçmişe giden mesajdan onay verisini çıkarır. Onay yalnız kendi isteğinde gider. */
+/** Strips approval data from messages sent as history. Approval goes only in its own request. */
 function withoutAction(message: ChatMessage): ChatMessage {
   if (message.role !== 'user' || !message.action) return message;
   const { action: _action, ...rest } = message;
@@ -70,12 +70,12 @@ function isFinished(message: ChatMessage): boolean {
 }
 
 /**
- * Sohbet durumu. useXAgent isteği çalıştırır, useXChat mesajları tutar.
+ * Conversation state. useXAgent runs the request, useXChat holds the messages.
  *
- * Onay kuralları (AX-6):
- * - Onay verisi tek kullanımlıktır. Aynı işlem kimliği ikinci kez gönderilmez.
- * - "Yeniden üret" yalnız yanıt metnini ister. Onay verisini göndermez.
- * - Onaylı istek koparsa yeniden deneme işlemin durumunu sorar.
+ * Approval rules (AX-6):
+ * - Approval data is single-use. The same operation ID is not sent twice.
+ * - Regenerate asks only for the reply text. It does not send approval data.
+ * - If an approved request drops, a retry asks for the operation's status.
  */
 export function useStudioChat(transport: AgentTransport) {
   const abortRef = useRef<AbortController | null>(null);
@@ -121,7 +121,7 @@ export function useStudioChat(transport: AgentTransport) {
   const last = messages[messages.length - 1];
   const busy = last?.status === 'loading' || last?.status === 'updating';
 
-  /** Mesajı gönderir. Sonuç bloğa iletilir. */
+  /** Sends the message. The result is passed to the block. */
   const send = useCallback(
     (message: UserMessage): GenUIActionResult => {
       if (busy) return 'busy';
@@ -141,10 +141,10 @@ export function useStudioChat(transport: AgentTransport) {
   }, []);
 
   /**
-   * Yanıtı yeniden ister.
-   * - Önceki mesaj onay değilse: yanıtı ve soruyu kaldırır, soruyu yeniden sorar.
-   * - Önceki mesaj onaysa: onay mesajı yerinde kalır. Onay yeniden gitmez.
-   *   Yanıt hata ile bittiyse işlemin durumu sorulur. Aksi halde yalnız metin istenir.
+   * Asks for the reply again.
+   * - If the previous message is not an approval: removes the reply and question, asks again.
+   * - If the previous message is an approval: the approval message stays. Approval is not resent.
+   *   If the reply ended in an error, the operation's status is queried. Otherwise only text is requested.
    */
   const regenerate = useCallback(
     (assistantId: string | number) => {
@@ -177,7 +177,7 @@ export function useStudioChat(transport: AgentTransport) {
     [busy, messages, onRequest, setMessages],
   );
 
-  /** Yanıtın yeniden deneme düğmesi ne yapar: durum sorgusu ya da yeniden deneme. */
+  /** What the reply's retry button does: a status query or a retry. */
   const retryKind = useCallback(
     (assistantId: string | number): 'status' | 'retry' => {
       const index = messages.findIndex((m) => m.id === assistantId);

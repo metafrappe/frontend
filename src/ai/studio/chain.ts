@@ -3,7 +3,7 @@ import type { EventsBlock, GenUIBlock, ToolEventStatus } from '@/genui';
 import { STEP_LABELS } from '../agent';
 import type { AgentStep, FlowStep } from '../agent';
 
-/** Sahte sunucunun araç olayları örnektir. Ekran bunu açıkça söyler (AX-7). */
+/** The mock server's tool events are examples. The screen says so clearly (AX-7). */
 export const SIMULATED_TOOLS_NOTE = 'Örnek adımlar. Gerçek araç çalışmadı.';
 
 const STATUS: Record<AgentStep['status'], ToolEventStatus> = {
@@ -13,8 +13,8 @@ const STATUS: Record<AgentStep['status'], ToolEventStatus> = {
 };
 
 /**
- * Sunucunun bildirdiği araç olaylarını onaylı "Araç olayları" yüzeyine çevirir.
- * Liste boşsa yüzey yoktur. Ekran kendi başına olay eklemez.
+ * Turns the tool events reported by the server into the approved tool events surface.
+ * If the list is empty there is no surface. The screen adds no events on its own.
  */
 export function toEventsBlock(steps: readonly AgentStep[]): EventsBlock | null {
   if (steps.length === 0) return null;
@@ -29,7 +29,7 @@ export function toEventsBlock(steps: readonly AgentStep[]): EventsBlock | null {
   };
 }
 
-/** Yüzeyin ait olduğu akış adımı. Listede olmayan blok adımsız kalır. */
+/** Flow step the surface belongs to. A block not on the list has no step. */
 const STEP_OF: Partial<Record<GenUIBlock['type'], FlowStep>> = {
   scope: 'plan',
   events: 'plan',
@@ -47,9 +47,9 @@ export interface StepGroup {
 }
 
 /**
- * Yanıtın bloklarını akış adımlarına ayırır.
- * Araç olayları yanıtın ilk adımında, o adımın yüzeylerinden sonra yer alır.
- * Adımsız bloklar (tablo, grafik, form) `rest` listesinde sırasını korur.
+ * Splits the reply's blocks into flow steps.
+ * Tool events go in the reply's first step, after that step's surfaces.
+ * Blocks without a step (table, chart, form) keep their order in the `rest` list.
  */
 export function groupBySteps(
   blocks: readonly GenUIBlock[],
@@ -65,8 +65,8 @@ export function groupBySteps(
     else rest.push(block);
   }
   const order: FlowStep[] = ['plan', 'preview', 'approval', 'apply'];
-  // Araç olayları bu yanıtın ilk adımına aittir. Yanıtta yüzey yoksa plan adımına girer.
-  // Örnek: onaydan sonraki yanıtta olay "Uygulama" başlığı altında görünür.
+  // Tool events belong to this reply's first step. If the reply has no surface, they go in the plan step.
+  // Example: in the reply after approval, the event shows under the apply step heading.
   const events = toEventsBlock(steps);
   if (events) add(order.find((step) => byStep.has(step)) ?? 'plan', events);
   const groups = order

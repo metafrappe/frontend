@@ -14,7 +14,7 @@ describe('shellTokens', () => {
   });
 
   it('flyout açılış gecikmesini ve hareketini kaynak metinden çıkarır', () => {
-    // F4: 60 ms açılış. F6: 180 ms fade + 6 px kayma.
+    // F4: 60 ms opening. F6: 180 ms fade + 6 px shift.
     expect(shellTokens.flyout.openDelay).toBe(60);
     expect(shellTokens.flyout.duration).toBe(180);
     expect(shellTokens.flyout.shift).toBe(6);

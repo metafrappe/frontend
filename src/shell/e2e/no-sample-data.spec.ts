@@ -2,15 +2,15 @@ import type { Page } from '@playwright/test';
 import { expect, test } from '../../../tests/setup/playwright-fixtures';
 
 /**
- * MVP denetimi: canlı panelde örnek veri yoktur.
- * Canlı panel sahte sunucuya bağlıdır. Sahte sunucunun menüsü boştur ve kredi ucu yoktur.
+ * MVP check: the live panel has no sample data.
+ * The live panel is connected to the mock server. The mock server's menu is empty and it has no credit endpoint.
  */
 const isCompact = (page: Page) => {
   const v = page.viewportSize();
   return !!v && (v.width <= 767 || v.height <= 499);
 };
 
-/** Yan menüyü açar. Telefonda menü çekmecededir. */
+/** Opens the sidebar. On phones the menu is in a drawer. */
 async function openSidebar(page: Page) {
   await page.goto('/');
   await expect(page.locator('.shell')).toBeVisible();
@@ -26,7 +26,7 @@ test.describe('canlı panelde örnek veri yok', () => {
     const sidebar = await openSidebar(page);
     await expect(sidebar.locator('.shell-ws')).toBeVisible();
     await expect(page.getByText(/Örnek Şirket/)).toHaveCount(0);
-    // Tek çalışma alanı açılır liste değildir.
+    // A single workspace is not a dropdown.
     await expect(sidebar.locator('button.shell-ws')).toHaveCount(0);
     await expect(sidebar.locator('[aria-haspopup="menu"]')).toHaveCount(0);
   });
@@ -55,7 +55,7 @@ test.describe('canlı panelde örnek veri yok', () => {
     test.skip(isCompact(page), 'telefonda menü çekmecededir; çekmece testi ayrıdır');
     await page.goto('/');
     await expect(page.locator('.shell')).toBeVisible();
-    // Tek çalışma alanı bir eylem değildir. İlk Tab durağı gezinme bağlantısı ya da düğmedir.
+    // A single workspace is not an action. The first Tab stop is a navigation link or button.
     for (let i = 0; i < 4; i += 1) {
       await page.keyboard.press('Tab');
       const inWorkspace = await page.evaluate(

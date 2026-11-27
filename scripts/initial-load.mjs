@@ -1,20 +1,20 @@
 #!/usr/bin/env node
 /**
- * İlk yük ölçümü. Üretim derlemesini (`dist/`) önizleme sunucusunda açar, Chromium'da verilen
- * yolları ziyaret eder ve aktarılan baytları (sıkıştırılmış, CDP `encodedDataLength`) yazar.
- * Dış istekler (kimlik sunucusu gibi) kesilir; yalnız yerel paket ölçülür.
+ * Initial-load measurement. Opens the production build (`dist/`) in the preview server, visits the given
+ * paths in Chromium and prints the transferred bytes (compressed, CDP `encodedDataLength`).
+ * External requests (such as the identity server) are blocked; only the local bundle is measured.
  *
- * Paket `/panel/` yoluyla derlendiyse yollar o yolun altında açılır (örnek: `/` -> `/panel/`).
- * Kullanım: node scripts/initial-load.mjs [--build] [--out dist] [--port 4381] [--width 360] [yol ...]
- * - `--build`: önce üretim derlemesini alır (`vite build`, sahte sunucu kapalı).
- * - `--build` yoksa `dist/` hazır olmalıdır. Klasörde `mockServiceWorker.js` varsa bu bir e2e
- *   derlemesidir; betik ölçmeden durur. Böylece `npm run test:e2e` sonrası yanlış paket ölçülmez.
+ * If the bundle was built with the `/panel/` path, paths are opened under that path (example: `/` -> `/panel/`).
+ * Usage: node scripts/initial-load.mjs [--build] [--out dist] [--port 4381] [--width 360] [path ...]
+ * - `--build`: first creates the production build (`vite build`, mock server off).
+ * - Without `--build`, `dist/` must be ready. If the folder contains `mockServiceWorker.js`, it is an e2e
+ *   build; the script stops without measuring. So the wrong bundle is not measured after `npm run test:e2e`.
  *
- * Önizleme sunucusu `vite` ikilisini doğrudan Node ile başlatır (`npx` ara süreci yoktur). Betik
- * biterken sunucuya SIGTERM gönderir, çıkışını bekler, gerekirse SIGKILL yollar. Böylece port boş kalır.
+ * The preview server starts the `vite` binary directly with Node (no `npx` intermediate process). When the
+ * script ends it sends SIGTERM to the server, waits for it to exit and sends SIGKILL if needed. So the port is left free.
  *
- * Bağlantı noktası doluysa betik sunucuyu hiç başlatmaz ve 2 koduyla durur; başka bir sunucu ölçülmez.
- * Sunucu açılınca betik `index.html` yanıtını `dist/index.html` ile karşılaştırır; farklıysa durur.
+ * If the port is in use, the script never starts the server and stops with code 2; another server is not measured.
+ * Once the server is up, the script compares the `index.html` response with `dist/index.html`; if they differ it stops.
  */
 import { spawn } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
@@ -27,7 +27,7 @@ import { chromium } from '@playwright/test';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const require = createRequire(import.meta.url);
-// Vite paketi `bin/vite.js` yolunu dışa açmaz; ikili paketin `bin` alanından bulunur.
+// The Vite package does not export the `bin/vite.js` path; it is found from the package's `bin` field.
 const vitePkgPath = require.resolve('vite/package.json', { paths: [root] });
 const viteBinField = require(vitePkgPath).bin;
 const viteBin = join(
@@ -56,7 +56,7 @@ const paths = args.length ? args : ['/'];
 const base = `http://127.0.0.1:${port}`;
 const outPath = resolve(root, outDir);
 
-/** `vite` komutunu doğrudan Node ile koşar; çıkış kodu 0 değilse hata fırlatır. */
+/** Runs the `vite` command directly with Node; throws if the exit code is not 0. */
 function runVite(viteArgs, env = {}) {
   return new Promise((done, fail) => {
     const child = spawn(process.execPath, [viteBin, ...viteArgs], {
@@ -72,7 +72,7 @@ function runVite(viteArgs, env = {}) {
 }
 
 if (shouldBuild) {
-  // Üretim derlemesi: sahte sunucu kapalı, NODE_ENV production.
+  // Production build: mock server off, NODE_ENV production.
   const env = { NODE_ENV: 'production', VITE_API_MOCKS: '' };
   await runVite(['build', '--outDir', outDir], env);
 }
@@ -84,8 +84,8 @@ if (!existsSync(join(outPath, 'index.html'))) {
   process.exit(2);
 }
 /**
- * Paketin adres yolu (Vite `base`). Üretim derlemesi `/panel/` yolunu kullanır (vite/base-path.ts).
- * Yol `index.html` içindeki betik adresinden okunur. Ölçülen yollar bu yolun altında açılır.
+ * The bundle's URL path (Vite `base`). The production build uses the `/panel/` path (vite/base-path.ts).
+ * The path is read from the script URL in `index.html`. Measured paths are opened under this path.
  */
 const appBase =
   readFileSync(join(outPath, 'index.html'), 'utf8').match(/src="(\/(?:[^"/]+\/)*)assets\//)?.[1] ??
@@ -98,7 +98,7 @@ if (existsSync(join(outPath, 'mockServiceWorker.js'))) {
   process.exit(2);
 }
 
-/** Bağlantı noktası boş mu? Bir şey yanıt veriyorsa doludur; ECONNREFUSED boş demektir. */
+/** Is the port free? If something responds it is in use; ECONNREFUSED means free. */
 function isPortFree(portToCheck) {
   return new Promise((done) => {
     const socket = connect({ host: '127.0.0.1', port: portToCheck });
@@ -137,7 +137,7 @@ preview.on('exit', () => {
   previewExited = true;
 });
 
-/** Önizleme sunucusunu kesin kapatır: SIGTERM, 3 s bekleme, gerekirse SIGKILL. */
+/** Shuts the preview server down for certain: SIGTERM, wait 3 s, SIGKILL if needed. */
 function stopPreview() {
   if (previewExited) return Promise.resolve();
   return new Promise((done) => {
@@ -157,7 +157,7 @@ for (const signal of ['SIGINT', 'SIGTERM']) {
   });
 }
 
-/** Sunucu açılana kadar bekler; sonra verilen `index.html` dosyasının gerçekten sunulduğunu doğrular. */
+/** Waits until the server is up; then verifies that the given `index.html` file is really served. */
 async function waitForServer() {
   for (let i = 0; i < 100; i += 1) {
     if (previewExited) throw new Error(`Önizleme sunucusu açılamadı (port ${port} dolu olabilir).`);
@@ -175,7 +175,7 @@ async function waitForServer() {
       }
     } catch (error) {
       if (error instanceof Error && error.message.includes('başka bir içerik')) throw error;
-      /* sunucu henüz açılmadı */
+      /* server not up yet */
     }
     await new Promise((resolve) => setTimeout(resolve, 200));
   }

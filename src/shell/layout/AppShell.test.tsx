@@ -317,8 +317,8 @@ describe('AppShell', () => {
 });
 
 /**
- * MVP denetimi: panelde örnek veri kalmaz (23 Kasım 2026).
- * Çalışma alanı, hızlı eylemler ve AI kredisi yalnız sunucu verisinden gelir.
+ * MVP audit: no sample data remains in the panel (23 November 2026).
+ * Workspace, quick actions and AI credit come only from server data.
  */
 describe('AppShell örnek veri yok', () => {
   const sidebars = [

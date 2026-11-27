@@ -9,9 +9,9 @@ export interface RunAgentOptions {
   transport: AgentTransport;
   request: AgentRequest;
   signal: AbortSignal;
-  /** Her geçerli olaydan sonra güncel yanıtla çağrılır. */
+  /** Called with the current reply after each valid event. */
   onUpdate: (message: AssistantMessage) => void;
-  /** İki parça arasında en çok bu kadar beklenir. */
+  /** Maximum wait between two chunks. */
   idleTimeoutMs?: number;
 }
 
@@ -45,11 +45,11 @@ function reduce(message: AssistantMessage, event: AgentEvent): AssistantMessage 
 class IdleTimeout extends Error {}
 
 /**
- * Sunucu akışını okur ve yanıtı adım adım kurar (U5).
+ * Reads the server stream and builds the reply step by step (U5).
  *
- * - İptal her an çalışır. İptalden sonra `onUpdate` bir daha çağrılmaz.
- * - Geçersiz parça yok sayılır (AX-5).
- * - Akış `done` olmadan biterse yanıt hata olur. Arayüz bunu gösterir.
+ * - Cancel works at any time. After cancel, `onUpdate` is not called again.
+ * - An invalid chunk is ignored (AX-5).
+ * - If the stream ends without `done`, the reply becomes an error. The UI shows it.
  */
 export async function runAgent({
   transport,
@@ -61,7 +61,7 @@ export async function runAgent({
   let message = emptyAssistant();
   const finish = (phase: AssistantMessage['phase'], error?: string): AssistantMessage => {
     message = { ...message, phase, ...(error ? { error } : {}) };
-    // Akış bitmeden gelen bloklar gösterilmez (U5).
+    // Blocks that arrive before the stream ends are not shown (U5).
     if (phase !== 'done') message = { ...message, ui: [] };
     return message;
   };
