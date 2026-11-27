@@ -10,6 +10,7 @@
 import controlSizeConfig from '@design-source/control-size-config.json';
 import { theme as antdTheme, type ThemeConfig } from 'antd';
 import type { CSSProperties } from 'react';
+import { radiusGlobalTokens, withRadius } from '@/design/radius';
 import { danger, focusIndicator, hitTarget, primary as accessiblePrimary } from '@/design/tokens';
 
 export type RecordThemeMode = 'light' | 'dark';
@@ -44,7 +45,6 @@ export function buildRecordAntdTheme(mode: RecordThemeMode): ThemeConfig {
   const primary = controlSizeConfig.primary;
   const darkPalette = controlSizeConfig.darkPalette;
   const sizes = controlSizeConfig.sizes;
-  const radius = controlSizeConfig.radius.default;
 
   return {
     algorithm: isDark ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
@@ -64,7 +64,8 @@ export function buildRecordAntdTheme(mode: RecordThemeMode): ThemeConfig {
       controlHeight: sizes.md.input.height,
       controlHeightSM: sizes.sm.input.height,
       controlHeightLG: sizes.lg.input.height,
-      borderRadius: radius,
+      // Köşeler radius.md basamaklarından gelir (Karar 45).
+      ...radiusGlobalTokens,
       controlOutline: 'transparent',
       controlOutlineWidth: 0,
       lineWidthFocus: 0,
@@ -79,93 +80,93 @@ export function buildRecordAntdTheme(mode: RecordThemeMode): ThemeConfig {
           }
         : {}),
     },
-    components: {
-      Button: {
-        controlHeight: sizes.md.button.height,
-        controlHeightSM: sizes.sm.button.height,
-        controlHeightLG: sizes.lg.button.height,
-        contentFontSize: sizes.md.button.fontSize,
-        contentFontSizeSM: sizes.sm.button.fontSize,
-        contentFontSizeLG: sizes.lg.button.fontSize,
-        fontWeight: controlSizeConfig.fontWeight.md,
-        primaryColor: accessiblePrimary[mode].text,
-        primaryShadow: isDark ? DARK_SHADOWS.button : LIGHT_SHADOWS.button,
-        defaultShadow: isDark ? DARK_SHADOWS.button : LIGHT_SHADOWS.button,
-        dangerShadow: isDark ? DARK_SHADOWS.button : LIGHT_SHADOWS.button,
-        ...(isDark
-          ? {
-              colorPrimaryBg: hexToRgba(primary.color, primary.dark.background),
-              defaultBg: darkPalette.button,
-              defaultHoverBg: darkPalette.buttonHover,
-              defaultActiveBg: darkPalette.buttonHover,
-              defaultBorderColor: darkPalette.buttonBorder,
-              defaultHoverBorderColor: darkPalette.buttonBorder,
-              defaultActiveBorderColor: darkPalette.buttonBorder,
-            }
-          : {}),
+    components: withRadius(
+      {
+        Button: {
+          controlHeight: sizes.md.button.height,
+          controlHeightSM: sizes.sm.button.height,
+          controlHeightLG: sizes.lg.button.height,
+          contentFontSize: sizes.md.button.fontSize,
+          contentFontSizeSM: sizes.sm.button.fontSize,
+          contentFontSizeLG: sizes.lg.button.fontSize,
+          fontWeight: controlSizeConfig.fontWeight.md,
+          primaryColor: accessiblePrimary[mode].text,
+          primaryShadow: isDark ? DARK_SHADOWS.button : LIGHT_SHADOWS.button,
+          defaultShadow: isDark ? DARK_SHADOWS.button : LIGHT_SHADOWS.button,
+          dangerShadow: isDark ? DARK_SHADOWS.button : LIGHT_SHADOWS.button,
+          ...(isDark
+            ? {
+                colorPrimaryBg: hexToRgba(primary.color, primary.dark.background),
+                defaultBg: darkPalette.button,
+                defaultHoverBg: darkPalette.buttonHover,
+                defaultActiveBg: darkPalette.buttonHover,
+                defaultBorderColor: darkPalette.buttonBorder,
+                defaultHoverBorderColor: darkPalette.buttonBorder,
+                defaultActiveBorderColor: darkPalette.buttonBorder,
+              }
+            : {}),
+        },
+        Input: {
+          activeBorderColor: isDark ? darkPalette.border : BASE_ANTD_TOKENS.colorBorder,
+          controlHeight: sizes.md.input.height,
+          controlHeightSM: sizes.sm.input.height,
+          controlHeightLG: sizes.lg.input.height,
+          inputFontSize: sizes.md.input.fontSize,
+          inputFontSizeSM: sizes.sm.input.fontSize,
+          inputFontSizeLG: sizes.lg.input.fontSize,
+          activeShadow: 'none',
+          ...(isDark
+            ? {
+                colorBgContainer: darkPalette.input,
+                activeBg: darkPalette.input,
+                hoverBg: darkPalette.input,
+                activeBorderColor: darkPalette.border,
+              }
+            : {}),
+        },
+        InputNumber: {
+          activeBorderColor: isDark ? darkPalette.border : BASE_ANTD_TOKENS.colorBorder,
+          controlHeight: sizes.md.input.height,
+          controlHeightSM: sizes.sm.input.height,
+          controlHeightLG: sizes.lg.input.height,
+          inputFontSize: sizes.md.input.fontSize,
+          activeShadow: 'none',
+          ...(isDark
+            ? {
+                colorBgContainer: darkPalette.input,
+                activeBg: darkPalette.input,
+                hoverBg: darkPalette.input,
+                activeBorderColor: darkPalette.border,
+              }
+            : {}),
+        },
+        Select: {
+          activeBorderColor: isDark ? darkPalette.border : BASE_ANTD_TOKENS.colorBorder,
+          controlHeight: sizes.md.input.height,
+          controlHeightSM: sizes.sm.input.height,
+          controlHeightLG: sizes.lg.input.height,
+          fontSize: sizes.md.input.fontSize,
+          fontSizeLG: sizes.lg.input.fontSize,
+          optionFontSize: controlSizeConfig.typography.default,
+          activeOutlineColor: 'transparent',
+          ...(isDark
+            ? {
+                selectorBg: darkPalette.input,
+                colorBgContainer: darkPalette.input,
+                activeBorderColor: darkPalette.border,
+              }
+            : {}),
+        },
+        Tabs: {
+          titleFontSize: controlSizeConfig.choice.tabs.fontSize,
+          horizontalItemGutter: controlSizeConfig.choice.tabs.gap,
+          itemSelectedColor: isDark ? primary.hover : hexToRgba(primary.light.text, 1),
+          itemHoverColor: isDark ? primary.hover : hexToRgba(primary.light.text, 1),
+          inkBarColor: primary.color,
+        },
       },
-      Input: {
-        activeBorderColor: isDark ? darkPalette.border : BASE_ANTD_TOKENS.colorBorder,
-        controlHeight: sizes.md.input.height,
-        controlHeightSM: sizes.sm.input.height,
-        controlHeightLG: sizes.lg.input.height,
-        inputFontSize: sizes.md.input.fontSize,
-        inputFontSizeSM: sizes.sm.input.fontSize,
-        inputFontSizeLG: sizes.lg.input.fontSize,
-        activeShadow: 'none',
-        ...(isDark
-          ? {
-              colorBgContainer: darkPalette.input,
-              activeBg: darkPalette.input,
-              hoverBg: darkPalette.input,
-              activeBorderColor: darkPalette.border,
-            }
-          : {}),
-      },
-      InputNumber: {
-        activeBorderColor: isDark ? darkPalette.border : BASE_ANTD_TOKENS.colorBorder,
-        controlHeight: sizes.md.input.height,
-        controlHeightSM: sizes.sm.input.height,
-        controlHeightLG: sizes.lg.input.height,
-        inputFontSize: sizes.md.input.fontSize,
-        activeShadow: 'none',
-        ...(isDark
-          ? {
-              colorBgContainer: darkPalette.input,
-              activeBg: darkPalette.input,
-              hoverBg: darkPalette.input,
-              activeBorderColor: darkPalette.border,
-            }
-          : {}),
-      },
-      Select: {
-        activeBorderColor: isDark ? darkPalette.border : BASE_ANTD_TOKENS.colorBorder,
-        controlHeight: sizes.md.input.height,
-        controlHeightSM: sizes.sm.input.height,
-        controlHeightLG: sizes.lg.input.height,
-        fontSize: sizes.md.input.fontSize,
-        fontSizeLG: sizes.lg.input.fontSize,
-        optionFontSize: controlSizeConfig.typography.default,
-        activeOutlineColor: 'transparent',
-        ...(isDark
-          ? {
-              selectorBg: darkPalette.input,
-              colorBgContainer: darkPalette.input,
-              activeBorderColor: darkPalette.border,
-            }
-          : {}),
-      },
-      Tabs: {
-        titleFontSize: controlSizeConfig.choice.tabs.fontSize,
-        horizontalItemGutter: controlSizeConfig.choice.tabs.gap,
-        itemSelectedColor: isDark ? primary.hover : hexToRgba(primary.light.text, 1),
-        itemHoverColor: isDark ? primary.hover : hexToRgba(primary.light.text, 1),
-        inkBarColor: primary.color,
-      },
-      Card: {
-        borderRadiusLG: controlSizeConfig.cards.radius,
-      },
-    },
+      controlSizeConfig.cards.radius,
+    ),
   };
 }
 

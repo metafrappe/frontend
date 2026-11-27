@@ -81,10 +81,11 @@ Her iş yalnız kendi klasörünü değiştirir. Ortak dosya gerekiyorsa raporda
 
 ## Ortak kurallarla ilişki
 
-Proje sahibinin genel kuralları bu depoda da geçerlidir. Orkestratör 26 Kasım 2026 Perşembe günü iki kararı değiştirdi (AJA-997). Kaynak model belgesinin 6. bölümüdür.
+Proje sahibinin genel kuralları bu depoda da geçerlidir. Orkestratör 26 Kasım 2026 Perşembe günü iki kararı değiştirdi (AJA-997). Kaynak model belgesinin 6. bölümüdür. Üçüncü değişiklik Karar 45'tir.
 
 1. **Metin boyutu.** En küçük metin 14 CSS px'tir. 12 px istisnası geçersizdir. 10 px ve 9 px istisnaları da kalktı. Gövde metni 16 px olur. Tablo metni 14 px olur. Değerler `design/source/control-size-config.json` dosyasındaki `typography` bölümündedir. Test `src/design/ui-tokens.test.ts` içindedir.
 2. **Hareket.** Dropdown için ayrı hareket eğrisi yoktur. Dropdown da genel eğriyi kullanır: `cubic-bezier(.65, 0, .35, 1)`. Eğilme hareketi kalktı. Dropdown süresi 140 ms'dir. Bu süre orta süreden (200 ms) kısadır. Bütün süre ve eğriler merkezi tokendadır. `prefers-reduced-motion` açıksa hareket durur. Hareket kapısı (`npm run lint`) `src/design/` dışında sabit süreyi, `cubic-bezier`, `steps` ve `ease`, `ease-in`, `ease-out`, `ease-in-out`, `linear` sözcüklerini reddeder. Kapı CSS'i bildirim bildirim tarar; JS nesne değerleri (`transition={{ duration: 0.3 }}`), `animate()` çağrıları ve sayı süreleri de yakalanır. Satır içi izin yorumu `motion-gate: allow sahip=<iş> neden=<metin>` biçimindedir; yalnız kendi bildirimini susturur. Kapı değişkende duran seçenek nesnesini bildirime bağlamaz; bu sınır `src/design/README.md` içinde yazılıdır. Hareket kitaplığı eklenince kural genişletilir.
+3. **Köşe.** Köşe değerleri Karar 45 ile `radius.md` yönergesine bağlandı (AJA-2342). Yönerge `metafrappe/backend` deposunda `docs/standards/radius.md` yolundadır. İzin verilen köşe değerleri 0, 3, 5, 7, 9, 13, 17, 21, 25 ve 29 px'tir. Kapsül öğeler bu listenin dışındadır. Örneğin yuvarlak düğme ve avatar kapsüldür. 24 px iç boşluklu kart 21 px köşe alır. Kontrol köşesi her boyutta 5 px kalır. Liste `design/source/control-size-config.json` dosyasında `radius.ladder` alanındadır. Testler `src/design/radius.test.ts` ve `src/design/radius.node.test.ts` dosyalarındadır. Yönergedeki odak halkası kısmı uygulanmaz.
 
 Şu genel kurallar istisnasız geçerlidir:
 
