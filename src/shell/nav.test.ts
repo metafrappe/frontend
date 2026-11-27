@@ -227,4 +227,24 @@ describe('bayi menüsü ve "Müşteriler" sayfası (G-169, G-170)', () => {
     // Modül olmayan yol bu kapıdan geçmez. Örnek: ana sayfa.
     expect(moduleAllowed('/', new Set())).toBe(true);
   });
+
+  it('ayar sayfaları yalnız kendi ayar türü okunabilirse açılır (G-97)', () => {
+    const pages: [string, string][] = [
+      ['/settings', 'Tenant Settings'],
+      ['/settings/branding', 'Tenant Branding'],
+      ['/settings/hr', 'HR Settings'],
+    ];
+    for (const [path, doctype] of pages) {
+      // Yetkisiz kullanıcı: sunucu bu türü okunabilir saymaz. Sayfa açılmaz, menüde görünmez.
+      expect(moduleAllowed(path, new Set())).toBe(false);
+      expect(permittedNav(routeNav, new Set()).map((e) => e.label)).not.toContain(
+        moduleRegistrations.find((m) => m.path === path)?.label.tr,
+      );
+      // Kiracı yöneticisi türü okuyabilir. Sayfa açılır.
+      expect(moduleAllowed(path, new Set([doctype]))).toBe(true);
+      // Bayi hesabı kiracı ayarlarını açamaz.
+      expect(moduleAllowed(path, new Set([doctype, LINK]))).toBe(false);
+      expect(requiredDocTypes).toContain(doctype);
+    }
+  });
 });
