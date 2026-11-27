@@ -5,6 +5,7 @@
  */
 import type { AppLanguage } from './language';
 import { localeBundle } from './locale-map';
+import { distanceUnit, type DistanceUnit, type MeasurementSystem } from './market';
 
 /** Açılış verisinin biçim alanlarından arayüzün kullandıkları. */
 export interface SiteFormatting {
@@ -12,13 +13,22 @@ export interface SiteFormatting {
   time_zone?: string | null | undefined;
   /** Sitenin varsayılan para birimi. Örnek: `TRY`. Yoksa tutar düz sayı yazılır. */
   currency?: string | null | undefined;
+  /** `locale` alanındaki bölge. Örnek: `GB`. Uzaklık birimi için kullanılır. */
+  region?: string | null | undefined;
+  /** `locale` alanındaki ölçü sistemi. Bölgenin önüne geçer. */
+  measurement_system?: MeasurementSystem | null | undefined;
 }
 
 export interface FormatSettings {
   language: AppLanguage;
   timeZone?: string | null | undefined;
   currency?: string | null | undefined;
+  region?: string | null | undefined;
+  measurementSystem?: MeasurementSystem | null | undefined;
 }
+
+/** Kilometres in one mile. */
+const KM_PER_MILE = 1.609344;
 
 export interface Formatter {
   language: AppLanguage;
@@ -33,7 +43,7 @@ export interface Formatter {
   date: (value: string) => string;
   /** Saat ve dakika, sitenin saat diliminde. */
   time: (value: Date) => string;
-  /** Gün ve saat, sitenin saat diliminde. */
+  /** Gün ve saat, sitenin saat diliminde. Yaz saati gecesinde tekrarlanan saatte saat dilimi kısaltması da yazılır. */
   dateTime: (value: Date) => string;
   /** Frappe tarih-saat değeri. Değer sitenin saat dilimiyle okunur. Okunamayan değer olduğu gibi döner. */
   frappeDateTime: (value: string) => string;
@@ -43,6 +53,10 @@ export interface Formatter {
   currency: (value: number, code?: string | null) => string;
   /** Liste. Örnek: "a, b ve c". */
   list: (items: readonly string[]) => string;
+  /** Yol uzaklığının birimi. Dilden değil ölçü sisteminden ve bölgeden gelir. */
+  distanceUnit: DistanceUnit;
+  /** Yol uzaklığı. Değer kilometredir. Örnek: `GB` bölgesinde 42.195 -> "26.2 mi". */
+  distance: (kilometres: number) => string;
   /** Kullanıcının diline göre küçük harf. Türkçede `I` -> `ı` olur. */
   lower: (text: string) => string;
   /** Kullanıcının diline göre büyük harf. Türkçede `i` -> `İ` olur. */
@@ -120,6 +134,25 @@ function zoneOffset(instant: number, timeZone: string): number {
   return wall - Math.floor(instant / 1000) * 1000;
 }
 
+/** Milisaniye olarak altı saat. Her yaz saati kayması bundan kısadır. */
+const SIX_HOURS = 6 * 60 * 60 * 1000;
+
+/**
+ * Anın duvar saati bu saat diliminde iki kez yaşanıyor mu, bunu söyler.
+ * Örnek: Londra'da 25 Ekim 2026 günü 01:30 önce BST, sonra GMT olur.
+ */
+function isRepeatedWallTime(instant: number, timeZone: string): boolean {
+  const offset = zoneOffset(instant, timeZone);
+  const wall = instant + offset;
+  const neighbours = [
+    zoneOffset(instant - SIX_HOURS, timeZone),
+    zoneOffset(instant + SIX_HOURS, timeZone),
+  ];
+  return neighbours.some(
+    (other) => other !== offset && zoneOffset(wall - other, timeZone) === other,
+  );
+}
+
 /**
  * Frappe tarih-saat değerini sitenin saat dilimiyle okur.
  * Frappe değeri saat dilimi taşımaz. Örnek: `2026-11-27 09:05:00` İstanbul'da 06.05 UTC olur.
@@ -176,8 +209,29 @@ export function createFormatter(settings: FormatSettings): Formatter {
   const dayFormat = new Intl.DateTimeFormat(intl, { ...DAY, timeZone: 'UTC' });
   const timeFormat = new Intl.DateTimeFormat(intl, { ...TIME, ...zone });
   const dateTimeFormat = new Intl.DateTimeFormat(intl, { ...DAY, ...TIME, ...zone });
+  // Yaz saati gecesinde bir saat tekrarlanır. Saat dilimi kısaltması iki anı birbirinden ayırır.
+  const zonedDateTimeFormat = new Intl.DateTimeFormat(intl, {
+    ...DAY,
+    ...TIME,
+    ...zone,
+    timeZoneName: 'short',
+  });
+  const activeZone = dateTimeFormat.resolvedOptions().timeZone;
+  const formatDateTime = (value: Date) =>
+    isRepeatedWallTime(value.getTime(), activeZone)
+      ? zonedDateTimeFormat.format(value)
+      : dateTimeFormat.format(value);
   const listFormat = new Intl.ListFormat(intl, { type: 'conjunction' });
   const parse = (value: string) => parseFrappeDatetime(value, timeZone);
+  const unit = distanceUnit({
+    region: settings.region,
+    measurementSystem: settings.measurementSystem,
+  });
+  const distanceFormat = new Intl.NumberFormat(intl, {
+    style: 'unit',
+    unit,
+    maximumFractionDigits: 1,
+  });
 
   return {
     language: settings.language,
@@ -190,10 +244,10 @@ export function createFormatter(settings: FormatSettings): Formatter {
       return day ? dayFormat.format(day) : value;
     },
     time: (value) => timeFormat.format(value),
-    dateTime: (value) => dateTimeFormat.format(value),
+    dateTime: formatDateTime,
     frappeDateTime: (value) => {
       const instant = parse(value);
-      return instant ? dateTimeFormat.format(instant) : value;
+      return instant ? formatDateTime(instant) : value;
     },
     parseFrappeDatetime: parse,
     currency: (value, code) => {
@@ -203,6 +257,9 @@ export function createFormatter(settings: FormatSettings): Formatter {
         : new Intl.NumberFormat(intl).format(value);
     },
     list: (items) => listFormat.format(items),
+    distanceUnit: unit,
+    distance: (kilometres) =>
+      distanceFormat.format(unit === 'mile' ? kilometres / KM_PER_MILE : kilometres),
     lower: (text) => text.toLocaleLowerCase(intl),
     upper: (text) => text.toLocaleUpperCase(intl),
   };

@@ -97,6 +97,31 @@ describe('saat dilimi açılış verisinden gelir (IC-13)', () => {
   });
 });
 
+describe('yaz saati gecesinde tekrarlanan saat ayrı görünür (AJA-1931)', () => {
+  // Londra'da 25 Ekim 2026 günü 01:30 iki kez yaşanır.
+  const first = '2026-10-25T01:30:00+01:00';
+  const second = '2026-10-25T01:30:00+00:00';
+
+  it('iki an saat dilimi kısaltmasıyla ayrılır', () => {
+    const en = createFormatter({ language: 'en', timeZone: 'Europe/London', currency: null });
+    expect(en.frappeDateTime(first)).toBe('Sunday, 25 October 2026 at 01:30 BST');
+    expect(en.frappeDateTime(second)).toBe('Sunday, 25 October 2026 at 01:30 GMT');
+    expect(en.dateTime(new Date(first))).toBe('Sunday, 25 October 2026 at 01:30 BST');
+  });
+
+  it('Türkçede de iki an ayrı görünür', () => {
+    const tr = createFormatter({ language: 'tr', timeZone: 'Europe/London', currency: null });
+    expect(tr.frappeDateTime(first)).not.toBe(tr.frappeDateTime(second));
+  });
+
+  it('tekrarlanmayan saatte metin değişmez', () => {
+    const en = createFormatter({ language: 'en', timeZone: 'Europe/London', currency: null });
+    expect(en.frappeDateTime('2026-10-25T03:30:00+00:00')).toBe('Sunday, 25 October 2026 at 03:30');
+    // Mart'ta atlanan saat tekrarlanmaz. Bu yüzden kısaltma eklenmez.
+    expect(en.frappeDateTime('2026-03-29T02:30:00+01:00')).toBe('Sunday, 29 March 2026 at 02:30');
+  });
+});
+
 describe('bozuk açılış verisi biçimleri düşürmez (IC-13)', () => {
   const instant = new Date(Date.UTC(2026, 10, 27, 6, 5));
 
