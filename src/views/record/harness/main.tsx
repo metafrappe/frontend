@@ -9,7 +9,7 @@ import '@fontsource/jetbrains-mono/400.css';
 
 import { StrictMode, useState } from 'react';
 
-import { resolveLanguage } from '@/app/locale';
+import { resolveLanguage, textMatches } from '@/app/locale';
 import { sampleBootstrap } from '@/mocks/fixtures';
 
 import { createRoot } from 'react-dom/client';
@@ -331,7 +331,7 @@ export function HarnessApp() {
         { value: 'DEP-ENG', label: 'Mühendislik', description: 'Yazılım geliştirme' },
         { value: 'DEP-OPS', label: 'Operasyon', description: 'Saha operasyonları' },
       ];
-      return txt ? all.filter((item) => item.label.toLowerCase().includes(txt.toLowerCase())) : all;
+      return all.filter((item) => textMatches(item.label, txt ?? ''));
     },
   };
 

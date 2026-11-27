@@ -1,4 +1,5 @@
 import { doctypeFromSlug } from './view-data';
+import { foldCode } from './locale/code';
 
 // Yalnız kayıt rotası kullanır; kayıt parçasıyla tembel iner.
 
@@ -7,7 +8,7 @@ import { doctypeFromSlug } from './view-data';
  * Parça aynı ada geri çevrilemiyorsa `undefined` döner; o zaman bağlantı çizilmez.
  */
 export function slugFromDoctype(doctype: string): string | undefined {
-  // `toLowerCase` dile bakmaz. Adres parçası kullanıcının diline göre değişmez (G-132).
-  const slug = doctype.trim().toLowerCase().split(/\s+/).filter(Boolean).join('-');
+  // `foldCode` dile bakmaz. Adres parçası kullanıcının diline göre değişmez (G-132).
+  const slug = foldCode(doctype).split(/\s+/).filter(Boolean).join('-');
   return slug !== '' && doctypeFromSlug(slug) === doctype ? slug : undefined;
 }

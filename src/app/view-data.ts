@@ -9,6 +9,7 @@ import type {
   ShellWorkspaceData,
 } from '@/shell/view-data';
 import type { CollectionSource } from '@/views/collection/source';
+import { capitalizeCode, foldCode } from './locale/code';
 
 // Bu dosya ilk yük parçasındadır. Koleksiyon kaynağı ve tanım kurucusu ilk yükte olmamalıdır.
 // Zincir yalnız liste rotası ilk isteği yapınca `import()` ile iner (orkestratör eki: ilk yük).
@@ -23,7 +24,7 @@ export function doctypeFromSlug(slug: string): string {
   return decodeURIComponent(slug)
     .split(/[-\s]+/)
     .filter(Boolean)
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .map(capitalizeCode)
     .join(' ');
 }
 
@@ -36,8 +37,8 @@ type BootstrapSidebar = Bootstrap['sidebars'][number];
  */
 export function moduleSlug(name: string): string {
   // Dilden bağımsız küçültme (G-132): Türkçe kural `Integrations` adını `ıntegrations` yapardı.
-  // `toLowerCase` dile bakmaz. Adres parçası kullanıcının diline göre değişmez.
-  return name.trim().toLowerCase().split(/\s+/).filter(Boolean).join('-');
+  // `foldCode` dile bakmaz. Adres parçası kullanıcının diline göre değişmez.
+  return foldCode(name).split(/\s+/).filter(Boolean).join('-');
 }
 
 const truthy = (v: number | boolean | null | undefined) => v === true || v === 1;

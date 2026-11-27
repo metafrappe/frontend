@@ -1,7 +1,10 @@
+import { textMatches } from '@/app/locale/text';
+
 import type { DropdownItem } from './Dropdown';
 
 /**
- * Arama metnine uyan öğeleri gruplar. Harf karşılaştırması kullanıcının diliyle yapılır (IC-13).
+ * Arama metnine uyan öğeleri gruplar. Harf karşılaştırması kullanıcının diliyle yapılır (IC-13, GILT 10).
+ * Dil verilmezse yedek dil `en-GB` kullanılır.
  * Örnek: Türkçede "IRMAK" araması "ırmak" ile eşleşir.
  */
 export function groupDropdownItems(
@@ -10,12 +13,11 @@ export function groupDropdownItems(
   grouped = true,
   locale?: string,
 ) {
-  const search = query.trim().toLocaleLowerCase(locale);
   const regular = new Map<string | undefined, DropdownItem[]>();
   const danger: DropdownItem[] = [];
 
   for (const item of items) {
-    if (!item.label.toLocaleLowerCase(locale).includes(search)) continue;
+    if (!textMatches(item.label, query, locale)) continue;
     if (item.danger) {
       danger.push(item);
     } else {
