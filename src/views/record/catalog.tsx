@@ -2,6 +2,8 @@ import { CalendarBlank, Clock, Sparkle, WarningCircle } from '@phosphor-icons/re
 import { Button, Checkbox, Input, InputNumber, Select } from 'antd';
 import type { ReactNode } from 'react';
 
+import { localeBundle, textMatches } from '@/app/locale';
+
 import { CATALOG_VERSION, resolveCatalogEntry } from './catalogRegistry';
 import { evaluateFieldState, isFrappeTruthy } from './conditions';
 import { ChildTableField, TableMultiSelectField } from './fields/ChildTableField';
@@ -409,6 +411,10 @@ export function CatalogField(props: CatalogFieldProps): ReactNode {
             size={compactCell ? 'small' : 'middle'}
             style={{ width: '100%' }}
             showSearch={entry.canonicalType === 'Autocomplete' || choices.length > 6}
+            // The built-in antd filter ignores the user's language (GILT 10).
+            filterOption={(input, option) =>
+              textMatches(String(option?.label ?? ''), input, localeBundle(locale).intl)
+            }
             allowClear={!state.required && !state.readOnly}
             disabled={state.readOnly}
             placeholder={formatRecordMessage(locale, 'selectPlaceholder')}
