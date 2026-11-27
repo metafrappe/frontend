@@ -1,22 +1,27 @@
-import { expect, test } from '../../../tests/setup/playwright-fixtures';
+import { expect, test, type Page } from '../../../tests/setup/playwright-fixtures';
 import AxeBuilder from '@axe-core/playwright';
 
 // Deneme yolu yalnız e2e derlemesinde açılır (src/shell/routes.ts). Sunucu sahtedir.
 const demo = '/_demo/idempotency';
 
-test.beforeEach(async ({ page }) => {
+/**
+ * Opens the demo page once. Every test gets a new browser context, so storage starts empty.
+ * The page is not reloaded: in WebKit a reload can be interrupted or leave a blank page.
+ * With `hold`, the fake request waits until the test releases it. The setting exists before the page loads.
+ */
+async function open(page: Page, { hold = false } = {}) {
+  if (hold) {
+    await page.addInitScript(() => {
+      (window as Window & { __idempotencyDemoHold?: boolean }).__idempotencyDemoHold = true;
+    });
+  }
   await page.goto(demo);
-  await page.evaluate(() => window.localStorage.clear());
-  await page.reload();
-});
+  await expect(page.getByRole('button', { name: 'Kayıt aç' })).toBeVisible();
+}
 
 test('a double press sends one request and the button says it is processing', async ({ page }) => {
   // The fake request waits until the test lets it finish. No timer decides the result.
-  // An init script keeps the setting even if the page loads again.
-  await page.addInitScript(() => {
-    (window as Window & { __idempotencyDemoHold?: boolean }).__idempotencyDemoHold = true;
-  });
-  await page.reload();
+  await open(page, { hold: true });
   const button = page.getByRole('button', { name: 'Kayıt aç' });
   await button.dblclick();
   const busy = page.getByRole('button', { name: 'İşleniyor' });
@@ -36,6 +41,7 @@ test('a double press sends one request and the button says it is processing', as
 });
 
 test('a change in another tab shows the conflict message', async ({ page }) => {
+  await open(page);
   await page.getByRole('button', { name: 'Başka sekmede değiştir' }).click();
   await page.getByRole('button', { name: 'Kaydet' }).click();
   await expect(page.getByText('Bu kayıt siz açtıktan sonra değişti.')).toBeVisible();
@@ -43,6 +49,7 @@ test('a change in another tab shows the conflict message', async ({ page }) => {
 });
 
 test('the screen fits, keeps text at 14 px and passes axe', async ({ page }) => {
+  await open(page);
   await page.getByRole('button', { name: 'Başka sekmede değiştir' }).click();
   await page.getByRole('button', { name: 'Kaydet' }).click();
   await expect(page.getByText('Bu kayıt siz açtıktan sonra değişti.')).toBeVisible();
