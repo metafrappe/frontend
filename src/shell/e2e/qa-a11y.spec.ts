@@ -147,6 +147,14 @@ test.describe('Ö6: yapışkan üst çubuk odaklanan öğeyi örtmez', () => {
   test('liste sayfasında aşağıdan odaklanan kutu üst çubuğun altında kalmaz', async ({ page }) => {
     test.skip(!isCompact(page), 'üst çubuk yalnız telefon kabuğunda');
     await page.goto(LIST);
+    // Selection boxes appear only in selection mode. The select-all box is in the table header.
+    // A narrow list opens as cards, so the "Tablo" button is pressed first.
+    const tools = page.getByRole('group', { name: 'Liste araçları' });
+    const table = tools.getByRole('button', { name: 'Tablo', exact: true });
+    await expect(page.getByRole('button', { name: 'Seç', exact: true })).toBeVisible();
+    if ((await table.count()) > 0 && (await table.getAttribute('aria-pressed')) !== 'true')
+      await table.click();
+    await page.getByRole('button', { name: 'Seç', exact: true }).click();
     const box = page.getByRole('checkbox', { name: 'Bu sayfadaki tüm kayıtları seç' });
     await expect(box).toBeAttached();
     await settle(page);

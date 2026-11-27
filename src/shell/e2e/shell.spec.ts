@@ -17,6 +17,15 @@ const LIST = `/ornek/${encodeURIComponent('örnek-kayıt')}`;
 
 /** Sahte sunucunun tanıdığı kayıt: kayıt formu gerçekten çizilir. `/satis/teklif/TEK-0003` hata verir. */
 const RECORD = `${LIST}/ORNEK-0003`;
+/**
+ * Finds the link to a record.
+ * A wide list draws the record as a table row; a narrow list draws it as a card. Both hold the link.
+ */
+const recordLink = (page: Page, name: string) =>
+  page
+    .getByRole('row', { name: new RegExp(name) })
+    .or(page.getByRole('listitem').filter({ hasText: name }))
+    .getByRole('link', { name, exact: true });
 
 /** Kabuk deneme sayfası. Kayıt bağlantısı yoktur; kayıt adresi kabuğun örnek formunu çizer. */
 const harness = (path: string) => `/src/shell/harness/?yol=${encodeURIComponent(path)}`;
@@ -241,8 +250,7 @@ test.describe('header ve sayfalar', () => {
 
   test('listede kayıt satırına basınca kayıt sayfası açılır', async ({ page }) => {
     await page.goto(LIST);
-    const row = page.getByRole('row', { name: /ORNEK-0003/ });
-    await row.getByRole('link', { name: 'ORNEK-0003' }).click();
+    await recordLink(page, 'ORNEK-0003').click();
     await expect.poll(() => new URL(page.url()).pathname).toBe(RECORD);
     await expect(page.getByRole('textbox', { name: /Örnek başlık/ })).toHaveValue('Örnek veri 3');
   });
@@ -253,10 +261,7 @@ test.describe('header ve sayfalar', () => {
     // Sahte sunucu sayfanın içinde çalışır; durumu sayfa yeniden yüklenince sıfırlanır.
     // Bu yüzden kayda listeden girilir ve uygulama içinde geri ve ileri gidilir.
     await page.goto(LIST);
-    await page
-      .getByRole('row', { name: /ORNEK-0003/ })
-      .getByRole('link', { name: 'ORNEK-0003' })
-      .click();
+    await recordLink(page, 'ORNEK-0003').click();
     const title = page.getByRole('textbox', { name: /Örnek başlık/ });
     await expect(title).toHaveValue('Örnek veri 3');
     await title.fill('Kaydedilen başlık');
