@@ -172,7 +172,9 @@ test.describe('Page header: long filter row', () => {
   });
 
   for (const width of ['page', 'narrow'] as const) {
-    test(`every filter is reached with Tab: ${width} container`, async ({ page }) => {
+    test(`every filter is reached with Tab: ${width} container`, async ({ page, browserName }) => {
+      // macOS WebKit does not Tab to buttons. Alt+Tab is used there (same as login.spec.ts).
+      const tab = browserName === 'webkit' ? 'Alt+Tab' : 'Tab';
       await openFilters(page);
       if (width === 'narrow') await narrow(page);
       const labels = FILTER_LABELS;
@@ -181,7 +183,7 @@ test.describe('Page header: long filter row', () => {
       const reached: string[] = [];
       // Search, filter button, view switch, then the chips. A short margin covers the rest.
       for (let i = 0; i < FILTER_COUNT + 12; i += 1) {
-        await page.keyboard.press('Tab');
+        await page.keyboard.press(tab);
         const info = await page.evaluate((chips) => {
           const el = document.activeElement as HTMLElement | null;
           if (!el || !el.closest(chips)) return null;
