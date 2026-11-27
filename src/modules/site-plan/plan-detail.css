@@ -1,0 +1,157 @@
+/*
+ * Plan detail (AJA-1744). The card's own width decides the layout, not the screen width.
+ * Logical properties only, so right-to-left text uses the same rules.
+ * Every value comes from the central tokens (`src/design`).
+ */
+.plan-comparison {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+  gap: var(--space-md);
+  min-inline-size: 0;
+  font-family: var(--font-ui);
+  font-size: var(--font-default);
+  color: var(--color-text);
+}
+
+.plan-card {
+  container: plan-card / inline-size;
+  min-inline-size: 0;
+  padding: var(--card-padding);
+  border-radius: var(--card-radius);
+  background: var(--color-bg-panel);
+  box-shadow: var(--shadow-card);
+  font-family: var(--font-ui);
+  font-size: var(--font-default);
+  color: var(--color-text);
+}
+
+/* Selection is shown with a surface tone and the word "Selected", never with a coloured edge. */
+.plan-card[data-selected] {
+  background: var(--color-tint);
+}
+
+.plan-card p,
+.plan-card h3,
+.plan-card dl,
+.plan-card dd {
+  margin: 0;
+}
+
+/* Narrow: one flexible column. Every cell may shrink below its content's natural width. */
+.plan-card__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-md);
+}
+
+.plan-card__grid > * {
+  min-inline-size: 0;
+}
+
+.plan-card__header {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+/* Wide card: the header spans both columns; price and action on one side, features on the other. */
+@container plan-card (min-width: 36rem) {
+  .plan-card__grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+
+/*
+ * The name wraps between words. A long German compound is hyphenated with the `lang` rules.
+ * `break-word` only breaks a word that cannot fit on a line of its own.
+ */
+.plan-card__title {
+  font-size: var(--btn-fs-lg);
+  font-weight: var(--font-weight-lg);
+  hyphens: auto;
+  overflow-wrap: break-word;
+}
+
+/* The distinguishing last part is never shortened and always has its own line. */
+.plan-card__variant {
+  display: block;
+}
+
+.plan-card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+}
+
+.plan-card__tag {
+  padding-inline: var(--space-xs);
+  border-radius: var(--radius);
+  background: var(--color-bg-panel-alt);
+  color: var(--color-text);
+}
+
+.plan-card__main,
+.plan-card__features {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.plan-card__summary {
+  font-weight: var(--font-weight-md);
+}
+
+.plan-card__tax {
+  color: var(--color-text-secondary);
+}
+
+/* Buttons take the full width. A label that does not fit wraps; it is never cut. */
+.plan-card .plan-card__select.ant-btn,
+.plan-card .plan-card__toggle.ant-btn {
+  inline-size: 100%;
+  block-size: auto;
+  min-block-size: max(var(--btn-h-md), var(--hit-target));
+  padding-block: var(--space-xs);
+  white-space: normal;
+  text-align: center;
+}
+
+.plan-card .plan-card__select.ant-btn > span,
+.plan-card .plan-card__toggle.ant-btn > span {
+  min-inline-size: 0;
+  overflow-wrap: break-word;
+}
+
+/* The error stays in the flow below its own button, so it pushes the next block down. */
+.plan-card__error {
+  overflow-wrap: break-word;
+}
+
+.plan-card__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+/* Label above its value at every width. */
+.plan-feature {
+  display: flex;
+  flex-direction: column;
+  min-inline-size: 0;
+}
+
+.plan-feature dt {
+  color: var(--color-text-secondary);
+  hyphens: auto;
+  overflow-wrap: break-word;
+}
+
+.plan-feature dd {
+  overflow-wrap: break-word;
+}
+
+/* A range or quantity is one unit: the minus sign, both ends and the unit stay together. */
+.plan-nowrap {
+  white-space: nowrap;
+}

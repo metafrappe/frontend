@@ -87,7 +87,9 @@ describe('Plan ayrıntısı', () => {
     render(<PlanDetail plan={planA} selected={false} onSelect={() => undefined} />);
     const card = screen.getByRole('article', { name: planA.name });
     expect(within(card).getByText('Vergi durumu bilinmiyor.')).toBeVisible();
-    expect(card).not.toHaveTextContent(/0[.,]00/);
+    // The price itself has decimals ("€100.00"). No tax amount is written next to it.
+    expect(card).not.toHaveTextContent(/vergi[^.]*\d/i);
+    expect(within(card).getByTestId('plan-price')).not.toHaveTextContent(/vergi|tax/i);
   });
 
   it('test verisi ekranda test verisi diye işaretlenir', () => {

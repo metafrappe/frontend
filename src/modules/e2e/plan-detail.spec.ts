@@ -147,14 +147,20 @@ test.describe('Plan detail: narrow space', () => {
     }
   });
 
-  for (const condition of [conditions[1], conditions[3]] as const) {
+  const rangeConditions = conditions.filter(
+    (condition) => !condition.pseudo && condition.narrow !== condition.scale,
+  );
+  for (const condition of rangeConditions) {
     test(`the temperature range is not broken (${condition.name})`, async ({ page }) => {
       await open(page);
       await apply(page, condition);
       for (const range of await page.getByTestId('plan-range-temperature').all()) {
         await expect(range).toHaveText(/^[-−]20 … \+60\s?°C$/);
-        // An inline element that wraps has one client rectangle per line.
-        expect(await range.evaluate((el) => el.getClientRects().length)).toBe(1);
+        // An inline element that wraps has client rectangles on more than one line.
+        const lines = await range.evaluate(
+          (el) => new Set([...el.getClientRects()].map((rect) => Math.round(rect.top))).size,
+        );
+        expect(lines).toBe(1);
         await expectInside(range, range.locator('xpath=ancestor::article[1]'));
       }
     });
