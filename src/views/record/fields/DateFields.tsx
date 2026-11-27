@@ -2,7 +2,6 @@ import { CalendarBlank } from '@phosphor-icons/react';
 import { DatePicker, type DatePickerProps } from 'antd';
 import dayjs, { type Dayjs } from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
-import 'dayjs/locale/tr';
 import type { ReactNode } from 'react';
 
 import { SERVER_DATE_FORMAT, SERVER_DATETIME_FORMAT } from '../dateFormat';

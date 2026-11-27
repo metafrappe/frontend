@@ -7,7 +7,8 @@ export const SERVER_DATETIME_FORMAT = 'YYYY-MM-DD HH:mm:ss';
 
 const LOCALE_DEFAULTS: Record<RecordLocale, { date: string; time: string }> = {
   tr: { date: 'DD.MM.YYYY', time: 'HH:mm:ss' },
-  en: { date: 'MM-DD-YYYY', time: 'HH:mm:ss' },
+  // Arayüzün İngilizcesi İngiliz İngilizcesidir (AJA-1407). Gün önce gelir: 27/11/2026.
+  en: { date: 'DD/MM/YYYY', time: 'HH:mm:ss' },
 };
 
 // Frappe'nin izin verdiği tarih kalıbı: gün, ay ve yıl parçaları ile tek tür ayraç.
