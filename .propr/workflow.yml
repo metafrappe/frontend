@@ -6,5 +6,5 @@
 auto_merge:
   enabled: true
   protected_paths:
-    - ".github/**"
-    - ".propr/**"
+    - '.github/**'
+    - '.propr/**'
