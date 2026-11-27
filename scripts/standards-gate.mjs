@@ -4,7 +4,7 @@
  * Kural kopyası kapısı.
  *
  * Bu depodaki `docs/standards/headless-frontend-standartlari.md` bir kopyadır.
- * Kaynak frappesetup deposunun `main` dalındaki dosyadır.
+ * Kaynak metafrappe/backend deposunun `main` dalındaki dosyadır.
  * Kapı iki dosyayı bayt bayt karşılaştırır. Dosyalar farklıysa 1 ile çıkar.
  *
  * Kaynak alınamazsa kapı yine 1 ile çıkar. Ağ hatası "aynı" sayılmaz.
@@ -21,7 +21,7 @@ import { fileURLToPath } from 'node:url';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
 export const SOURCE_URL =
-  'https://raw.githubusercontent.com/karacaismail/frappesetup/main/docs/standartlar/headless-frontend-standartlari.md';
+  'https://raw.githubusercontent.com/metafrappe/backend/main/docs/standards/headless-frontend-standartlari.md';
 export const COPY_PATH = resolve(root, 'docs/standards/headless-frontend-standartlari.md');
 
 const TIMEOUT_MS = 30_000;
