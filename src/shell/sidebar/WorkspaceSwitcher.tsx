@@ -75,7 +75,7 @@ export function WorkspaceSwitcher({ rail, data }: WorkspaceSwitcherProps) {
   const ws = items[0];
   return (
     <div className="shell-ws" data-static="true">
-      <span className="shell-logo" aria-hidden="true">
+      <span className="shell-logo" aria-hidden="true" translate="no">
         A
       </span>
       {ws &&
@@ -295,7 +295,7 @@ function WorkspaceMenu({ rail, data }: { rail: boolean; data: ShellWorkspaceData
         onKeyDown={onButtonKeyDown}
         {...(rail ? { 'aria-label': t.workspace.label(ws.name) } : {})}
       >
-        <span className="shell-logo" aria-hidden="true">
+        <span className="shell-logo" aria-hidden="true" translate="no">
           A
         </span>
         {!rail && (
