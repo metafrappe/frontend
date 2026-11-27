@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { execFile } from 'node:child_process';
-import { mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { tmpdir } from 'node:os';
@@ -52,10 +52,16 @@ function runGate(args: string[]) {
 }
 
 describe('kural kopyası kapısı', () => {
-  it('kaynak frappesetup main dalındaki dosyadır', () => {
+  it('kaynak metafrappe/backend main dalındaki dosyadır', () => {
     expect(SOURCE_URL).toBe(
-      'https://raw.githubusercontent.com/karacaismail/frappesetup/main/docs/standartlar/headless-frontend-standartlari.md',
+      'https://raw.githubusercontent.com/metafrappe/backend/main/docs/standards/headless-frontend-standartlari.md',
     );
+  });
+
+  it('CI adımı kaynağı metafrappe/backend diye adlandırır', () => {
+    const ci = readFileSync(resolve(__dirname, '../../.github/workflows/ci.yml'), 'utf8');
+    expect(ci).toContain('- name: Kural kopyası metafrappe/backend ile aynı mı');
+    expect(ci).not.toContain('frappesetup');
   });
 
   it('kopya kaynakla bayt bayt aynıysa geçer', async () => {
