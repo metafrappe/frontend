@@ -5,6 +5,7 @@
 import { theme as antdTheme, type ThemeConfig } from 'antd';
 
 import { duration, easing, seconds } from './motion';
+import { radiusGlobalTokens, withRadius } from './radius';
 import { designSource, type ThemeMode } from './source';
 import {
   border,
@@ -71,9 +72,8 @@ export function buildAntdTheme(mode: ThemeMode, options: BuildThemeOptions = {})
     controlHeight: button.md.height,
     controlHeightSM: button.sm.height,
     controlHeightLG: button.lg.height,
-    borderRadius: radius.control,
-    borderRadiusSM: Math.max(radius.control - 1, 2),
-    borderRadiusLG: radius.control + 2,
+    // Köşeler radius.md basamaklarından gelir (Karar 45).
+    ...radiusGlobalTokens,
     boxShadowSecondary: shadow.dropdown,
     lineWidth: border.width,
     // Odak: çevreleyen halka ve çerçeve yasak. Gösterge CSS'te alt çizgi olarak verilir.
@@ -183,7 +183,6 @@ export function buildAntdTheme(mode: ThemeMode, options: BuildThemeOptions = {})
     Dropdown: { fontSize: typography.default },
     /** Tablo metni en küçük metindir: 14 px (model 4. bölüm). Gövde 16 px kalır. */
     Table: { fontSize: typography.min },
-    Card: { borderRadiusLG: radius.card },
   };
 
   return {
@@ -191,6 +190,6 @@ export function buildAntdTheme(mode: ThemeMode, options: BuildThemeOptions = {})
     hashed: false,
     algorithm: dark ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
     token,
-    components,
+    components: withRadius(components, radius.card),
   };
 }

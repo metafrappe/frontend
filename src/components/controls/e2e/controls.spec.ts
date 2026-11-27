@@ -204,7 +204,12 @@ test('controls match the locked height and font size', async ({ page, hasTouch }
     await expect(page.getByTestId(`link-${size}`)).toHaveCSS('font-size', `${fontSize}px`);
   }
 
-  await expect(page.getByTestId('card')).toHaveCSS('border-radius', '10px');
+  // Karar 45: 24 px iç boşluklu kart 21 px köşe alır (radius.md).
+  await expect(page.getByTestId('card')).toHaveCSS(
+    'border-radius',
+    `${designSource.cards.radius}px`,
+  );
+  expect(designSource.cards.radius).toBe(21);
 });
 
 test('choice controls match the locked height and font size', async ({ page, hasTouch }) => {
