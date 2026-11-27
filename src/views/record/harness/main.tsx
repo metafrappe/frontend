@@ -9,7 +9,8 @@ import '@fontsource/jetbrains-mono/400.css';
 
 import { StrictMode, useState } from 'react';
 
-import { FALLBACK_LANGUAGE } from '@/app/locale';
+import { resolveLanguage } from '@/app/locale';
+import { sampleBootstrap } from '@/mocks/fixtures';
 
 import { createRoot } from 'react-dom/client';
 import { EMPTY_LEAVE_CONTEXT, LEAVE_CONTEXT, LEAVE_META } from './leaveFixture';
@@ -22,6 +23,12 @@ import {
   type RecordDocument,
   RecordView,
 } from '../index';
+
+/**
+ * The test page shows the sample session. Its texts and labels are Turkish, so the page uses the
+ * sample user's language, not the fallback language. The fallback language became English (AJA-1413).
+ */
+const HARNESS_LANGUAGE = resolveLanguage(sampleBootstrap.user.language);
 
 const HARNESS_META: DocTypeMeta = {
   schema: {
@@ -338,7 +345,7 @@ export function HarnessApp() {
           createMode
           adapter={adapter}
           themeMode={themeMode}
-          locale={FALLBACK_LANGUAGE}
+          locale={HARNESS_LANGUAGE}
           breadcrumbs={[]}
           {...(params.get('assist') === '1'
             ? { onAssistField: () => setAssistCalls((count) => count + 1) }
@@ -350,7 +357,7 @@ export function HarnessApp() {
           {...(scenario === 'empty' ? {} : { name: `HR-EXP-000${currentIndex}` })}
           adapter={adapter}
           themeMode={themeMode}
-          locale={FALLBACK_LANGUAGE}
+          locale={HARNESS_LANGUAGE}
           navigator={{
             currentIndex,
             totalCount: 1284,
