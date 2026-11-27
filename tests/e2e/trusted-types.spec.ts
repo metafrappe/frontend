@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from '../setup/playwright-fixtures';
 
 /** GV-2 ve GV-6: içerik güvenlik politikası yayımlanan yanıtta sınanır (AJA-2283). */
 test('önizleme yanıtı Trusted Types başlığını rapor kipinde gönderir', async ({ page }) => {

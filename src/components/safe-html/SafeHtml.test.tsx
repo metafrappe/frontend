@@ -67,3 +67,27 @@ describe('PrintPreview', () => {
     expect(srcdoc).not.toContain('<script');
   });
 });
+
+describe('sanitizeHtml öznitelikleri', () => {
+  it('başlık ve tablo özniteliklerini korur', () => {
+    const html =
+      '<table><thead><tr><th scope="col" title="Tutar alanı">Tutar</th></tr></thead>' +
+      '<tbody><tr><td colspan="2">10</td></tr></tbody></table>';
+    expect(sanitizeHtml(html)).toBe(html);
+  });
+
+  it('başka şemaları siler', () => {
+    for (const href of [
+      'data:text/html,x',
+      'vbscript:x',
+      'JaVaScRiPt:alert(1)',
+      'java\tscript:x',
+    ]) {
+      expect(sanitizeHtml(`<a href="${href}">x</a>`)).toBe('<a>x</a>');
+    }
+  });
+
+  it('_blank dışındaki hedefi siler', () => {
+    expect(sanitizeHtml('<a href="/yol" target="_top">x</a>')).toBe('<a href="/yol">x</a>');
+  });
+});
