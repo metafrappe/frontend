@@ -1,5 +1,8 @@
 import { Checkbox } from 'antd';
 import { Link } from 'react-router-dom';
+
+import { useFormat } from '@/app/locale';
+
 import { displayCell } from './presentation';
 import type { ViewProps } from './types';
 
@@ -21,6 +24,7 @@ export function CardView({
   onSelect: (names: string[]) => void;
   recordHref?: ((name: string) => string) | undefined;
 }) {
+  const format = useFormat();
   const fields = definition.columns.filter((field) => field.fieldname !== 'name');
   const [lead, ...rest] = fields;
   return (
@@ -47,13 +51,15 @@ export function CardView({
             />
           )}
           <div className="collection-card-body">
-            {lead && <strong className="collection-card-lead">{displayCell(row, lead)}</strong>}
+            {lead && (
+              <strong className="collection-card-lead">{displayCell(row, lead, format)}</strong>
+            )}
             {rest.length > 0 && (
               <dl className="collection-card-fields">
                 {rest.map((field) => (
                   <div key={field.fieldname}>
                     <dt>{field.label}</dt>
-                    <dd>{displayCell(row, field)}</dd>
+                    <dd>{displayCell(row, field, format)}</dd>
                   </div>
                 ))}
               </dl>
