@@ -115,7 +115,7 @@ describe('billing address follows the billing country', () => {
     type(/^Ad ya da şirket unvanı/, 'Madonna');
     type(/^Adres$/, 'Örnek Sokak 1');
     type(/^İlçe/, 'Kadıköy');
-    type(/^İl/, 'İstanbul');
+    type(/^İl$/, 'İstanbul');
     fireEvent.click(screen.getByRole('button', { name: 'Taslağı kaydet' }));
     await waitFor(() => expect(billing.saveBillingDraft).toHaveBeenCalledTimes(1));
     const [body] = vi.mocked(billing.saveBillingDraft).mock.calls[0]!;
@@ -142,14 +142,14 @@ describe('tax number status', () => {
     type(/^Vergi numarası/, '1234567890');
     type(/^Adres$/, 'Örnek Sokak 1');
     type(/^İlçe/, 'Kadıköy');
-    type(/^İl/, 'İstanbul');
+    type(/^İl$/, 'İstanbul');
     fireEvent.click(screen.getByRole('button', { name: 'Taslağı kaydet' }));
 
     expect(await screen.findByText(/şu an denetlenemedi/)).toBeInTheDocument();
     expect(screen.queryByText(/yanlış/i)).not.toBeInTheDocument();
     expect(screen.getByLabelText(/^Vergi numarası/)).toHaveValue('1234567890');
     expect(screen.getByLabelText(/^Ad ya da şirket unvanı/)).toHaveValue('Örnek Anonim Şirketi');
-    expect(screen.getByLabelText(/^İl/)).toHaveValue('İstanbul');
+    expect(screen.getByLabelText(/^İl$/)).toHaveValue('İstanbul');
   });
 
   it('servis numarayı reddederse numaranın yanlış olduğunu söyler', async () => {
@@ -164,7 +164,7 @@ describe('tax number status', () => {
     type(/^Vergi numarası/, '1');
     type(/^Adres$/, 'Örnek Sokak 1');
     type(/^İlçe/, 'Kadıköy');
-    type(/^İl/, 'İstanbul');
+    type(/^İl$/, 'İstanbul');
     fireEvent.click(screen.getByRole('button', { name: 'Taslağı kaydet' }));
     expect(await screen.findByText(/Vergi numarası yanlış/)).toBeInTheDocument();
     expect(screen.queryByText(/denetlenemedi/)).not.toBeInTheDocument();

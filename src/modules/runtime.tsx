@@ -11,6 +11,7 @@ import type {
   ProviderCatalog,
   SavedConnection,
 } from '../api';
+import type { BillingClient } from './billing/model';
 import { ModuleContext } from './context';
 
 export interface RequestOptions {
@@ -69,6 +70,11 @@ export interface ModuleClient {
    * İstemci kodu ilk yüke girmez; yalnız "Yönetim" sayfası çağırınca iner.
    */
   userAdmin?: () => Promise<UserAdminClient>;
+  /**
+   * Fatura ve koşul kabul istemcisini yükler (AJA-1785). İstemci kodu ilk yüke girmez;
+   * yalnız "Fatura bilgileri" sayfası çağırınca iner.
+   */
+  billing?: () => Promise<BillingClient>;
 }
 /** Bayi uçları. Ortak istemci yanıtları sözleşmeyle denetler. Yetkiyi sunucu denetler. */
 export interface ResellerClient {
