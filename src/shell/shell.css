@@ -1577,7 +1577,8 @@ html:has(.shell[data-layout='compact']) {
   white-space: normal;
 }
 
-.shell-hd-filter.ant-btn > span:not(.ant-btn-icon) {
+/* The count badge keeps its own min-width (AJA-1918). */
+.shell-hd-filter.ant-btn > span:not(.ant-btn-icon, .shell-hd-badge) {
   min-width: 0;
   overflow-wrap: break-word;
 }
