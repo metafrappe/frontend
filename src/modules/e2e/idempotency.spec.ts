@@ -11,14 +11,24 @@ test.beforeEach(async ({ page }) => {
 });
 
 test('a double press sends one request and the button says it is processing', async ({ page }) => {
+  // The fake request waits until the test lets it finish. No timer decides the result.
+  await page.evaluate(() => {
+    (window as Window & { __idempotencyDemoHold?: boolean }).__idempotencyDemoHold = true;
+  });
   const button = page.getByRole('button', { name: 'Kayıt aç' });
   await button.dblclick();
   const busy = page.getByRole('button', { name: 'İşleniyor' });
   await expect(busy).toHaveAttribute('aria-busy', 'true');
-  // Playwright `click()` waits for the button to settle; by then the first request may be done.
-  // The event is sent at once so the press really happens while the request is pending.
+  // Playwright `click()` waits for the button to settle. The event is sent at once instead.
   await busy.dispatchEvent('click');
   await expect(page.getByTestId('request-count')).toHaveText('Gönderilen istek: 1');
+  await expect(busy).toHaveAttribute('aria-busy', 'true');
+  await page.evaluate(() => {
+    const release = (window as Window & { __idempotencyDemoRelease?: () => void })
+      .__idempotencyDemoRelease;
+    if (!release) throw new Error('The demo page has no release hook.');
+    release();
+  });
   await expect(page.getByText('İşlem tamam.')).toBeVisible();
   await expect(page.getByTestId('request-count')).toHaveText('Gönderilen istek: 1');
 });
