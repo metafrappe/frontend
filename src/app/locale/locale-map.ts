@@ -3,8 +3,10 @@
  * Bileşenler dili `useLanguage` ve `useLocaleBundle` kancalarından alır (IC-12).
  * Yeni dil eklenince yalnız bu dosya ve `language.ts` değişir.
  */
-import enGB from 'antd/locale/en_GB';
-import trTR from 'antd/locale/tr_TR';
+// ES modülü kullanılır. `antd/locale/*` CommonJS biçimindedir. Vite derlemesinde dil nesnesi
+// `{ default }` kabına sarılı gelir ve antd İngilizceye düşer (AJA-1971).
+import enGB from 'antd/es/locale/en_GB';
+import trTR from 'antd/es/locale/tr_TR';
 import type { Locale as AntdLocale } from 'antd/es/locale';
 import 'dayjs/locale/en-gb';
 import 'dayjs/locale/tr';

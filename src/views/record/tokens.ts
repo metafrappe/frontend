@@ -27,6 +27,24 @@ const BASE_ANTD_TOKENS = antdTheme.getDesignToken();
 export const RECORD_PHONE_MAX_WIDTH_PX: number = BASE_ANTD_TOKENS.screenSMMax;
 export const RECORD_LINK_SEARCH_DEBOUNCE_MS: number = controlSizeConfig.sidebar.flyout.closeDelay;
 
+/**
+ * Takvimin dokunma hedefi (AJA-476). Gün hücresi ve ay okları en az bu kadar olur.
+ * Değer WCAG 2.5.5 hedefidir: 44 px. Yedi gün sütunu 308 px eder ve 320 px ekrana sığar.
+ * Tasarım kaynağındaki `hitArea.minTarget` 24 px'tir. O değer WCAG 2.5.8 alt sınırıdır.
+ * 24 px'lik hücre parmakla zor seçilir. Bu yüzden takvim kendi hedefini kullanır.
+ * Kaldırma koşulu: `foundation` kaynağa bir dokunma hedefi tokenı eklerse bu değer ona bağlanır.
+ */
+export const RECORD_PICKER_TOUCH_TARGET_PX = Math.max(controlSizeConfig.hitArea.minTarget, 44);
+
+/** Takvim panelinin dar ekrandaki kenar boşluğu. antd `paddingXXS` değeridir: 4 px. */
+export const RECORD_PICKER_PANEL_PAD_PX: number = BASE_ANTD_TOKENS.paddingXXS;
+
+/**
+ * antd gün hücresine üstten ve alttan `paddingXXS * 1.5` boşluk verir.
+ * Hücre satırı bu boşlukla birlikte dokunma hedefi kadar olur.
+ */
+const PICKER_CELL_PAD_Y_PX = BASE_ANTD_TOKENS.paddingXXS * 1.5;
+
 function hexToRgba(hex: string, alpha: number): string {
   const clean = hex.replace('#', '');
   const r = Number.parseInt(clean.slice(0, 2), 16);
@@ -116,6 +134,31 @@ export function buildRecordAntdTheme(mode: RecordThemeMode): ThemeConfig {
         ...(isDark
           ? {
               colorBgContainer: darkPalette.input,
+              activeBg: darkPalette.input,
+              hoverBg: darkPalette.input,
+              activeBorderColor: darkPalette.border,
+            }
+          : {}),
+      },
+      // Tarih alanı (panel sorunu 3). Ölçü ve renkler metin kutusuyla aynıdır.
+      DatePicker: {
+        // Takvim hücresi dokunma hedefinden gelir (AJA-476). antd hücreyi controlHeightSM'den
+        // hesaplardı: 36 × 1.5 = 54 px. Panel 414 px olur ve 320 px ekrana sığmazdı.
+        cellWidth: RECORD_PICKER_TOUCH_TARGET_PX,
+        cellHeight: RECORD_PICKER_TOUCH_TARGET_PX - PICKER_CELL_PAD_Y_PX * 2,
+        // Odakta kenarlık rengi değişmez. Odak göstergesi yalnız alttaki çizgidir.
+        activeBorderColor: isDark ? darkPalette.border : BASE_ANTD_TOKENS.colorBorder,
+        controlHeight: sizes.md.input.height,
+        controlHeightSM: sizes.sm.input.height,
+        controlHeightLG: sizes.lg.input.height,
+        inputFontSize: sizes.md.input.fontSize,
+        inputFontSizeSM: sizes.sm.input.fontSize,
+        inputFontSizeLG: sizes.lg.input.fontSize,
+        activeShadow: 'none',
+        ...(isDark
+          ? {
+              colorBgContainer: darkPalette.input,
+              colorBgElevated: darkPalette.elevated,
               activeBg: darkPalette.input,
               hoverBg: darkPalette.input,
               activeBorderColor: darkPalette.border,
@@ -265,6 +308,8 @@ export function buildRecordCssVariables(mode: RecordThemeMode): CSSProperties {
     '--rv-motion-duration': `${controlSizeConfig.focusDim.duration}ms`,
     '--rv-motion-easing': controlSizeConfig.focusDim.easing,
     '--rv-focus-line-size': `${resolved.lineWidthBold}px`,
+    '--rv-picker-touch-target': `${RECORD_PICKER_TOUCH_TARGET_PX}px`,
+    '--rv-picker-panel-pad': `${RECORD_PICKER_PANEL_PAD_PX}px`,
   };
 
   return vars as CSSProperties;

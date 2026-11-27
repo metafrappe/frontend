@@ -19,6 +19,8 @@ import {
   useState,
 } from 'react';
 
+import { localeBundle } from '@/app/locale';
+
 import { RecordApiError } from './adapter';
 import { CatalogField } from './catalog';
 import { CATALOG_VERSION } from './catalogRegistry';
@@ -1122,7 +1124,8 @@ export function RecordView(props: RecordViewProps) {
   const recordIdentityKey = `${props.doctype}::${props.createMode ? '__new__' : (props.name ?? '__empty__')}::${locale}::${boundaryResetCount}`;
 
   return (
-    <ConfigProvider theme={antdThemeConfig}>
+    // antd dili kaydın dilinden gelir (AJA-476). Takvimde ay ve gün adları bu dilde yazılır.
+    <ConfigProvider theme={antdThemeConfig} locale={localeBundle(locale).antd}>
       <div
         ref={rootRef}
         className="rv-root"

@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { RecordView } from '../RecordView';
 import { LEAVE_META } from '../harness/leaveFixture';
 import type { DocTypeMeta, RecordDataAdapter } from '../types';
+import { typeDate } from './typeDate';
 
 function renderForm(meta: DocTypeMeta = LEAVE_META) {
   const adapter: RecordDataAdapter = {
@@ -96,7 +97,7 @@ describe('record sections and field validation', () => {
     await user.click(save);
     expect(live.firstElementChild).not.toBe(firstAnnouncement);
     const start = screen.getByLabelText(/Başlangıç tarihi/);
-    fireEvent.change(start, { target: { value: '2026-11-27' } });
+    typeDate(start, '27.11.2026');
     expect(start).not.toHaveAttribute('aria-invalid', 'true');
     expect(start.closest('.rv-field')?.querySelector('.rv-field-error')).toBeNull();
     expect(screen.getByLabelText(/Bitiş tarihi/)).toHaveAttribute('aria-invalid', 'true');

@@ -7,6 +7,7 @@ import { createFrappeRecordAdapter, RecordApiError } from '../adapter';
 import { RecordView } from '../RecordView';
 import { LEAVE_META } from '../harness/leaveFixture';
 import type { DocTypeMeta, RecordDataAdapter, RecordErrorCode } from '../types';
+import { typeDate } from './typeDate';
 
 type Context = components['schemas']['LeaveRequestContextResponse']['message'];
 const context: Context = {
@@ -129,10 +130,8 @@ describe('new record prefill', () => {
     await userEvent.click(await screen.findByText('Mazeret izni'));
     expect(typeField.getByTitle('Mazeret izni')).toBeVisible();
     expect(type).not.toHaveAccessibleDescription();
-    fireEvent.change(screen.getByLabelText(/Başlangıç tarihi/), {
-      target: { value: '2026-11-27' },
-    });
-    fireEvent.change(screen.getByLabelText(/Bitiş tarihi/), { target: { value: '2026-11-28' } });
+    typeDate(screen.getByLabelText(/Başlangıç tarihi/), '27.11.2026');
+    typeDate(screen.getByLabelText(/Bitiş tarihi/), '28.11.2026');
     await userEvent.click(screen.getByRole('button', { name: 'Kaydet' }));
     expect(adapter.saveRecord).toHaveBeenCalledWith(
       expect.objectContaining({ data: expect.objectContaining({ leave_type: 'Casual Leave' }) }),
@@ -326,10 +325,8 @@ describe('new record prefill', () => {
     const { adapter } = setup();
     mount(adapter);
     await screen.findByLabelText('Ad');
-    fireEvent.change(screen.getByLabelText(/Başlangıç tarihi/), {
-      target: { value: '2026-11-27' },
-    });
-    fireEvent.change(screen.getByLabelText(/Bitiş tarihi/), { target: { value: '2026-11-28' } });
+    typeDate(screen.getByLabelText(/Başlangıç tarihi/), '27.11.2026');
+    typeDate(screen.getByLabelText(/Bitiş tarihi/), '28.11.2026');
     await userEvent.click(screen.getByRole('button', { name: 'Kaydet' }));
     expect(adapter.saveRecord).toHaveBeenCalledWith(
       expect.objectContaining({

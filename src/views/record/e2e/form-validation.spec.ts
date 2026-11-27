@@ -27,7 +27,9 @@ test('leave sections announce errors and focus the first invalid field on every 
   await expect(page.getByRole('status').filter({ hasText: 'alanda hata var.' })).toHaveText(
     '2 alanda hata var.',
   );
-  await start.fill('2026-11-27');
+  // Tarih alanı markalı seçicidir (panel sorunu 3). Tarih kullanıcının biçimiyle yazılır.
+  await start.fill('27.11.2026');
+  await start.press('Enter');
   await expect(start).not.toHaveAttribute('aria-invalid', 'true');
   await expect(page.getByLabel(/Bitiş tarihi/)).toHaveAttribute('aria-invalid', 'true');
 });
@@ -53,7 +55,7 @@ for (const theme of ['light', 'dark']) {
         font: getComputedStyle(root).fontFamily,
         shortControls:
           root.getAttribute('data-rv-viewport') === 'phone'
-            ? [...root.querySelectorAll('.ant-btn, .ant-select-selector, input[type="date"]')]
+            ? [...root.querySelectorAll('.ant-btn, .ant-select-selector, .ant-picker')]
                 .filter((el) => el.getBoundingClientRect().height < 48)
                 .map((el) => el.className)
             : [],

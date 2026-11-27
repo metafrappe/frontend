@@ -9,6 +9,7 @@ import {
   type RecordDataAdapter,
   type RecordLinkTarget,
   RecordView,
+  type SiteFormatting,
 } from '@/views/record';
 
 import { useLanguage } from './locale';
@@ -70,7 +71,28 @@ function ModuleRecordLink({
 
 export interface RecordRouteProps extends RecordAddress {
   /** Oturumun ortak API istemcisi. Site kökü, CSRF deposu ve oturum süresi işi buradan gelir. */
-  api: Pick<ApiClient, 'frappeDocument'>;
+  api: Pick<ApiClient, 'frappeDocument' | 'getBootstrap'>;
+}
+
+/**
+ * Kullanıcının biçim ayarını açılış verisinden okur. Örnek: tarih kalıbı `dd.mm.yyyy`.
+ * Ayar okunamazsa kayıt yine açılır; alanlar arayüz dilinin varsayılanını kullanır.
+ */
+function useSiteFormatting(api: Pick<ApiClient, 'getBootstrap'>): SiteFormatting | undefined {
+  const [formatting, setFormatting] = useState<SiteFormatting | undefined>(undefined);
+  useEffect(() => {
+    const controller = new AbortController();
+    api
+      .getBootstrap({ signal: controller.signal })
+      .then((bootstrap) => {
+        if (!controller.signal.aborted) setFormatting(bootstrap.formatting);
+      })
+      .catch(() => {
+        /* Biçim ayarı yoksa alanlar dil varsayılanını kullanır. */
+      });
+    return () => controller.abort();
+  }, [api]);
+  return formatting;
 }
 
 /**
@@ -85,6 +107,7 @@ export default function RecordRoute({ api, module, doctype, name }: RecordRouteP
   const locale = useLanguage();
   const adapter = useMemo(() => createFrappeRecordAdapter({ api, locale }), [api, locale]);
   const pageDoctype = doctypeFromSlug(doctype);
+  const formatting = useSiteFormatting(api);
   const renderRecordLink = useCallback(
     (target: RecordLinkTarget, children: ReactNode) => {
       const slug = slugFromDoctype(target.doctype);
@@ -108,6 +131,7 @@ export default function RecordRoute({ api, module, doctype, name }: RecordRouteP
       doctype={pageDoctype}
       name={decode(name)}
       locale={locale}
+      formatting={formatting}
       adapter={adapter}
       renderRecordLink={renderRecordLink}
     />

@@ -102,6 +102,14 @@ const HARNESS_META: DocTypeMeta = {
         sensitivity: 'standard',
       },
       {
+        fieldname: 'follow_up_at',
+        fieldtype: 'Datetime',
+        label: 'Takip Zamanı',
+        read_only: false,
+        component: 'datetime',
+        sensitivity: 'standard',
+      },
+      {
         fieldname: 'is_paid',
         fieldtype: 'Check',
         label: 'Ödendi',
@@ -230,6 +238,7 @@ const HARNESS_RECORD: RecordDocument = {
   department: 'DEP-ENG',
   status: 'Open',
   posting_date: '2026-11-23',
+  follow_up_at: '2026-11-23 14:05:00',
   is_paid: 0,
   service_rating: 0.8,
   tag_color: '',

@@ -106,6 +106,12 @@ export interface SiteFormatting {
   currency: string | null;
   number_format: string;
   rounding_method: string;
+  /** Kullanıcının dilindeki Frappe tarih kalıbı. Örnek: `dd.mm.yyyy`. */
+  date_format?: string | undefined;
+  /** Kullanıcının dilindeki Frappe saat kalıbı. Örnek: `HH:mm:ss`. */
+  time_format?: string | undefined;
+  /** Kullanıcının dilinde haftanın ilk günü. Örnek: `Monday`. */
+  first_day_of_the_week?: string | undefined;
 }
 
 export interface RecordDocument {
