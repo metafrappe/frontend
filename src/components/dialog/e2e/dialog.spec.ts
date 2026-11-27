@@ -9,6 +9,7 @@ import {
   settle,
   type PseudoMode,
 } from '../../../testing/gilt/playwright';
+import { foldLabel } from '../labels';
 
 // Shared demo route (AGENTS.md, src/shell/routes.ts). Opens only in the e2e build.
 const DEMO = '/_demo/dialog';
@@ -127,9 +128,7 @@ test.describe('Confirm buttons say the result', () => {
     const visible = (await button.innerText()).trim();
     const name = (await button.getAttribute('aria-label')) ?? visible;
     for (const text of [visible, name]) {
-      expect(VAGUE, `"${text}" does not say the result`).not.toContain(
-        text.toLocaleLowerCase('tr'),
-      );
+      expect(VAGUE, `"${text}" does not say the result`).not.toContain(foldLabel(text));
     }
     // The accessible name is the visible text, so voice control finds the button.
     expect(name).toBe(visible);

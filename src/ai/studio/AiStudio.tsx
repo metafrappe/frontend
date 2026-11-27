@@ -12,10 +12,11 @@ import {
   ThumbsUp,
   UploadSimple,
 } from '@phosphor-icons/react';
-import { App, Button, Drawer, Tag } from 'antd';
+import { App, Button, Tag } from 'antd';
 import type { GetProp } from 'antd';
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 
+import { SidePanel } from '@/components/dialog';
 import type { GenUIAction, GenUIActionResult } from '@/genui';
 import { useGenuiVars } from '@/genui/useGenuiVars';
 
@@ -406,7 +407,7 @@ function StudioInner({ transport, source }: { transport: AgentTransport; source:
 
       {!wide && (
         <>
-          <Drawer
+          <SidePanel
             title="Sohbetler"
             placement="left"
             open={leftOpen}
@@ -416,8 +417,8 @@ function StudioInner({ transport, source }: { transport: AgentTransport; source:
             rootStyle={vars}
           >
             {left}
-          </Drawer>
-          <Drawer
+          </SidePanel>
+          <SidePanel
             title="Çalışma alanı"
             placement="right"
             open={rightOpen}
@@ -427,7 +428,7 @@ function StudioInner({ transport, source }: { transport: AgentTransport; source:
             rootStyle={vars}
           >
             {right}
-          </Drawer>
+          </SidePanel>
         </>
       )}
     </div>

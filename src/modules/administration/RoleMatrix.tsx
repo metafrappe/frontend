@@ -1,4 +1,6 @@
-import { Alert, Button, Checkbox, Input, Modal, Select } from 'antd';
+import { Alert, Button, Checkbox, Input, Select } from 'antd';
+
+import { ActionDialog } from '@/components/dialog';
 import {
   useCallback,
   useEffect,
@@ -297,18 +299,14 @@ export function RoleMatrix({ admin }: { admin: AdminClient }) {
               </div>
             </div>
           )}
-          <Modal
+          <ActionDialog
             open={reviewing}
             title={copy.reviewChanges}
             onCancel={() => setReviewing(false)}
-            footer={[
-              <Button key="cancel" onClick={() => setReviewing(false)}>
-                {copy.discard}
-              </Button>,
-              <Button key="save" type="primary" loading={saving} onClick={() => void save()}>
-                {copy.saveChanges}
-              </Button>,
-            ]}
+            cancelLabel={copy.keepEditing}
+            confirmLabel={copy.saveChanges}
+            loading={saving}
+            onConfirm={() => void save()}
           >
             <ul>
               {changeList.map((change) => (
@@ -325,7 +323,7 @@ export function RoleMatrix({ admin }: { admin: AdminClient }) {
                 </li>
               ))}
             </ul>
-          </Modal>
+          </ActionDialog>
         </div>
       )}
     </AdminResource>

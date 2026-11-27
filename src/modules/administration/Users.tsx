@@ -1,4 +1,6 @@
-import { Alert, Button, Input, Modal, Select } from 'antd';
+import { Alert, Button, Input, Select } from 'antd';
+
+import { ActionDialog } from '@/components/dialog';
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import type { InviteInput, InvitePreview, UserAdminClient, UserRecord } from '../runtime';
 import { failureKind, useMutation, useRead, type FailureKind } from '../data';
@@ -410,12 +412,11 @@ function RoleProfileDialog({
   const assign = useMutation();
   const before = user.roles;
   return (
-    <Modal
+    <ActionDialog
       open
       title={text.roleProfileChange}
       onCancel={close}
-      footer={null}
-      destroyOnClose
+      destroyOnHidden
       width="min(100%, 40rem)"
     >
       <div className="module-stack">
@@ -480,6 +481,6 @@ function RoleProfileDialog({
           {text.roleProfileAssign}
         </Button>
       </div>
-    </Modal>
+    </ActionDialog>
   );
 }

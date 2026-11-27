@@ -1,0 +1,95 @@
+/*
+ * Shared dialog, side panel and short confirm (AJA-1745).
+ * The container width decides the layout, not the screen width.
+ */
+
+/* Each dialog box is a size container, so a narrow side panel also stacks the buttons. */
+.atonota-dialog .ant-modal,
+.atonota-dialog .ant-popover-inner,
+.atonota-dialog .ant-drawer-content-wrapper {
+  container-type: inline-size;
+}
+
+/* Buttons keep their whole text. Long labels wrap between words, never off the box. */
+.atonota-dialog :is(.ant-modal-footer, .ant-popconfirm-buttons) .ant-btn {
+  block-size: auto;
+  min-block-size: var(--hit-target);
+  min-inline-size: var(--hit-target);
+  max-inline-size: 100%;
+  white-space: normal;
+  overflow-wrap: break-word;
+  text-align: center;
+}
+
+.atonota-dialog :is(.ant-modal-footer, .ant-popconfirm-buttons) .ant-btn > span {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+
+.atonota-dialog .ant-modal-footer,
+.atonota-dialog .ant-popconfirm-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-xs);
+}
+
+.atonota-dialog .ant-modal-footer > .ant-btn + .ant-btn,
+.atonota-dialog .ant-popconfirm-buttons > .ant-btn {
+  margin-inline-start: 0;
+}
+
+/*
+ * In a narrow box the buttons stack in source order and fill the width.
+ * The limit is in rem, so 200 % text stacks the buttons sooner.
+ */
+@container (max-width: 30rem) {
+  .atonota-dialog .ant-modal-footer,
+  .atonota-dialog .ant-popconfirm-buttons {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+/* The close icon of the side panel does not shrink when the title is long. */
+.atonota-dialog .ant-drawer-close {
+  flex: none;
+  min-block-size: var(--hit-target);
+  min-inline-size: var(--hit-target);
+}
+
+.atonota-dialog .ant-drawer-title {
+  min-inline-size: 0;
+  overflow-wrap: break-word;
+}
+
+/*
+ * Short area, for example with the phone keyboard open. The dialog fits the visible height.
+ * Only the body scrolls, so the last button stays on screen.
+ */
+.atonota-dialog .ant-modal {
+  inset-block-start: var(--space-md);
+  padding-block-end: 0;
+  max-inline-size: calc(100vw - 2 * var(--space-md));
+}
+
+.atonota-dialog .ant-modal-content {
+  display: flex;
+  flex-direction: column;
+  max-block-size: calc(100dvh - 2 * var(--space-md));
+}
+
+.atonota-dialog .ant-modal-header,
+.atonota-dialog .ant-modal-footer {
+  flex: none;
+}
+
+.atonota-dialog .ant-modal-body {
+  flex: 1 1 auto;
+  min-block-size: 0;
+  overflow-y: auto;
+}
+
+.atonota-dialog .ant-modal-title {
+  overflow-wrap: break-word;
+}

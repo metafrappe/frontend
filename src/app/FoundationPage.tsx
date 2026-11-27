@@ -1,4 +1,6 @@
-import { Button, Card, Flex, Input, Modal, Select, Space, Table, Typography } from 'antd';
+import { Button, Card, Flex, Input, Select, Space, Table, Typography } from 'antd';
+
+import { ActionDialog } from '@/components/dialog';
 import { useState } from 'react';
 
 import { FOCUS_DIM_SOURCE_CLASS, useFocusDim } from '@/engines/focus-dim';
@@ -91,14 +93,14 @@ function SurfaceButtonsDemo() {
           </Button>
         </Flex>
       </Card>
-      <Modal
+      <ActionDialog
         title="Kaydı sil"
         open={open}
-        onOk={() => setOpen(false)}
+        onConfirm={() => setOpen(false)}
         onCancel={() => setOpen(false)}
-        okText="Tamam"
-        cancelText="Vazgeç"
-        okButtonProps={{ 'data-testid': 'btn-modal-primary' }}
+        confirmLabel="Kaydı sil"
+        cancelLabel="Vazgeç"
+        confirmButtonProps={{ 'data-testid': 'btn-modal-primary' }}
         data-testid="demo-modal"
       >
         <Typography.Paragraph>
@@ -107,7 +109,7 @@ function SurfaceButtonsDemo() {
         <Button type="text" danger data-testid="btn-modal-danger-text">
           Kalıcı sil
         </Button>
-      </Modal>
+      </ActionDialog>
     </section>
   );
 }

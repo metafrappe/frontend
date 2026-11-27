@@ -2,7 +2,9 @@
  * Dialog test page. Opens only in the e2e build at `/_demo/dialog`.
  * The route row is in `src/shell/routes.ts`. The texts are sample data for tests.
  */
-import { Button, Drawer, Modal, Popconfirm } from 'antd';
+import { Button } from 'antd';
+
+import { ActionDialog, ConfirmPopover, SidePanel } from '..';
 import { useState } from 'react';
 
 const DRAFTS = ['Mart taslağı', 'Nisan taslağı', 'Mayıs taslağı'];
@@ -38,35 +40,36 @@ export default function DialogDemoPage() {
       <Button data-testid="open-panel" onClick={() => setPanelOpen(true)}>
         Yan paneli aç
       </Button>
-      <Popconfirm
+      <ConfirmPopover
         title="Bağlantı kaldırılsın mı?"
-        okText="Tamam"
-        cancelText="İptal"
+        confirmLabel="Bağlantıyı kaldır"
+        cancelLabel="Vazgeç"
         onConfirm={() => setResult('Bağlantı kaldırıldı.')}
       >
         <Button data-testid="open-popconfirm">Bağlantıyı kaldır</Button>
-      </Popconfirm>
+      </ConfirmPopover>
       <output data-testid="result">{result}</output>
 
-      <Modal
+      <ActionDialog
         open={removing !== undefined}
         title="Taslak silinsin mi?"
-        okText="Tamam"
-        cancelText="İptal"
-        onOk={() => {
+        confirmLabel="Taslağı sil"
+        cancelLabel="Vazgeç"
+        danger
+        onConfirm={() => {
           setDrafts((list) => list.filter((name) => name !== removing));
           setRemoving(undefined);
         }}
         onCancel={() => setRemoving(undefined)}
       >
         <p>{removing} kalıcı olarak silinir.</p>
-      </Modal>
-      <Modal
+      </ActionDialog>
+      <ActionDialog
         open={longOpen}
         title="Değişiklikleri gözden geçirin"
-        okText="Tamam"
-        cancelText="İptal"
-        onOk={() => setLongOpen(false)}
+        confirmLabel="Değişiklikleri kaydet"
+        cancelLabel="Düzenlemeye devam et"
+        onConfirm={() => setLongOpen(false)}
         onCancel={() => setLongOpen(false)}
       >
         <ul>
@@ -74,10 +77,10 @@ export default function DialogDemoPage() {
             <li key={line}>{line}</li>
           ))}
         </ul>
-      </Modal>
-      <Drawer title="Çalışma alanı" open={panelOpen} onClose={() => setPanelOpen(false)}>
+      </ActionDialog>
+      <SidePanel title="Çalışma alanı" open={panelOpen} onClose={() => setPanelOpen(false)}>
         <p>Panelin içeriği.</p>
-      </Drawer>
+      </SidePanel>
     </div>
   );
 }
