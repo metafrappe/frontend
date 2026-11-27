@@ -181,6 +181,40 @@ describe('AI Studio', { timeout: 30_000 }, () => {
     expect(screen.getByText('Yanıt durduruldu.')).toBeInTheDocument();
   });
 
+  it('akış sürerken sohbet değişince A sohbetinin parçası B sohbetine yazılmaz', async () => {
+    // The stream ignores the abort signal. After the switch it sends late text and the end event.
+    const encode = (event: AgentEvent) => new TextEncoder().encode(encodeAgentEvent(event));
+    let late: (() => void) | undefined;
+    const stubborn: AgentTransport = () =>
+      Promise.resolve(
+        new ReadableStream<Uint8Array>({
+          start(controller) {
+            controller.enqueue(encode({ type: 'text', delta: 'A sohbetinin yanıtı. ' }));
+            late = () => {
+              try {
+                controller.enqueue(encode({ type: 'text', delta: 'A geç parça.' }));
+                controller.enqueue(encode({ type: 'done' }));
+                controller.close();
+              } catch {
+                // The reader already closed the stream.
+              }
+            };
+          },
+        }),
+      );
+    render(<AiStudio transport={stubborn} source={MOCK_SOURCE} />);
+    const user = await send('A sorusu');
+    await screen.findByText(/A sohbetinin yanıtı/);
+    await newConversation(user);
+    late?.();
+    for (let i = 0; i < 5; i += 1) await new Promise((resolve) => setTimeout(resolve, 0));
+    const log = screen.getByRole('log');
+    expect(log).not.toHaveTextContent('A geç parça');
+    expect(log).not.toHaveTextContent('Yanıt durduruldu.');
+    expect(screen.getByRole('heading', { name: /Atonota asistanı/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Mesajı gönder' })).toBeInTheDocument();
+  });
+
   it('sunucu araç olayı göndermezse araç listesi göstermez', async () => {
     const events: AgentEvent[] = [{ type: 'text', delta: 'Kısa yanıt.' }, { type: 'done' }];
     render(
