@@ -8,6 +8,7 @@ import { CollectionView } from '../CollectionView';
 import { sampleDefinition, sampleSavedViews } from '../sample';
 import type { CollectionSource } from '../types';
 import { PreviewNotice } from './PreviewNotice';
+import { PreviewTitle } from './PreviewTitle';
 import { TemporaryFoundation } from './TemporaryFoundation';
 import './preview.css';
 
@@ -66,7 +67,7 @@ const container = document.getElementById('root');
 if (!container) throw new Error('Missing preview root');
 createRoot(container).render(
   <TemporaryFoundation mode={mode}>
-    <h1 className="preview-title">Koleksiyon örneği</h1>
+    <PreviewTitle />
     {mocks.active ? <PreviewNotice /> : null}
     <BrowserRouter>
       <CollectionView

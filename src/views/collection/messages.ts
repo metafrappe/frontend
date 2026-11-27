@@ -58,6 +58,7 @@ const tr = {
   'collection.sort.asc': 'Artan',
   'collection.sort.desc': 'Azalan',
   'collection.content.label': 'Koleksiyon içeriği',
+  'collection.preview.title': 'Koleksiyon örneği',
 } as const satisfies Record<string, Message>;
 
 export type CollectionMessageKey = keyof typeof tr;
