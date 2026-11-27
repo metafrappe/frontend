@@ -20,6 +20,13 @@ describe('liste dil kataloğu (IC-9, IC-11)', () => {
     ).toBe('2 kayıt onaylanır: A, B.');
   });
 
+  it('deneme sayfası başlığı katalogdan gelir (AJA-1621)', () => {
+    expect(COLLECTION_MESSAGES.tr).toHaveProperty(
+      ['collection.preview.title'],
+      'Koleksiyon örneği',
+    );
+  });
+
   it('çevirisi olmayan dil kaynak metne düşer, metin uydurulmaz', () => {
     expect(formatCollectionMessage('en', 'collection.bulk.cancel')).toBe('Vazgeç');
   });

@@ -21,6 +21,8 @@ for (const theme of ['light', 'dark'] as const) {
     const axe = await new AxeBuilder({ page }).analyze();
     expect(axe.violations.map((violation) => violation.id)).toEqual([]);
     await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
+    // Başlık metni dil kataloğundan gelir. Ekran okuyucu yine bu adı okur (AJA-1621).
+    await expect(page.getByRole('heading', { level: 1 })).toHaveAccessibleName('Koleksiyon örneği');
   });
 }
 

@@ -64,6 +64,8 @@ const MOVED: Record<string, readonly string[]> = {
     ' süzgecini kaldır',
     'Koleksiyon içeriği',
   ],
+  // AJA-1567 deneme sayfasına tek h1 ekledi. Başlık görünmez ama ekran okuyucu okur (AJA-1621).
+  'preview/main.tsx': ['Koleksiyon örneği'],
 };
 
 /** Metnin bileşende gömülü yazımı: tırnak içinde ya da iki JSX etiketi arasında. */
