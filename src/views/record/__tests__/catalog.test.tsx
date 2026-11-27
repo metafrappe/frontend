@@ -585,4 +585,47 @@ describe('versioned field catalog (RE-11, AX-4, Goal 1)', () => {
     const addedRows = onChange.mock.calls[0]?.[1] as unknown[];
     expect(addedRows).toHaveLength(2);
   });
+
+  describe('aramalı seçim kutusu kullanıcının dilini kullanır (GILT 10)', () => {
+    const cities = ['Ankara', 'Bursa', 'İzmir', 'Isparta', 'Konya', 'Muğla', 'Ordu'];
+    const cityField: DocField = {
+      fieldname: 'city',
+      fieldtype: 'Select',
+      label: 'Şehir',
+      read_only: false,
+      component: 'select',
+      sensitivity: 'standard',
+      choices: cities.map((city) => ({ value: city, label: city })),
+    };
+
+    async function search(locale: 'tr' | 'en', query: string): Promise<string[]> {
+      const user = userEvent.setup();
+      render(
+        <CatalogField
+          field={cityField}
+          value={null}
+          doc={{}}
+          doctype="Expense Claim"
+          meta={CHILD_META}
+          adapter={createStubAdapter()}
+          locale={locale}
+          onChange={vi.fn()}
+        />,
+      );
+      await user.type(screen.getByRole('combobox'), query);
+      return screen.queryAllByRole('option').map((option) => option.textContent ?? '');
+    }
+
+    it('Türkçede izmir araması İzmir seçeneğini bulur', async () => {
+      expect(await search('tr', 'izmir')).toEqual(['İzmir']);
+    });
+
+    it('Türkçede ısparta araması Isparta seçeneğini bulur', async () => {
+      expect(await search('tr', 'ısparta')).toEqual(['Isparta']);
+    });
+
+    it('İngiliz İngilizcesinde isparta araması Isparta seçeneğini bulur', async () => {
+      expect(await search('en', 'isparta')).toEqual(['Isparta']);
+    });
+  });
 });

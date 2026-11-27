@@ -122,6 +122,17 @@ describe('sabit dil yalnız eşleme dosyasındadır', () => {
     expect(offenders).toEqual([]);
   });
 
+  it('aramalı antd seçim kutusu kendi süzgecini verir (GILT 10)', () => {
+    // The built-in antd filter upper-cases with `toUpperCase()`. That rule ignores the user's language.
+    const offenders = sourceFiles(SRC)
+      .map((path) => relative(SRC, path))
+      .filter((path) => {
+        const source = readFileSync(join(SRC, path), 'utf8');
+        return countMatches(source, /\bshowSearch\b/g) > countMatches(source, /\bfilterOption=/g);
+      });
+    expect(offenders).toEqual([]);
+  });
+
   it('ortak yardımcı denetimi örnek yazımları yakalar (olumsuz örnek)', () => {
     for (const sample of [
       'label.toLowerCase().includes(txt)',
@@ -151,3 +162,7 @@ const CASE_ALLOWED = new Set([
   // The sample record name prefix is built from the DocType name. This is sample data.
   'shell/sampleData.ts',
 ]);
+
+function countMatches(source: string, pattern: RegExp): number {
+  return source.match(pattern)?.length ?? 0;
+}
