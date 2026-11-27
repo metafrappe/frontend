@@ -1,7 +1,7 @@
 import { CheckCircle, Question, XCircle } from '@phosphor-icons/react';
 
 import type { ResultBlock, ResultOutcome } from '../types';
-import { OUTCOME_LABEL } from './SurfaceLabels';
+import { useGenuiStrings } from '../useGenuiStrings';
 
 const ICON: Record<ResultOutcome, typeof CheckCircle> = {
   succeeded: CheckCircle,
@@ -11,6 +11,7 @@ const ICON: Record<ResultOutcome, typeof CheckCircle> = {
 
 /** Sonuç kartı. Sonuç "başarılı", "başarısız" ya da "bilinmiyor" olur. */
 export function ResultView({ block }: { block: ResultBlock }) {
+  const text = useGenuiStrings();
   const Icon = ICON[block.outcome];
   return (
     <div
@@ -20,7 +21,7 @@ export function ResultView({ block }: { block: ResultBlock }) {
     >
       <Icon aria-hidden />
       <p>
-        <strong>{OUTCOME_LABEL[block.outcome]}</strong> {block.summary}
+        <strong>{text.outcomeLabels[block.outcome]}</strong> {block.summary}
       </p>
     </div>
   );

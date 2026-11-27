@@ -2,7 +2,7 @@ import { CheckCircle, Hourglass, ListChecks, XCircle } from '@phosphor-icons/rea
 import { useId } from 'react';
 
 import type { EventsBlock, ToolEventStatus } from '../types';
-import { EVENT_LABEL } from './SurfaceLabels';
+import { useGenuiStrings } from '../useGenuiStrings';
 
 const ICON: Record<ToolEventStatus, typeof CheckCircle> = {
   done: CheckCircle,
@@ -15,12 +15,13 @@ const ICON: Record<ToolEventStatus, typeof CheckCircle> = {
  * Sahte ilerleme yoktur: yüzde ya da tahmini süre yazılmaz.
  */
 export function EventsView({ block }: { block: EventsBlock }) {
+  const text = useGenuiStrings();
   const id = useId();
   return (
     <div role="group" data-genui="events" className="genui-card genui-events" aria-labelledby={id}>
       <div className="genui-card-h">
         <ListChecks aria-hidden />
-        <strong id={id}>Araç olayları</strong>
+        <strong id={id}>{text.toolEvents}</strong>
       </div>
       <ul aria-labelledby={id}>
         {block.items.map((item) => {
@@ -30,7 +31,7 @@ export function EventsView({ block }: { block: EventsBlock }) {
               <Icon aria-hidden />
               <span>
                 <code>{item.tool}</code> {item.summary}{' '}
-                <span className="genui-event-state">{EVENT_LABEL[item.status]}</span>
+                <span className="genui-event-state">{text.eventLabels[item.status]}</span>
               </span>
             </li>
           );

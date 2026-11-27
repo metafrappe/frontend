@@ -1,5 +1,6 @@
 import { useId } from 'react';
 
+import { useGenuiStrings } from '../useGenuiStrings';
 import type { FieldChange } from '../types';
 
 /**
@@ -10,18 +11,19 @@ import type { FieldChange } from '../types';
  * kelimeler ortasından bölünmez. Hücreler `headers` ile başlıklara bağlıdır.
  */
 export function ChangeTable({ changes }: { changes: FieldChange[] }) {
+  const text = useGenuiStrings();
   const id = useId();
   const before = `${id}-before`;
   const after = `${id}-after`;
   return (
-    <table className="genui-changes" aria-label="Değişecek alanlar">
+    <table className="genui-changes" aria-label={text.changes.name}>
       <thead>
         <tr>
           <th scope="col" id={before}>
-            Önce
+            {text.changes.before}
           </th>
           <th scope="col" id={after}>
-            Sonra
+            {text.changes.after}
           </th>
         </tr>
       </thead>
@@ -35,9 +37,9 @@ export function ChangeTable({ changes }: { changes: FieldChange[] }) {
               </th>
             </tr>
             <tr>
-              <td headers={`${field} ${before}`}>{change.before || 'Boş'}</td>
+              <td headers={`${field} ${before}`}>{change.before || text.changes.empty}</td>
               <td headers={`${field} ${after}`} className="genui-after">
-                {change.after || 'Boş'}
+                {change.after || text.changes.empty}
               </td>
             </tr>
           </tbody>

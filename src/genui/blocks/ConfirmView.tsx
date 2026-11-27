@@ -2,28 +2,10 @@ import { ArrowCounterClockwise, CheckCircle, Warning, XCircle } from '@phosphor-
 import { Alert, Button, Checkbox, Input } from 'antd';
 import { useEffect, useId, useState } from 'react';
 
-import type { ConfirmBlock, ConfirmRisk, GenUIActionHandler, GenUIDecision } from '../types';
+import type { ConfirmBlock, GenUIActionHandler, GenUIDecision } from '../types';
+import { useGenuiStrings } from '../useGenuiStrings';
 import { ChangeTable } from './ChangeTable';
-import {
-  BUSY_NOTE,
-  EXPIRED_LABEL,
-  EXPIRED_NOTE,
-  FAILED_NOTE,
-  USED_NOTE,
-  useDecision,
-} from './useDecision';
-
-/** Risk düzeyinin yazılı adı. Düzey renkle değil yazıyla anlatılır. */
-const RISK_LABEL: Record<ConfirmRisk, string> = {
-  R1: 'R1 Düşük',
-  R2: 'R2 Orta',
-  R3: 'R3 Yüksek',
-};
-
-export const R2_CHECK = 'Önizlemeyi okudum.';
-export const R3_HINT = '"Onayla" düğmesi ad doğru yazılınca açılır.';
-export const R3_OK = 'Ad doğru. "Onayla" düğmesi açıldı.';
-export const UNDO_LABEL = 'Geri almayı öner';
+import { useDecision } from './useDecision';
 
 /** Tarayıcının bekleme süresi bu sayıyı aşamaz (yaklaşık 24,8 gün). */
 const MAX_TIMEOUT_MS = 2_147_483_647;
@@ -52,6 +34,8 @@ function useExpired(expiresAt: string | undefined): boolean {
  * İşlem özetini ve değişecek alanları önce ve sonra biçiminde gösterir.
  * Sohbet meşgulken düğmeler kapalıdır. Blok yalnız karar sohbete kabul
  * edilince kilitlenir. Böylece aynı karar iki kez gitmez ve kaybolmaz.
+ * Bütün metinler arayüz dilinden gelir (AJA-1859). Sunucunun düğme adı gösterilmez.
+ * Sohbete giden karar yalnız blok kimliğini ve karar kodunu taşır. Metin bunu değiştirmez.
  */
 export function ConfirmView({
   block,
@@ -64,6 +48,7 @@ export function ConfirmView({
   busy?: boolean;
   decided?: GenUIDecision | undefined;
 }) {
+  const text = useGenuiStrings();
   const { decision, notice, locked, apply } = useDecision(decided);
   // Süresi geçen öneri onaylanamaz; sunucu da reddeder.
   const expired = useExpired(block.expiresAt);
@@ -93,11 +78,7 @@ export function ConfirmView({
         ) : (
           <XCircle weight="fill" aria-hidden />
         )}
-        <span role="status">
-          {decision === 'approved'
-            ? 'Onayınız gönderildi. Sonucu asistan yeni mesajla bildirecek.'
-            : 'Vazgeçtiniz. Hiçbir işlem yapılmadı.'}
-        </span>
+        <span role="status">{decision === 'approved' ? text.approvedNote : text.rejectedNote}</span>
         {/* Sunucuda geri alma yok. Uç bildirilirse yalnız yeni öneri istenir. */}
         {decision === 'approved' && block.undoProposal === true && (
           <Button
@@ -107,11 +88,11 @@ export function ConfirmView({
             onClick={() =>
               onAction({
                 kind: 'ask',
-                text: `"${block.title}" işlemini geri almak için yeni bir öneri aç.`,
+                text: text.undoRequest(block.title),
               })
             }
           >
-            {UNDO_LABEL}
+            {text.undoLabel}
           </Button>
         )}
       </section>
@@ -132,25 +113,25 @@ export function ConfirmView({
       </header>
       <p className="genui-summary">{block.summary}</p>
       <dl className="genui-facts">
-        <dt>Risk düzeyi</dt>
+        <dt>{text.riskLevel}</dt>
         <dd>
-          <span className="genui-risk">{RISK_LABEL[risk]}</span>
+          <span className="genui-risk">{text.riskLabels[risk]}</span>
         </dd>
         {block.target && (
           <>
-            <dt>Hedef kayıt</dt>
+            <dt>{text.targetRecord}</dt>
             <dd>{block.target.label}</dd>
           </>
         )}
       </dl>
       <ChangeTable changes={block.changes} />
-      {busy && <p className="genui-muted-text">{BUSY_NOTE}</p>}
-      {notice === 'busy' && <Alert type="error" showIcon message={FAILED_NOTE} role="alert" />}
-      {notice === 'used' && <Alert type="warning" showIcon message={USED_NOTE} role="alert" />}
+      {busy && <p className="genui-muted-text">{text.busyNote}</p>}
+      {notice === 'busy' && <Alert type="error" showIcon message={text.failedNote} role="alert" />}
+      {notice === 'used' && <Alert type="warning" showIcon message={text.usedNote} role="alert" />}
       {expired && !locked && (
         <div role="status">
-          <strong>{EXPIRED_LABEL}</strong>
-          <p className="genui-muted-text">{EXPIRED_NOTE}</p>
+          <strong>{text.expiredLabel}</strong>
+          <p className="genui-muted-text">{text.expiredNote}</p>
         </div>
       )}
       {!locked && !expired && risk === 'R2' && (
@@ -160,13 +141,13 @@ export function ConfirmView({
           disabled={busy}
           onChange={(event) => setChecked(event.target.checked)}
         >
-          {R2_CHECK}
+          {text.r2Check}
         </Checkbox>
       )}
       {!locked && !expired && risk === 'R3' && block.target && (
         <div className="genui-type">
           <label htmlFor={inputId}>
-            Onaylamak için hedefin adını yazın: <strong>{block.target.name}</strong>
+            {text.r3Prompt} <strong>{block.target.name}</strong>
           </label>
           <Input
             id={inputId}
@@ -178,7 +159,7 @@ export function ConfirmView({
             onChange={(event) => setTyped(event.target.value)}
           />
           <p id={noteId} className="genui-muted-text" role="status">
-            {nameOk ? R3_OK : R3_HINT}
+            {nameOk ? text.r3Ok : text.r3Hint}
           </p>
         </div>
       )}
@@ -190,10 +171,10 @@ export function ConfirmView({
             disabled={busy || !ready}
             onClick={() => decide('approved')}
           >
-            {block.confirmLabel}
+            {text.approve}
           </Button>
           <Button disabled={busy} onClick={() => decide('rejected')}>
-            {block.cancelLabel}
+            {text.reject}
           </Button>
         </div>
       )}

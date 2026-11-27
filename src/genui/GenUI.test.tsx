@@ -1,4 +1,5 @@
-import { render, screen, within } from '@testing-library/react';
+import { render as renderUi, screen, within } from '@testing-library/react';
+import type { ReactElement, ReactNode } from 'react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -6,6 +7,15 @@ import { GenUI } from './GenUI';
 import { GENUI_REGISTRY } from './registry';
 import { parseBlocks } from './schema';
 import type { GenUIActionResult, GenUIBlock } from './types';
+
+import { LanguageProvider } from '@/app/locale';
+
+/** These tests check the Turkish texts, so the UI language is Turkish (AJA-1859). */
+function TurkishUi({ children }: { children: ReactNode }) {
+  return <LanguageProvider initialLanguage="tr">{children}</LanguageProvider>;
+}
+
+const render = (ui: ReactElement) => renderUi(ui, { wrapper: TurkishUi });
 
 const confirmBlock: GenUIBlock = {
   type: 'confirm',
@@ -134,7 +144,7 @@ describe('Onay bloğu (U4, AX-6)', () => {
   it('kullanıcı onay vermeden olay göndermez', () => {
     const onAction = accept();
     render(<GenUI blocks={[confirmBlock]} onAction={onAction} />);
-    expect(screen.getByRole('button', { name: 'Gönder' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Onayla' })).toBeInTheDocument();
     expect(onAction).not.toHaveBeenCalled();
   });
 
@@ -142,7 +152,7 @@ describe('Onay bloğu (U4, AX-6)', () => {
     const user = userEvent.setup();
     const onAction = accept();
     render(<GenUI blocks={[confirmBlock]} onAction={onAction} />);
-    await user.click(screen.getByRole('button', { name: 'Gönder' }));
+    await user.click(screen.getByRole('button', { name: 'Onayla' }));
     expect(onAction).toHaveBeenCalledTimes(1);
     expect(onAction).toHaveBeenCalledWith({
       kind: 'confirm',
@@ -150,7 +160,7 @@ describe('Onay bloğu (U4, AX-6)', () => {
       decision: 'approved',
       title: 'Bildirim gönderilsin mi?',
     });
-    expect(screen.queryByRole('button', { name: 'Gönder' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Onayla' })).toBeNull();
     expect(screen.getByRole('status')).toHaveTextContent('Onayınız gönderildi');
   });
 
@@ -165,7 +175,7 @@ describe('Onay bloğu (U4, AX-6)', () => {
 
   it('sohbet meşgulken onay düğmelerini kapatır ve nedenini yazar', () => {
     render(<GenUI blocks={[confirmBlock]} onAction={accept()} busy />);
-    expect(screen.getByRole('button', { name: 'Gönder' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Onayla' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Vazgeç' })).toBeDisabled();
     expect(screen.getByText('Yanıt bitince onay verebilirsiniz.')).toBeInTheDocument();
   });
@@ -174,8 +184,8 @@ describe('Onay bloğu (U4, AX-6)', () => {
     const user = userEvent.setup();
     const onAction = vi.fn((): GenUIActionResult => 'busy');
     render(<GenUI blocks={[confirmBlock]} onAction={onAction} />);
-    await user.click(screen.getByRole('button', { name: 'Gönder' }));
-    expect(screen.getByRole('button', { name: 'Gönder' })).toBeEnabled();
+    await user.click(screen.getByRole('button', { name: 'Onayla' }));
+    expect(screen.getByRole('button', { name: 'Onayla' })).toBeEnabled();
     expect(screen.getByRole('alert')).toHaveTextContent('Onay gönderilemedi.');
     expect(screen.queryByText(/Onayınız gönderildi/)).toBeNull();
   });
@@ -184,7 +194,7 @@ describe('Onay bloğu (U4, AX-6)', () => {
 describe('Geçmişten gelen karar', () => {
   it('geçmişte onaylanmış onay bloğunu kilitli çizer', () => {
     render(<GenUI blocks={[confirmBlock]} onAction={accept()} decisions={{ c1: 'approved' }} />);
-    expect(screen.queryByRole('button', { name: 'Gönder' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Onayla' })).toBeNull();
     expect(screen.getByRole('status')).toHaveTextContent('Onayınız gönderildi');
   });
 
@@ -198,10 +208,10 @@ describe('Geçmişten gelen karar', () => {
     const user = userEvent.setup();
     const onAction = vi.fn((): GenUIActionResult => 'used');
     render(<GenUI blocks={[confirmBlock]} onAction={onAction} />);
-    await user.click(screen.getByRole('button', { name: 'Gönder' }));
+    await user.click(screen.getByRole('button', { name: 'Onayla' }));
     expect(screen.getByRole('alert')).toHaveTextContent('Bu onay daha önce gönderildi.');
     expect(screen.queryByText(/yeniden deneyin/)).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Gönder' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Onayla' })).toBeNull();
   });
 });
 
@@ -288,7 +298,7 @@ describe('Onay bloğunun süresi', () => {
     const onAction = accept();
     render(<GenUI blocks={[block]} onAction={onAction} />);
     expect(screen.getByText('Süresi doldu')).toBeVisible();
-    expect(screen.queryByRole('button', { name: 'Gönder' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Onayla' })).toBeNull();
     expect(onAction).not.toHaveBeenCalled();
   });
 
@@ -296,7 +306,7 @@ describe('Onay bloğunun süresi', () => {
     const [block] = parseBlocks([{ ...confirmBlock, expiresAt: '2999-01-01T00:00:00Z' }]);
     if (!block) throw new Error('blok yok');
     render(<GenUI blocks={[block]} onAction={accept()} />);
-    expect(screen.getByRole('button', { name: 'Gönder' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Onayla' })).toBeEnabled();
     expect(screen.queryByText('Süresi doldu')).toBeNull();
   });
 

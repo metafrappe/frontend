@@ -1,10 +1,20 @@
-import { render, screen } from '@testing-library/react';
+import { render as renderUi, screen } from '@testing-library/react';
+import type { ReactElement, ReactNode } from 'react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
 import { parseBlocks } from '../schema';
 import type { ConfirmBlock, GenUIActionResult } from '../types';
 import { ConfirmView } from './ConfirmView';
+
+import { LanguageProvider } from '@/app/locale';
+
+/** These tests check the Turkish texts, so the UI language is Turkish (AJA-1859). */
+function TurkishUi({ children }: { children: ReactNode }) {
+  return <LanguageProvider initialLanguage="tr">{children}</LanguageProvider>;
+}
+
+const render = (ui: ReactElement) => renderUi(ui, { wrapper: TurkishUi });
 
 const base: ConfirmBlock = {
   type: 'confirm',

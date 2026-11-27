@@ -72,8 +72,13 @@ export interface ConfirmBlock {
   summary: string;
   /** Değişecek alanlar. Boş olamaz. Kullanıcı değişikliği görmeden onay vermez. */
   changes: FieldChange[];
-  confirmLabel: string;
-  cancelLabel: string;
+  /**
+   * Old server label. Not shown: the card writes "Approve" in the UI language (AJA-1859).
+   * The server's text may be in another language. The decision code stays `approved` either way.
+   */
+  confirmLabel?: string;
+  /** Old server label. Not shown. */
+  cancelLabel?: string;
   danger?: boolean;
   /**
    * Onayın son geçerlilik zamanı, ISO 8601. Örnek: `2026-11-24T12:00:00+03:00`.
@@ -124,7 +129,12 @@ export interface FormBlock {
   type: 'form';
   id: string;
   title: string;
-  submitLabel: string;
+  /**
+   * Old server label. Not shown: the card writes its buttons in the UI language (AJA-1859).
+   * Accepted so that old replies still render.
+   */
+  submitLabel?: string;
+  /** Old server label. Not shown. */
   cancelLabel?: string;
   fields: FormField[];
 }

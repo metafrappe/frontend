@@ -1,4 +1,5 @@
-import { render, screen, within } from '@testing-library/react';
+import { render as renderUi, screen, within } from '@testing-library/react';
+import type { ReactElement, ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
 import { GenUI } from './GenUI';
@@ -6,6 +7,15 @@ import { GENUI_REGISTRY } from './registry';
 import { parseBlock, parseBlocks } from './schema';
 import type { GenUIActionResult } from './types';
 import { SURFACE_SAMPLES, SURFACE_STATES } from './demo/samples';
+
+import { LanguageProvider } from '@/app/locale';
+
+/** These tests check the Turkish texts, so the UI language is Turkish (AJA-1859). */
+function TurkishUi({ children }: { children: ReactNode }) {
+  return <LanguageProvider initialLanguage="tr">{children}</LanguageProvider>;
+}
+
+const render = (ui: ReactElement) => renderUi(ui, { wrapper: TurkishUi });
 
 /**
  * Altı yapay zekâ yüzeyi (AJA-1156): kapsam şeridi, araç olayı listesi, kaynak kartı,

@@ -1,39 +1,41 @@
 import type { ReviewBlock } from '../types';
 import { ChangeTable } from './ChangeTable';
 import { SourceList } from './SourceList';
-import { RISK_LABEL, RISK_TONE } from './SurfaceLabels';
+import { useGenuiStrings } from '../useGenuiStrings';
+import { RISK_TONE } from './SurfaceLabels';
 
 /**
  * Değişiklik incelemesi: özet, risk düzeyi, hedef, geri alma ve önce-sonra tablosu.
  * Salt okunurdur. Onay düğmesi onay kartındadır (6b işi).
  */
 export function ReviewView({ block }: { block: ReviewBlock }) {
+  const text = useGenuiStrings();
   return (
     <div
       data-genui="review"
       className={`genui-card genui-diff-review${block.risk === 'R3' ? ' is-r3' : ''}`}
       role="group"
-      aria-label="Değişiklik önerisi"
+      aria-label={text.review}
     >
       <p className="genui-diff-summary">
         <strong>{block.summary}</strong>
       </p>
       <dl className="genui-facts">
-        <dt>Risk düzeyi</dt>
+        <dt>{text.riskLevel}</dt>
         <dd>
           <span className={`genui-badge is-${RISK_TONE[block.risk]}`}>
-            {RISK_LABEL[block.risk]}
+            {text.riskLabels[block.risk]}
           </span>
         </dd>
-        <dt>Hedef kayıt</dt>
+        <dt>{text.targetRecord}</dt>
         <dd>{block.target}</dd>
-        <dt>Geri alınabilir mi?</dt>
+        <dt>{text.reversible}</dt>
         <dd>{block.reversible}</dd>
       </dl>
       <ChangeTable changes={block.changes} />
       <div className="genui-source">
         <div>
-          <strong>Kaynak</strong>
+          <strong>{text.source}</strong>
           <SourceList items={block.sources ?? []} />
         </div>
       </div>

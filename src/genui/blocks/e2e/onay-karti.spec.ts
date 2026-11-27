@@ -28,7 +28,7 @@ test.describe('onay kartı', () => {
 
     const coarse = await page.evaluate(() => matchMedia('(any-pointer: coarse)').matches);
     const min = coarse ? 48 : 44;
-    for (const name of ['Gönder', 'Vazgeç']) {
+    for (const name of ['Onayla', 'Vazgeç']) {
       const button = card.getByRole('button', { name });
       const height = await button.evaluate((el) => el.getBoundingClientRect().height);
       expect(height, `${name} yüksekliği`).toBeGreaterThanOrEqual(min);
@@ -48,7 +48,7 @@ test.describe('onay kartı', () => {
   test('klavyeyle "Vazgeç" seçilir', async ({ page, browserName }) => {
     const card = page.locator('[data-genui="confirm"]');
     const reject = card.getByRole('button', { name: 'Vazgeç' });
-    await card.getByRole('button', { name: 'Gönder' }).focus();
+    await card.getByRole('button', { name: 'Onayla' }).focus();
     // WebKit, Safari gibi, düğmeye düz Tab ile gitmez. Bu tarayıcıda Alt+Tab kullanılır.
     await page.keyboard.press(browserName === 'webkit' ? 'Alt+Tab' : 'Tab');
     await expect(reject).toBeFocused();
@@ -56,9 +56,9 @@ test.describe('onay kartı', () => {
     await expect(card.getByRole('status')).toHaveText('Vazgeçtiniz. Hiçbir işlem yapılmadı.');
   });
 
-  test('dokunma ya da fareyle "Gönder" seçilir', async ({ page, isMobile }) => {
+  test('dokunma ya da fareyle "Onayla" seçilir', async ({ page, isMobile }) => {
     const card = page.locator('[data-genui="confirm"]');
-    const send = card.getByRole('button', { name: 'Gönder' });
+    const send = card.getByRole('button', { name: 'Onayla' });
     if (isMobile) await send.tap();
     else await send.click();
     await expect(card.getByRole('status')).toContainText('Onayınız gönderildi.');

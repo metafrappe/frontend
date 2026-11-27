@@ -2,12 +2,6 @@ import { useState } from 'react';
 
 import type { GenUIActionResult, GenUIDecision } from '../types';
 
-export const BUSY_NOTE = 'Yanıt bitince onay verebilirsiniz.';
-export const FAILED_NOTE = 'Onay gönderilemedi. Yanıt bitince yeniden deneyin.';
-export const EXPIRED_LABEL = 'Süresi doldu';
-export const EXPIRED_NOTE = 'Bu öneri artık onaylanamaz. Asistandan yeni öneri isteyin.';
-export const USED_NOTE = 'Bu onay daha önce gönderildi. İşlem yeniden yapılmadı.';
-
 /**
  * Onay ve form bloklarının karar durumu.
  *

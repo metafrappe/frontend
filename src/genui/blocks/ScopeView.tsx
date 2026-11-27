@@ -1,26 +1,27 @@
 import type { ScopeBlock } from '../types';
-import { MODE_LABEL } from './SurfaceLabels';
+import { useGenuiStrings } from '../useGenuiStrings';
 
 /** Kapsam şeridi: kiracı, ortam, kip ve kapsam her zaman görünür. */
 export function ScopeView({ block }: { block: ScopeBlock }) {
+  const text = useGenuiStrings();
   return (
-    <div data-genui="scope" className="genui-scope" role="group" aria-label="Kapsam">
+    <div data-genui="scope" className="genui-scope" role="group" aria-label={text.scope.name}>
       <dl>
         <div>
-          <dt>Kiracı</dt>
+          <dt>{text.scope.tenant}</dt>
           <dd>{block.tenant}</dd>
         </div>
         <div>
-          <dt>Ortam</dt>
+          <dt>{text.scope.environment}</dt>
           <dd>{block.environment}</dd>
         </div>
         <div>
-          <dt>Kip</dt>
-          <dd>{MODE_LABEL[block.mode]}</dd>
+          <dt>{text.scope.mode}</dt>
+          <dd>{text.modeLabels[block.mode]}</dd>
         </div>
         {block.scope && (
           <div>
-            <dt>Kapsam</dt>
+            <dt>{text.scope.scope}</dt>
             <dd>{block.scope}</dd>
           </div>
         )}

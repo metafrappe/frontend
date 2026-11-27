@@ -331,8 +331,9 @@ function validate(raw: Obj): KnownBlock | null {
         str(raw['title']) &&
         str(raw['summary']) &&
         list(raw['changes'], LIMITS.fields, isChange) &&
-        str(raw['confirmLabel']) &&
-        str(raw['cancelLabel']) &&
+        // Button texts belong to the card and follow the UI language (AJA-1859). Old labels are still accepted.
+        str(raw['confirmLabel'], false) &&
+        str(raw['cancelLabel'], false) &&
         (raw['danger'] === undefined || typeof raw['danger'] === 'boolean') &&
         (raw['expiresAt'] === undefined ||
           (str(raw['expiresAt']) && Number.isFinite(Date.parse(raw['expiresAt'])))) &&
@@ -346,7 +347,7 @@ function validate(raw: Obj): KnownBlock | null {
     case 'form':
       return str(raw['id']) &&
         str(raw['title']) &&
-        str(raw['submitLabel']) &&
+        str(raw['submitLabel'], false) &&
         str(raw['cancelLabel'], false) &&
         list(raw['fields'], LIMITS.fields, isField)
         ? (raw as unknown as KnownBlock)

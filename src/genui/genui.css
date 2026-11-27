@@ -303,6 +303,27 @@
   gap: var(--ai-gap-sm);
 }
 
+/*
+ * Button text follows the UI language (AJA-1859). German text is long.
+ * At 320 CSS px a long text wraps between words inside the card. The font does not shrink.
+ * A word longer than the line breaks only as a last resort.
+ */
+.genui-actions .ant-btn,
+.genui-done .genui-undo {
+  max-width: 100%;
+  height: auto;
+  padding-block: var(--ai-gap-xs);
+  white-space: normal;
+  text-align: center;
+}
+
+.genui-actions .ant-btn > span,
+.genui-done .genui-undo > span {
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+
 .genui-fields {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--ai-field-min)), 1fr));

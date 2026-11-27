@@ -2,11 +2,12 @@ import {
   cleanup,
   configure,
   getConfig,
-  render,
+  render as renderUi,
   screen,
   waitFor,
   within,
 } from '@testing-library/react';
+import type { ReactElement, ReactNode } from 'react';
 import userEvent from '@testing-library/user-event';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -15,6 +16,15 @@ import type { AgentEvent, AgentRequest, AgentTransport } from '../agent';
 import { encodeAgentEvent } from '../agent';
 import { MOCK_SOURCE } from '../agent';
 import { AiStudio } from './AiStudio';
+
+import { LanguageProvider } from '@/app/locale';
+
+/** Bu testler Türkçe metinleri denetler. Bu yüzden arayüz dili Türkçedir (AJA-1859). */
+function TurkishUi({ children }: { children: ReactNode }) {
+  return <LanguageProvider initialLanguage="tr">{children}</LanguageProvider>;
+}
+
+const render = (ui: ReactElement) => renderUi(ui, { wrapper: TurkishUi });
 
 // `waitFor` ve `find*` denetimleri DOM değişince yeniden çalışır; sabit süre beklemez.
 // Üst sınır varsayılan 1 saniyedir. Sahte akış yüklü makinede bundan uzun sürer (inceleme 2, Ö4).
@@ -74,7 +84,7 @@ async function approveDelayNotice(user: ReturnType<typeof setupUser>) {
   const log = screen.getByRole('log');
   await waitFor(() => expect(log.querySelector('[data-genui="confirm"]')).not.toBeNull());
   const block = log.querySelector('[data-genui="confirm"]') as HTMLElement;
-  await user.click(within(block).getByRole('button', { name: 'Gönder' }));
+  await user.click(within(block).getByRole('button', { name: 'Onayla' }));
 }
 
 /** Sohbet çekmecesinden bir sohbete geçer. */
@@ -198,7 +208,7 @@ describe('AI Studio', { timeout: 30_000 }, () => {
     await waitFor(() => expect(log.querySelector('[data-genui="confirm"]')).not.toBeNull());
     expect(within(log).queryAllByText(/^Onaylıyorum/)).toHaveLength(0);
     const block = log.querySelector('[data-genui="confirm"]') as HTMLElement;
-    await user.click(within(block).getByRole('button', { name: 'Gönder' }));
+    await user.click(within(block).getByRole('button', { name: 'Onayla' }));
     await waitFor(() => expect(within(log).getByText(/^Onaylıyorum/)).toBeInTheDocument());
     await waitFor(() => expect(log).toHaveTextContent('gerçek bir işlem yapılmadı'));
   });
@@ -310,7 +320,7 @@ describe('AI Studio', { timeout: 30_000 }, () => {
     await user.type(screen.getByRole('textbox', { name: 'Asistana mesaj yazın' }), 'merhaba');
     await user.click(screen.getByRole('button', { name: 'Mesajı gönder' }));
     const block = log.querySelector('[data-genui="confirm"]') as HTMLElement;
-    expect(within(block).getByRole('button', { name: 'Gönder' })).toBeDisabled();
+    expect(within(block).getByRole('button', { name: 'Onayla' })).toBeDisabled();
   });
 
   it('bağlam dosyası yalnız kendi sohbetinde kalır', async () => {
@@ -351,7 +361,7 @@ describe('AI Studio', { timeout: 30_000 }, () => {
     await openConversation(user, /^Geciken siparişleri bul$/);
     await waitFor(() => expect(log.querySelector('[data-genui="confirm"]')).not.toBeNull());
     const block = log.querySelector('[data-genui="confirm"]') as HTMLElement;
-    expect(within(block).queryByRole('button', { name: 'Gönder' })).toBeNull();
+    expect(within(block).queryByRole('button', { name: 'Onayla' })).toBeNull();
     expect(within(block).getByRole('status')).toHaveTextContent('Onayınız gönderildi');
   });
 
