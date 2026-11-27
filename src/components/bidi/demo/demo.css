@@ -1,0 +1,6 @@
+.bidi-demo {
+  display: grid;
+  gap: var(--radius);
+  padding: var(--radius);
+  min-inline-size: 0;
+}

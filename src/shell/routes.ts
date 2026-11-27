@@ -137,6 +137,12 @@ export const lazyRoutes: RouteEntry[] = [
           load: () => import('@/components/controls/demo/ControlsDemoPage'),
         },
         {
+          path: '/_demo/bidi',
+          label: 'Yazı yönü denemesi',
+          icon: Flask,
+          load: () => import('@/components/bidi/demo/BidiDemoPage'),
+        },
+        {
           path: '/_demo/genui',
           label: 'Yüzey denemesi',
           icon: Flask,
