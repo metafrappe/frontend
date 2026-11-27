@@ -85,7 +85,9 @@
   "radius": {
     "default": 5,
     "locked": true,
-    "decision": "Radius kararı verildi: 5 px. Seçenek kaldırıldı."
+    "decision": "Radius kararı verildi: 5 px. Seçenek kaldırıldı.",
+    "ladder": [0, 3, 5, 7, 9, 13, 17, 21, 25, 29],
+    "ladderDecision": "Karar 45, radius.md: köşe yalnız bu basamaklardan biri olur. Kapsül öğeler (yuvarlak düğme, avatar, pill) kısa kenarın yarısını alır ve listenin dışındadır."
   },
   "sizes": {
     "sm": {
