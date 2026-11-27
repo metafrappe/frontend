@@ -66,7 +66,12 @@ function UserLanguage({
     void loadUserLocale(session.api, user, ctrl.signal).then((locale) => {
       if (ctrl.signal.aborted || locale === undefined) return;
       setLanguage(locale.language);
-      setFormatting({ time_zone: locale.time_zone, currency: locale.currency });
+      setFormatting({
+        time_zone: locale.time_zone,
+        currency: locale.currency,
+        region: locale.region,
+        measurement_system: locale.measurement_system,
+      });
     });
     return () => ctrl.abort();
   }, [session, user, setLanguage, setFormatting]);
