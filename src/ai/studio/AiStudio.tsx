@@ -73,8 +73,8 @@ function StudioInner({ transport, source }: { transport: AgentTransport; source:
   // Seçilen kip bir sonraki yeni işe uygulanır. Başlamış akışın kipi değişmez.
   const [mode, setMode] = useState<AgentMode>('ask');
   const { flow, flowTransport, start, approve, forget } = useFlow(transport, activeKey);
-  const { messages, setMessages, send, cancel, regenerate, retryKind, busy } =
-    useStudioChat(flowTransport);
+  const { messages, setMessages, send, cancel, detach, regenerate, retryKind, busy } =
+    useStudioChat(flowTransport, activeKey);
   const store = useRef<Record<string, StoredMessages>>({});
   const nextId = useRef(2);
   // Çekmece kapanınca odak, çekmeceyi açan düğmeye döner.
@@ -150,8 +150,8 @@ function StudioInner({ transport, source }: { transport: AgentTransport; source:
 
   const switchTo = (key: string) => {
     if (key === activeKey) return;
-    cancel();
-    store.current[activeKey] = messages;
+    // The running reply stops here. Its late chunks do not reach the next conversation.
+    store.current[activeKey] = detach();
     setMessages(store.current[key] ?? []);
     setActiveKey(key);
     setLeftOpen(false);
@@ -173,7 +173,7 @@ function StudioInner({ transport, source }: { transport: AgentTransport; source:
     setConversations(rest);
     forget(key);
     if (key === activeKey && rest[0]) {
-      cancel();
+      detach();
       setMessages(store.current[rest[0].key] ?? []);
       setActiveKey(rest[0].key);
     }

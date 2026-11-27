@@ -23,6 +23,7 @@ export function createHttpTransport({
         'Content-Type': 'application/json',
         Accept: 'text/event-stream',
         ...(headers ? await headers() : {}),
+        ...(request.idempotencyKey ? { 'Idempotency-Key': request.idempotencyKey } : {}),
       },
       body: JSON.stringify(request),
       signal,
