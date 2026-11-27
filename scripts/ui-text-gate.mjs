@@ -7,6 +7,9 @@
  * - JSX metni: `<p>Kayıt yok</p>`.
  * - Metin taşıyan öznitelikteki sabit metin: `aria-label="Göstergeler"`.
  * - JSX ifadesindeki sabit metin: `<b>{'Kaynak'}</b>`.
+ * - Koşullu metin: `{x ? 'Aç' : 'Kapat'}`, `{x && 'Aç'}`. Öznitelikte de: `aria-label={x ? 'Aç' : 'Kapat'}`.
+ * - Değişkenli metnin sabit parçası: `` {`Toplam ${n}`} `` → "Toplam".
+ * - Öznitelik içindeki JSX metni: `extra={<span>Ek bilgi</span>}`.
  * Harf içermeyen metin sayılmaz. Örnek: `·`, `/`, `—`.
  *
  * Test, önizleme, örnek veri ve e2e dosyaları taranmaz.
@@ -71,31 +74,66 @@ function isLiteral(node) {
   return node && (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node));
 }
 
+/**
+ * İfadenin ekranda görünen sabit metin parçaları. Dönüş: `{ node, text }` listesi.
+ * Koşulun dalları (`x ? 'Aç' : 'Kapat'`), mantık işlecinin sonucu (`x && 'Aç'`, `x ?? 'Yok'`) ve
+ * şablonun sabit parçaları (`` `Toplam ${n}` `` → "Toplam") metin sayılır. Koşulun kendisi,
+ * karşılaştırma ve işlev çağrısı (`m('anahtar')`) metin sayılmaz.
+ */
+function textParts(expr) {
+  if (!expr) return [];
+  if (isLiteral(expr)) return [{ node: expr, text: expr.text.trim() }];
+  if (ts.isTemplateExpression(expr)) {
+    const parts = [expr.head.text, ...expr.templateSpans.map((span) => span.literal.text)];
+    return [{ node: expr, text: parts.join(' ').replace(/\s+/g, ' ').trim() }];
+  }
+  if (
+    ts.isParenthesizedExpression(expr) ||
+    ts.isAsExpression(expr) ||
+    ts.isSatisfiesExpression(expr) ||
+    ts.isNonNullExpression(expr)
+  )
+    return textParts(expr.expression);
+  if (ts.isConditionalExpression(expr))
+    return [...textParts(expr.whenTrue), ...textParts(expr.whenFalse)];
+  if (ts.isBinaryExpression(expr)) {
+    const op = expr.operatorToken.kind;
+    if (op === ts.SyntaxKind.AmpersandAmpersandToken) return textParts(expr.right);
+    if (op === ts.SyntaxKind.BarBarToken || op === ts.SyntaxKind.QuestionQuestionToken)
+      return [...textParts(expr.left), ...textParts(expr.right)];
+  }
+  return [];
+}
+
 /** Bir dosyanın gömülü metinleri. Dönüş: `{ file, line, text }` listesi. */
 export function findEmbeddedText(source, file) {
   const sf = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
   const hits = [];
-  const add = (node, text) =>
-    hits.push({ file, line: sf.getLineAndCharacterOfPosition(node.getStart(sf)).line + 1, text });
+  const add = (node, text) => hits.push({ node, text });
+  const addParts = (expr) => {
+    for (const part of textParts(expr)) if (LETTER.test(part.text)) add(part.node, part.text);
+  };
   const visit = (node) => {
     if (ts.isJsxText(node)) {
       const text = node.text.trim();
       if (LETTER.test(text)) add(node, text.replace(/\s+/g, ' '));
     } else if (ts.isJsxAttribute(node)) {
       const init = node.initializer;
-      const name = node.name.getText(sf);
-      if (TEXT_ATTRIBUTES.has(name)) {
-        const literal = init && ts.isJsxExpression(init) ? init.expression : init;
-        if (isLiteral(literal) && LETTER.test(literal.text)) add(node, literal.text);
-      }
-      return;
-    } else if (ts.isJsxExpression(node) && isLiteral(node.expression)) {
-      if (LETTER.test(node.expression.text)) add(node, node.expression.text);
+      if (TEXT_ATTRIBUTES.has(node.name.getText(sf)))
+        addParts(init && ts.isJsxExpression(init) ? init.expression : init);
+    } else if (ts.isJsxExpression(node) && !ts.isJsxAttribute(node.parent)) {
+      addParts(node.expression);
     }
     ts.forEachChild(node, visit);
   };
   visit(sf);
-  return hits;
+  return hits
+    .sort((a, b) => a.node.getStart(sf) - b.node.getStart(sf))
+    .map(({ node, text }) => ({
+      file,
+      line: sf.getLineAndCharacterOfPosition(node.getStart(sf)).line + 1,
+      text,
+    }));
 }
 
 function sourceFiles(dir) {

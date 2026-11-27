@@ -36,6 +36,7 @@ describe('ürün kataloğu', () => {
 
 describe('taşınan Türkçe metinler aynen kalır', () => {
   it.each([
+    ['controls.dropdown.noResults', {}, 'Sonuç yok.'],
     ['genui.json.unknownBlock', {}, 'Bu blok tanınmadı. Ham veri gösteriliyor.'],
     ['genui.kpis.label', {}, 'Göstergeler'],
     ['genui.source.title', {}, 'Kaynak'],

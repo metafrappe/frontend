@@ -6,6 +6,7 @@ import type { MessageKey } from './en-GB';
  * Eksik anahtar için kaynak katalogdaki (en-GB) metin görünür.
  */
 export const tr: Catalog<MessageKey> = {
+  'controls.dropdown.noResults': 'Sonuç yok.',
   'genui.choices.label': 'Öneriler',
   'genui.json.unknownBlock': 'Bu blok tanınmadı. Ham veri gösteriliyor.',
   'genui.kpis.label': 'Göstergeler',

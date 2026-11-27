@@ -5,6 +5,7 @@
  * Yeni metin önce buraya, sonra öteki kataloglara eklenir.
  */
 export const enGB = {
+  'controls.dropdown.noResults': 'No results.',
   'genui.choices.label': 'Suggestions',
   'genui.json.unknownBlock': 'This block was not recognised. Showing the raw data.',
   'genui.kpis.label': 'Indicators',

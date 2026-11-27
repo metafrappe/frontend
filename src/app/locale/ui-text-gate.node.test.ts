@@ -122,7 +122,12 @@ describe('gömülü metin kapısı', () => {
       ].join('\n'),
       'src/x/A.tsx',
     );
-    expect(hits.map((h: { text: string }) => h.text)).toEqual(['Aç', 'Kapat', 'Toplam kayıt', 'Ara']);
+    expect(hits.map((h: { text: string }) => h.text)).toEqual([
+      'Aç',
+      'Kapat',
+      'Toplam kayıt',
+      'Ara',
+    ]);
   });
 
   it('öznitelik içindeki JSX metnini yakalar', () => {
