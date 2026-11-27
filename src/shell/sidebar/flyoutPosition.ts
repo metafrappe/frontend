@@ -1,7 +1,7 @@
 export interface FlyoutPositionInput {
-  /** Üst öğenin pencereye göre konumu. */
+  /** Position of the parent item relative to the viewport. */
   anchor: { top: number; height: number };
-  /** Sidebar sağ kenarının pencereye göre x konumu. */
+  /** x position of the sidebar's right edge relative to the viewport. */
   sidebarRight: number;
   flyoutHeight: number;
   viewportHeight: number;
@@ -12,11 +12,11 @@ export interface FlyoutPositionInput {
 export interface FlyoutPosition {
   left: number;
   top: number;
-  /** Okun flyout üst kenarına göre dikey konumu. */
+  /** Vertical position of the arrow relative to the flyout's top edge. */
   caret: number;
 }
 
-/** F1–F3 kurallarını uygular. Saf işlevdir. */
+/** Applies the F1–F3 rules. Pure function. */
 export function flyoutPosition(input: FlyoutPositionInput): FlyoutPosition {
   const { anchor, sidebarRight, flyoutHeight, viewportHeight, gap, clampPadding } = input;
   const center = anchor.top + anchor.height / 2;

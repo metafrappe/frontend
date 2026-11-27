@@ -1,12 +1,12 @@
-// Ad `.node.test.ts` ile biter. Böylece Node türleri yalnız bu testte geçerlidir.
+// The name ends in `.node.test.ts`, so Node types apply only to this test.
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
 const src = readFileSync(`${process.cwd()}/src/shell/tokens.ts`, 'utf8');
 
 /**
- * İnceleme 2, Küçük 3: kaynak alanı silinirse sabit yedek sessizce kullanılmaz.
- * Okuyucu hata verir.
+ * Review 2, Minor 3: if a source field is deleted, a hard-coded fallback is not used silently.
+ * The reader throws an error.
  */
 describe('tokens.ts', () => {
   it('sessiz sabit yedek değer yoktur', () => {

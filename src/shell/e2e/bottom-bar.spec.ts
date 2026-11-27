@@ -3,8 +3,8 @@ import type { Page } from '@playwright/test';
 import { expect, test } from '../../../tests/setup/playwright-fixtures';
 
 /**
- * Telefon alt çubuğu (AJA-982b). Kabul sırası 320, 360, 375, 390 px, yatay telefon,
- * tablet ve masaüstüdür. Karar `useMedia.ts` içindeki telefon sorgusuyla aynıdır.
+ * Phone bottom bar (AJA-982b). Acceptance order is 320, 360, 375, 390 px, landscape phone,
+ * tablet and desktop. The decision matches the phone query in `useMedia.ts`.
  */
 const isCompact = (page: Page) => {
   const v = page.viewportSize();
@@ -37,7 +37,7 @@ async function settle(page: Page) {
   });
 }
 
-// Görünür alanın yüksekliği küçülür. Sanal klavye tarayıcıda böyle görünür.
+// The visible area's height shrinks. This is how the virtual keyboard appears in the browser.
 async function openKeyboard(page: Page) {
   await page.evaluate(() => {
     const vv = window.visualViewport;
@@ -79,7 +79,7 @@ test.describe('telefon alt çubuğu', () => {
           w: r.width,
           h: r.height,
           font: parseFloat(getComputedStyle(node).fontSize),
-          // Ad kesilmez: metin kutusuna sığar.
+          // The label is not truncated: the text fits its box.
           clipped: label ? label.scrollWidth > label.clientWidth + 1 : true,
           outline: getComputedStyle(node).outlineStyle,
         };
@@ -109,10 +109,10 @@ test.describe('telefon alt çubuğu', () => {
     if (isLandscapePhone(page)) {
       expect(box.x).toBe(0);
       expect(box.height).toBeGreaterThan(box.width);
-      // Çubuk başlığın ve sayfanın solunda kalır. Üst üste binmez.
+      // The bar stays to the left of the header and the page. They do not overlap.
       expect(header.x).toBeGreaterThanOrEqual(box.x + box.width - 1);
       expect(main.x).toBeGreaterThanOrEqual(box.x + box.width - 1);
-      // Kabuğun üstündeki not da örtülmez. Örnek: sahte sunucunun "Örnek veri" notu.
+      // The notice above the shell is not covered either. Example: the mock server's sample data notice.
       const shellTop = await page
         .locator('.shell')
         .evaluate((el) => el.getBoundingClientRect().top);
@@ -135,7 +135,7 @@ test.describe('telefon alt çubuğu', () => {
     await expect(bar(page)).toBeVisible();
   });
 
-  // Bu test her projede koşar. Görünüm yatay telefona çevrilir. Böylece WebKit de denenir.
+  // This test runs in every project. The viewport is switched to landscape phone. That way WebKit is tested too.
   test('yatay telefonda sanal klavye açılınca sol çubuk yerinde kalır, sayfa kaymaz', async ({
     page,
   }) => {
@@ -193,11 +193,11 @@ test.describe('telefon alt çubuğu', () => {
     await expect(bar(page)).toBeVisible();
     const drawer = page.getByRole('dialog', { name: 'Menü' });
     const touch = !!test.info().project.use.hasTouch;
-    // Safari ve WebKit, Tab ile yalnız alanlara geçer. Düğmelere Option+Tab ile geçer.
+    // Safari and WebKit move only to fields with Tab. They move to buttons with Option+Tab.
     const tab = browserName === 'webkit' ? 'Alt+Tab' : 'Tab';
     const backTab = browserName === 'webkit' ? 'Alt+Shift+Tab' : 'Shift+Tab';
 
-    // Fare.
+    // Mouse.
     await item(page, 'Asistan').click();
     await expect.poll(() => new URL(page.url()).pathname).toBe('/asistan');
     await expect(item(page, 'Asistan')).toHaveAttribute('aria-current', 'page');
@@ -209,7 +209,7 @@ test.describe('telefon alt çubuğu', () => {
     await page.keyboard.press('Escape');
     await expect(item(page, 'Ara')).toBeFocused();
 
-    // Klavye. Odak göstergesi çevrelemez: çerçeve yok, alt çizgi var.
+    // Keyboard. The focus indicator does not surround: no outline, an underline instead.
     await item(page, 'Bekleyenler').focus();
     await page.keyboard.press(tab);
     await expect(item(page, 'Ara')).toBeFocused();
@@ -224,8 +224,8 @@ test.describe('telefon alt çubuğu', () => {
     }));
     expect(focus.outline).toBe('none');
     expect(focus.shadow).toBe('none');
-    // Odak modunu yalnız düz Tab açar (`src/engines/focus-mode`). WebKit'te Option+Tab modu açmaz.
-    // Bu yüzden alt çizgi göstergesi yalnız Chromium'da ölçülür. Açık konu görev yorumundadır.
+    // Only plain Tab turns on focus mode (`src/engines/focus-mode`). In WebKit, Option+Tab does not turn it on.
+    // So the underline indicator is measured only in Chromium. The open issue is in the task comment.
     if (browserName === 'chromium') expect(focus.indicator).toBe('1');
     await page.keyboard.press(tab);
     await page.keyboard.press('Enter');
@@ -236,7 +236,7 @@ test.describe('telefon alt çubuğu', () => {
     await page.keyboard.press('Escape');
     await expect(item(page, 'Menü')).toBeFocused();
 
-    // Dokunma.
+    // Touch.
     if (touch) {
       await item(page, 'Bekleyenler').tap();
       await expect.poll(() => new URL(page.url()).pathname).toBe('/');
@@ -254,7 +254,7 @@ test.describe('telefon alt çubuğu', () => {
     await expect(title).toHaveValue('Örnek veri 3');
     await title.fill('Yön değişimi metni');
     await title.focus();
-    // Dikey telefon yataya, yatay telefon dikeye döner. İki durumda da tablet görünümü açılmaz.
+    // Portrait phone rotates to landscape, landscape to portrait. In neither case does the tablet layout open.
     await page.setViewportSize({ width: start.height, height: start.width });
     await expect(page.locator('.shell')).toHaveAttribute('data-layout', 'compact');
     await expect(title).toHaveValue('Yön değişimi metni');

@@ -20,7 +20,7 @@ export interface FlyoutItemRenderProps {
 export interface FlyoutContent {
   title: string;
   badge?: number;
-  /** Ajan ve komut panelleri geniştir. */
+  /** Agent and command panels are wide. */
   wide?: boolean;
   body?: ReactNode;
   items: { key: string; render: (p: FlyoutItemRenderProps) => ReactNode }[];
@@ -51,8 +51,8 @@ export interface FlyoutItemProps {
 const ITEM_SELECTOR = '[data-fly-item]';
 
 /**
- * Alt menüsü olan sidebar öğesi (S5, F1–F6).
- * Geniş ekranda panel sağda açılır. Telefonda öğenin altında açılır.
+ * Sidebar item with a submenu (S5, F1–F6).
+ * On wide screens the panel opens to the right. On phones it opens below the item.
  */
 export function FlyoutItem(p: FlyoutItemProps) {
   const {
@@ -86,14 +86,14 @@ export function FlyoutItem(p: FlyoutItemProps) {
     suppressFocusOpen.current = false;
   };
 
-  // F5: sağ ok ile açılınca odak ilk öğeye geçer.
+  // F5: when opened with the right arrow, focus moves to the first item.
   useEffect(() => {
     if (!open || !focusFirst.current) return;
     focusFirst.current = false;
     panelRef.current?.querySelector<HTMLElement>(ITEM_SELECTOR)?.focus();
   }, [open]);
 
-  // F1–F3: panel konumu. Telefonda panel akış içindedir.
+  // F1–F3: panel position. On phones the panel is in the normal flow.
   useLayoutEffect(() => {
     if (compact || presence === 'closed') return undefined;
     const update = () => {
@@ -293,7 +293,7 @@ export function FlyoutItem(p: FlyoutItemProps) {
           </div>
           {content.body}
           {content.items.length > 0 && (
-            // G1: flyout panelinin de kayan zemini vardır (kaynak: .sb-fly .glide).
+            // G1: the flyout panel has its own gliding background too (source: .sb-fly .glide).
             <div
               ref={glideRef as React.RefObject<HTMLDivElement>}
               className="shell-glide-host"

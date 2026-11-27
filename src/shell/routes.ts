@@ -1,23 +1,23 @@
 /**
- * Rota kaydı. Uygulamanın bütün sayfa rotaları buradadır.
+ * Route registry. All of the app's page routes are here.
  *
- * KURAL: Her iş kendi sayfası için `lazyRoutes` listesine yalnız kendi satırını ekler.
- * Başka işin satırı değiştirilmez. Koleksiyon yolları (`collectionRoutes`) kabuğundur.
- * Satırın biçimi sabittir. Dört alan vardır, başka alan eklenmez:
+ * RULE: each task adds only its own row to `lazyRoutes` for its own page.
+ * Another task's row is not changed. Collection paths (`collectionRoutes`) belong to the shell.
+ * The row format is fixed. There are four fields; no other field is added:
  *
  *   {
- *     path: '/satis/:doctype',             // react-router yolu, "/" ile başlar
- *     label: 'Satış',                      // menü etiketi, Türkçe ve kısa
- *     icon: ShoppingCart,                  // Phosphor ikonu, ağırlık regular
- *     load: () => import('@/modules/...'), // tembel yükleyici
+ *     path: '/satis/:doctype',             // react-router path, starts with "/"
+ *     label: 'Sales',                      // menu label, short
+ *     icon: ShoppingCart,                  // Phosphor icon, weight regular
+ *     load: () => import('@/modules/...'), // lazy loader
  *   },
  *
- * Kurallar:
- * - Yükleyici, varsayılan dışa aktarımı bileşen olan bir modül döndürür.
- * - Sayfa modülü bu dosyayı içe aktarmaz. Adresler `paths.ts` dosyasından gelir.
- * - Parametresiz yollar (":" içermeyen) sidebar menüsünde görünür. `/_demo/` yolları görünmez.
- * - Yollar tekildir. `routes.test.ts` biçimi ve tekilliği denetler.
- * - Bu dosyanın sahibi `shell` işidir. Öteki işler yalnız kendi satırını ekler.
+ * Rules:
+ * - The loader returns a module whose default export is a component.
+ * - A page module does not import this file. Addresses come from `paths.ts`.
+ * - Parameterless paths (without ":") appear in the sidebar menu. `/_demo/` paths do not.
+ * - Paths are unique. `routes.test.ts` checks the format and uniqueness.
+ * - This file is owned by the `shell` task. Other tasks only add their own row.
  */
 import type { Icon } from '@phosphor-icons/react';
 import {
@@ -52,15 +52,15 @@ export interface RouteEntry {
 }
 
 /**
- * Özellik ayarları. Kapalı ayarın satırı rota listesine girmez.
- * Kapalı satırın adresi koleksiyon sayfasına da düşmez. Bkz. `reservedFirstSegments`.
+ * Feature flags. A disabled flag's row does not enter the route list.
+ * A disabled row's address does not fall through to the collection page either. See `reservedFirstSegments`.
  */
 export const shellFeatures = {
-  /** AI Studio bu dalda. Yükleyici `src/ai/studio/AiStudioPage.tsx` dosyasına bağlıdır. */
+  /** AI Studio is on this branch. The loader points to `src/ai/studio/AiStudioPage.tsx`. */
   aiStudio: true,
 };
 
-/** AI Studio satırı. Ayar kapalı olursa listede yoktur. */
+/** The AI Studio row. If the flag is off, it is not in the list. */
 export const aiStudioRoute: RouteEntry = {
   path: '/panel/ai',
   label: 'AI Studio',
@@ -69,23 +69,23 @@ export const aiStudioRoute: RouteEntry = {
 };
 
 /**
- * Modül sayfasının tembel yükleyicisi.
- * Sayfa ve `ModuleBoundary` yalnız yükleyici çağrılınca istenir.
- * Sayfa `ModuleProvider` içinde açılır.
+ * Lazy loader for a module page.
+ * The page and `ModuleBoundary` are requested only when the loader is called.
+ * The page opens inside `ModuleProvider`.
  */
 export function modulePage(load: ModuleRegistration['load'], path?: string): RouteEntry['load'] {
   return () =>
     Promise.all([load(), import('./pages/ModuleBoundary')]).then(([page, boundary]) => {
       const Page = page.default;
       const { ModuleBoundary } = boundary;
-      // Yol, sayfa kapısının kuralını seçer (G-94, G-169). Bkz. `moduleAllowed`.
+      // The path selects the page gate's rule (G-94, G-169). See `moduleAllowed`.
       return {
         default: () => createElement(ModuleBoundary, { page: Page, ...(path ? { path } : {}) }),
       };
     });
 }
 
-/** Modül ikonları. Kayıtta ikon alanı yoktur. Bilinmeyen modül genel ikonu alır. */
+/** Module icons. The registry has no icon field. An unknown module gets the generic icon. */
 const moduleIcons: Record<string, Icon> = {
   account: UserCircle,
   administration: ShieldCheck,
@@ -96,7 +96,7 @@ const moduleIcons: Record<string, Icon> = {
   customers: UsersThree,
 };
 
-/** `modules` işinin kayıtları (`src/modules/registry.ts`). Kabuk yalnız biçimi çevirir. */
+/** The `modules` task's entries (`src/modules/registry.ts`). The shell only converts the format. */
 export const moduleRoutes: RouteEntry[] = moduleRegistrations.map((m) => ({
   path: m.path,
   label: m.label.tr,
@@ -105,8 +105,8 @@ export const moduleRoutes: RouteEntry[] = moduleRegistrations.map((m) => ({
 }));
 
 /**
- * Tembel rota listesi. Her iş buraya yalnız kendi satırını ekler.
- * Bu satırlar koleksiyon yollarından önce eklenir ve onlardan önce eşleşir.
+ * Lazy route list. Each task adds only its own row here.
+ * These rows are added before the collection paths and match before them.
  */
 export const lazyRoutes: RouteEntry[] = [
   { path: '/', label: 'Ana sayfa', icon: House, load: () => import('./pages/HomePage') },
@@ -119,9 +119,9 @@ export const lazyRoutes: RouteEntry[] = [
   { path: '/ajanlar/:id', label: 'AI ajanı', icon: Robot, load: () => import('./pages/AgentPage') },
   ...moduleRoutes,
   ...(shellFeatures.aiStudio ? [aiStudioRoute] : []),
-  // Deneme sayfaları yalnız e2e derlemesinde vardır. Koşul derleme zamanında sabittir.
-  // İşlev çağrısı kullanılmaz: derleyici çağrıyı sabite çevirmez ve sayfalar üretime girer.
-  // Menüde görünmezler (`menuEntries`).
+  // Test pages exist only in the e2e build. The condition is constant at build time.
+  // A function call is not used: the compiler would not fold the call to a constant and the pages would reach production.
+  // They do not appear in the menu (`menuEntries`).
   ...(import.meta.env.MODE === 'e2e'
     ? [
         {
@@ -147,9 +147,9 @@ export const lazyRoutes: RouteEntry[] = [
 ];
 
 /**
- * Koleksiyon yolları. Bu satırların sahibi `shell` işidir. Öteki işler buraya satır eklemez.
- * Liste rotası `views-collection` işinin `CollectionView` bileşenini çizer.
- * Kayıt rotası `views-record` işinin bileşeni gelince ona bağlanacak.
+ * Collection paths. These rows are owned by the `shell` task. Other tasks do not add rows here.
+ * The list route renders the `views-collection` task's `CollectionView` component.
+ * The record route will be wired to the `views-record` task's component once it arrives.
  */
 export const collectionRoutes: RouteEntry[] = [
   {
@@ -166,13 +166,13 @@ export const collectionRoutes: RouteEntry[] = [
   },
 ];
 
-/** Bütün rotalar, eşleşme sırasıyla. */
+/** All routes, in match order. */
 export const routeRegistry: RouteEntry[] = [...lazyRoutes, ...collectionRoutes];
 
 /**
- * Bu ilk adres parçaları hiçbir zaman koleksiyon ya da kayıt sayfasına düşmez.
- * `_demo` örnek sayfalar içindir. `panel` uygulama sayfaları içindir.
- * Bu öneklerin sayfaları yalnız `lazyRoutes` içindeki kendi satırıyla açılır.
+ * These first address segments never fall through to a collection or record page.
+ * `_demo` is for sample pages. `panel` is for app pages.
+ * Pages under these prefixes open only via their own row in `lazyRoutes`.
  */
 export const reservedFirstSegments: readonly string[] = ['_demo', 'panel'];
 
@@ -181,15 +181,15 @@ export function isReservedSegment(segment: string | undefined): boolean {
 }
 
 /**
- * Kayıtları router kayıtlarına çevirir. Sayfa `React.lazy` ile tembel yüklenir.
- * Kabuk hemen çizilir. Sayfa yüklenirken yalnız içerik alanı bekler.
- * Router'ın kendi `lazy` alanı kullanılmaz: ilk açılışta kabuğu da bekletir.
+ * Converts entries into router entries. The page is lazy-loaded with `React.lazy`.
+ * The shell renders immediately. While the page loads, only the content area waits.
+ * The router's own `lazy` field is not used: on first load it would make the shell wait too.
  */
 export function toRouteObjects(entries: RouteEntry[]): RouteObject[] {
   return entries.map((e) => ({ path: e.path, Component: lazy(e.load) }));
 }
 
-/** Menüde görünen kayıtlar: parametresiz yollar. Deneme sayfaları (`/_demo/`) menüde görünmez. */
+/** Entries shown in the menu: parameterless paths. Test pages (`/_demo/`) do not appear in the menu. */
 export function menuEntries(entries: RouteEntry[]): RouteEntry[] {
   return entries.filter((e) => !e.path.includes(':') && !e.path.startsWith(DEMO_PATH_PREFIX));
 }

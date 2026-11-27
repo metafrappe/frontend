@@ -9,18 +9,18 @@ import { LANDSCAPE_PHONE_QUERY } from './useMedia';
 import { useVirtualKeyboard } from './useVirtualKeyboard';
 
 interface BottomBarProps {
-  /** Menü açık mı? Düğmeler `aria-expanded` değerini bundan alır. */
+  /** Is the menu open? Buttons take their `aria-expanded` value from this. */
   open: boolean;
-  /** Menüyü hangi düğme açtı? Yalnız o düğme `aria-expanded=true` olur. */
+  /** Which button opened the menu? Only that button gets `aria-expanded=true`. */
   opener: 'menu' | 'search' | null;
   onMenu: (event: MouseEvent<HTMLButtonElement>) => void;
   onSearch: (event: MouseEvent<HTMLButtonElement>) => void;
 }
 
 /**
- * Telefon alt çubuğu. Dört düğme vardır: "Bekleyenler", "Ara", "Asistan" ve "Menü".
- * Yatay telefonda çubuk sol kenara geçer. Bu kararı CSS verir; React ağacı değişmez.
- * Sanal klavye açılınca çubuk gizlenir.
+ * Phone bottom bar. It has four buttons:
+ * Pending, Search, Assistant and Menu. On a landscape phone the bar moves to the left edge.
+ * CSS makes this decision; the React tree does not change. The bar hides when the virtual keyboard opens.
  */
 export const BottomBar = forwardRef<HTMLElement, BottomBarProps>(function BottomBar(
   { open, opener, onMenu, onSearch },
@@ -29,14 +29,14 @@ export const BottomBar = forwardRef<HTMLElement, BottomBarProps>(function Bottom
   const keyboard = useVirtualKeyboard();
   const b = t.bottomBar;
   const own = useRef<HTMLElement | null>(null);
-  // Çubuğun gerçek boyu ölçülür. İçerik bu pay kadar çubuktan uzak durur.
-  // Büyütülmüş yazıda çubuk büyür; pay da büyür. Gizli çubuğun payı sıfırdır.
+  // The bar's real size is measured. Content keeps clear of the bar by this offset.
+  // With enlarged text the bar grows, and so does the offset. A hidden bar's offset is zero.
   useLayoutEffect(() => {
     const el = own.current;
     if (!el) return undefined;
     const root = document.documentElement;
-    // Kabuğun üstünde başka bir not olabilir. Örnek: sahte sunucunun "Örnek veri" notu.
-    // Yatay telefonda sol çubuk kabuğun üst kenarından başlar ve bu notu örtmez.
+    // There may be another note above the shell. Example: the mock server's sample data note.
+    // On a landscape phone the left bar starts at the shell's top edge and does not cover this note.
     const shell = el.parentElement;
     const measureTop = () => {
       const top = Math.max(0, shell?.getBoundingClientRect().top ?? 0);
@@ -48,8 +48,8 @@ export const BottomBar = forwardRef<HTMLElement, BottomBarProps>(function Bottom
       root.style.setProperty('--shell-bar-inline', `${r.width}px`);
       measureTop();
     };
-    // Kaydırma yalnız çubuğun üst kenarını değiştirir. Üst kenar yalnız yatay telefonda kullanılır.
-    // Bu yüzden kaydırmada yalnız yatay telefonda ve yalnız bu değer ölçülür.
+    // Scrolling changes only the bar's top edge. The top edge is used only on a landscape phone.
+    // So on scroll, only this value is measured, and only on a landscape phone.
     const landscape = window.matchMedia(LANDSCAPE_PHONE_QUERY);
     const onScroll = () => {
       if (landscape.matches) measureTop();

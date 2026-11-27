@@ -19,7 +19,7 @@ function renderHeader(p: Partial<PageHeaderProps> = {}) {
     primaryAction: { label: 'Yeni teklif', onClick: vi.fn() },
     ...p,
   };
-  // Sayaç Türkçe biçimle sınanır. Yedek dil en-GB olduğu için dil açıkça verilir.
+  // The counter is tested with Turkish formatting. The fallback locale is en-GB, so the locale is passed explicitly.
   render(
     <LanguageProvider initialLanguage="tr">
       <MemoryRouter>

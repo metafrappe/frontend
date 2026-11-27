@@ -1,7 +1,7 @@
 /**
- * Menü öğesinin etkin olup olmadığını bulur.
- * Yol parça parça karşılaştırılır. Önek eşleşmesi etkin sayılmaz.
- * Örnek: "/satis/teklif" öğesi "/satis/teklifler" adresinde etkin değildir.
+ * Determines whether a menu item is active.
+ * Paths are compared segment by segment. A prefix match does not count as active.
+ * Example: the "/satis/teklif" item is not active at "/satis/teklifler".
  */
 export function isPathActive(to: string, pathname: string): boolean {
   const target = (to.split('?')[0] ?? to).split('/').filter(Boolean);

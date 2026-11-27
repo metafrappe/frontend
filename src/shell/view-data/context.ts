@@ -7,150 +7,150 @@ import type { CollectionDefinition, CollectionSource } from '@/views/collection'
 
 import type { ShellHomeData } from './home-data';
 
-/** Liste rotasının adres parçaları. Eşleme sağlayıcının işidir. */
+/** URL segments of the list route. Mapping is the provider's job. */
 export interface CollectionAddress {
   module: string;
   doctype: string;
 }
 
 export interface ShellCollectionData {
-  /** Adresteki DocType için koleksiyon tanımını getirir. İptal sinyaline uyar. */
+  /** Fetches the collection definition for the DocType in the URL. Honours the abort signal. */
   loadDefinition: (
     address: CollectionAddress,
     signal: AbortSignal,
   ) => Promise<CollectionDefinition>;
-  /** Liste isteklerini sunucuya ileten kaynak. */
+  /** The source that forwards list requests to the server. */
   source: CollectionSource;
   /**
-   * Adresteki türün görünen adı. Tanım gelmeden (bekleme ve hata ekranı) sayfa başlığı budur.
-   * Örnek: `/satis/teklif` -> `Teklif`. Yoksa başlık genel "Kayıtlar" olur.
+   * Display name of the type in the URL. Before the definition arrives (loading and error screens) this is the page header.
+   * Example: `/satis/teklif` -> `Teklif`. If absent, the header is the generic "Records" title.
    */
   title?: (address: CollectionAddress) => string;
 }
 
-/** Sidebar grubundaki liste bağlantısı. */
+/** A list link in a sidebar group. */
 export interface ShellSidebarLink {
-  /** Menüde görünen ad. */
+  /** Name shown in the menu. */
   label: string;
-  /** Frappe DocType adı. Adres parçası bundan üretilir. */
+  /** Frappe DocType name. The URL segment is derived from it. */
   doctype: string;
 }
 
-/** Sunucunun açılış verisindeki bir sidebar grubu. Eşleme uygulama girişinin işidir. */
+/** A sidebar group in the server's boot data. Mapping is the app entry's job. */
 export interface ShellSidebar {
   id: string;
   label: string;
-  /** Liste adresinin ilk parçası. Örnek: `selling`. */
+  /** First segment of the list URL. Example: `selling`. */
   module: string;
   links: ShellSidebarLink[];
 }
 
 export interface ShellNavigationData {
-  /** Menü gruplarını getirir. Veri yoksa ya da istek başarısızsa boş liste döner. */
+  /** Fetches the menu groups. Returns an empty list if there is no data or the request fails. */
   loadSidebars: (signal: AbortSignal) => Promise<ShellSidebar[]>;
   /**
-   * Verilen DocType adlarından kullanıcının okuyabildiklerini döner (G-94).
-   * Kararı sunucu verir. İstek başarısızsa tür okunamaz sayılır.
-   * Bağlantı yoksa menü yetki isteyen sayfayı göstermez.
+   * Returns which of the given DocType names the user can read (G-94).
+   * The server makes the decision. If the request fails, the type counts as unreadable.
+   * Without a connection, the menu does not show pages that require permission.
    */
   loadReadable?: (doctypes: readonly string[], signal: AbortSignal) => Promise<ReadonlySet<string>>;
   /**
-   * Hesabın bayi hesabı olup olmadığını sunucuya sorar (G-169, G-170, AJA-945).
-   * Bayi müşteri listesi ucu 200 dönerse hesap bayidir. Boş liste de bayi sayılır.
-   * Uç 403 dönerse hesap kiracı hesabıdır. Başka hata gelirse söz reddedilir.
+   * Asks the server whether the account is a reseller account (G-169, G-170, AJA-945).
+   * If the reseller customer list endpoint returns 200, the account is a reseller. An empty list also counts as reseller.
+   * If the endpoint returns 403, the account is a tenant account. On any other error the promise is rejected.
    */
   loadAccountKind?: (signal: AbortSignal) => Promise<AccountKind>;
 }
 
-/** Hesap türü. `reseller` bayi hesabıdır, `tenant` kiracı hesabıdır. */
+/** Account type. `reseller` is a reseller account, `tenant` is a tenant account. */
 export type AccountKind = 'reseller' | 'tenant';
 
-/** Kayıt rotasının adres parçaları. */
+/** URL segments of the record route. */
 export interface RecordAddress {
   module: string;
   doctype: string;
-  /** Adresteki kayıt adı, kodlanmış hâliyle. */
+  /** The record name in the URL, in its encoded form. */
   name: string;
 }
 
 export interface ShellRecordData {
-  /** Kaydı çizen bileşen. Uygulama girişi bunu tembel yükler. */
+  /** The component that renders the record. The app entry lazy-loads it. */
   Component: ComponentType<RecordAddress>;
 }
 
 /**
- * Kabuğun görünümlere verdiği veri bağlantısı.
- * Kabuk API istemcisi kurmaz. Bağlantıyı uygulama girişi (`src/app/`) verir.
+ * The data connection the shell gives to views.
+ * The shell does not create an API client. The app entry (`src/app/`) provides the connection.
  */
-/** Oturumdaki kişi. Kullanıcı kartı bunu gösterir. */
+/** The signed-in person. The user card shows this. */
 export interface ShellAccount {
-  /** Frappe kullanıcı kimliği. Örnek: `kisi@example.test`. */
+  /** Frappe user ID. Example: `kisi@example.test`. */
   user: string;
-  /** Görünen ad. Yoksa kart kullanıcı kimliğini gösterir. */
+  /** Display name. If absent, the card shows the user ID. */
   fullName?: string;
 }
 
 /**
- * Bir çalışma alanı. Bu sürümde çalışma alanı oturumun kiracısıdır (Frappe sitesi).
- * Örnek: `{ id: 'acme.atonota.net', name: 'acme.atonota.net' }`.
+ * A workspace. In this version the workspace is the session's tenant (Frappe site).
+ * Example: `{ id: 'acme.atonota.net', name: 'acme.atonota.net' }`.
  */
 export interface ShellWorkspace {
   id: string;
   name: string;
-  /** Adın altındaki kısa not. Yoksa not satırı çizilmez. */
+  /** Short note below the name. If absent, the note line is not drawn. */
   note?: string;
 }
 
-/** Çalışma alanı seçicinin verisi. Tek öğe varsa seçici açılır liste olmadan sade görünür. */
+/** Workspace switcher data. With a single item the switcher appears plain, without a dropdown. */
 export interface ShellWorkspaceData {
   items: ShellWorkspace[];
-  /** Açık çalışma alanının kimliği. */
+  /** ID of the open workspace. */
   current: string;
-  /** Başka çalışma alanı seçilince çağrılır. Yoksa seçim yalnız ekranda değişir. */
+  /** Called when another workspace is selected. If absent, the selection changes only on screen. */
   select?: (id: string) => void;
 }
 
-/** AI kredisi. Sayılar sunucudan gelir. */
+/** AI credit. The numbers come from the server. */
 export interface ShellCredit {
   used: number;
   total: number;
 }
 
 export interface ShellCreditData {
-  /** Krediyi okur. Uç yoksa ya da yanıt geçersizse `null` döner; sayaç görünmez. */
+  /** Reads the credit. Returns `null` if there is no endpoint or the response is invalid; the counter is hidden. */
   load: (signal: AbortSignal) => Promise<ShellCredit | null>;
 }
 
 export interface ShellViewData {
-  /** Çalışma alanı seçici. Yoksa yalnız logo görünür. */
+  /** Workspace switcher. If absent, only the logo is shown. */
   workspaces?: ShellWorkspaceData;
-  /** AI kredisi sayacı. Yoksa sayaç görünmez. */
+  /** AI credit counter. If absent, the counter is hidden. */
   credit?: ShellCreditData;
-  /** AI Studio bağlantısı. Yoksa AI Studio "bağlantı kurulmadı" yazar. */
+  /** AI Studio connection. If absent, AI Studio shows "not connected". */
   ai?: ShellAiData;
   collection?: ShellCollectionData;
-  /** Kayıt rotasının bağlantısı. Yoksa kabuk örnek kaydı gösterir (deneme sayfaları). */
+  /** Record route connection. If absent, the shell shows the sample record (test pages). */
   record?: ShellRecordData;
-  /** Oturumdaki kişi. Yoksa kabuk örnek kişiyi gösterir (deneme sayfaları). */
+  /** The signed-in person. If absent, the shell shows the sample person (test pages). */
   account?: ShellAccount;
-  /** Menü grupları. Yoksa menüde yalnız rota kaydındaki sayfalar görünür. */
+  /** Menu groups. If absent, the menu shows only pages in the route registry. */
   navigation?: ShellNavigationData;
   /**
-   * Oturumu kapatır. Başarılı olursa tarayıcı Keycloak çıkış sayfasına gider.
-   * İstek başarısız olursa işlev reddedilir ve oturum açık kalır.
-   * Yoksa kabuk çıkış düğmesini çizmez (deneme sayfaları).
+   * Signs out. On success the browser goes to the Keycloak logout page.
+   * If the request fails, the function rejects and the session stays open.
+   * If absent, the shell does not draw the sign-out button (test pages).
    */
   signOut?: () => Promise<void>;
-  /** Modül sayfalarının ortamı. Kabuk bunu `ModuleProvider` ile verir. */
+  /** Environment for module pages. The shell provides it via `ModuleProvider`. */
   modules?: ModuleEnvironment;
   /**
-   * Ana sayfanın (Bekleyenler) bağlantısı. Yoksa ana sayfa modül ortamının bağlantısını kullanır.
-   * İkisi de yoksa ana sayfa bağlantının kurulmadığını yazar.
+   * Connection for the home page ("Bekleyenler", pending items). If absent, the home page uses the module environment's connection.
+   * If neither exists, the home page states that the connection is not set up.
    */
   home?: ShellHomeData;
 }
 
-/** AI Studio taşıyıcısı ve ekranda yazan kaynak adı (AX-7). */
+/** AI Studio transport and the source name shown on screen (AX-7). */
 export interface ShellAiData {
   transport: AgentTransport;
   source: AgentSource;

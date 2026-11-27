@@ -1,7 +1,7 @@
 /**
- * Kabuğun görünen metinleri. Metin kod içine gömülmez, buradan alınır.
- * Değer gerektiren metinler işlevdir. Cümle parçalardan birleştirilmez.
- * Sayılar biçimlenmiş metin olarak gelir. Biçimi çağıran `useFormat()` ile yapar (IC-13).
+ * The shell's visible text. Text is not hard-coded; it is taken from here.
+ * Text that needs values is a function. Sentences are not assembled from fragments.
+ * Numbers arrive as formatted text. The caller formats them with `useFormat()` (IC-13).
  */
 
 export const t = {
@@ -94,7 +94,7 @@ export const t = {
     link: 'yardım sayfası',
     linkAfter: 'size yol gösterir.',
   },
-  /** Ana sayfa (Bekleyenler). Taslak: AJA-880, "2. ANA SAYFA". */
+  /** Home page (the Pending page). Mock-up: AJA-880, screen 2 "Home page". */
   home: {
     title: 'Bekleyenler',
     newLeave: 'Yeni izin talebi',
@@ -150,7 +150,7 @@ export const t = {
     increase: 'Artır',
     decrease: 'Azalt',
     home: 'Ana sayfa',
-    /** Liste sayfasının genel başlığı. Türün adı bilinmezse kullanılır. */
+    /** Generic list page title. Used when the type's name is unknown. */
     records: 'Kayıtlar',
     notFound: 'Sayfa bulunamadı',
     notFoundText: 'Adres yanlış olabilir. Ana sayfaya dönün.',

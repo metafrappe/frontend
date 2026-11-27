@@ -7,8 +7,8 @@ const isCompact = (page: Page) => {
 };
 
 /**
- * Çalışma alanı düğmesi. Telefonda düğme menü çekmecesinin içindedir.
- * Birden çok çalışma alanı yalnız deneme sayfasında vardır. Canlı panel oturumun tek sitesini gösterir.
+ * Workspace button. On phones the button is inside the menu drawer.
+ * Multiple workspaces exist only on the test page. The live panel shows the session's single site.
  */
 async function switcher(page: Page) {
   await page.goto('/_demo/shell');
@@ -23,7 +23,7 @@ async function switcher(page: Page) {
 
 const menu = (page: Page) => page.getByRole('menu', { name: 'Çalışma alanları' });
 
-/** Odaktaki öğe düğmeye göre nerededir? Listenin içi, düğmeden önce, sonra ya da hiçbir öğe. */
+/** Where is the focused element relative to the button? Inside the list, before the button, after it, or no element. */
 async function focusAfter(page: Page, button: Locator) {
   return button.evaluate((node) => {
     const active = document.activeElement;
@@ -81,7 +81,7 @@ test.describe('çalışma alanı menüsü klavyeyle (Ö8)', () => {
     const items = menu(page).getByRole('menuitem');
     await expect(items.first()).toBeFocused();
     await page.keyboard.press('ArrowDown');
-    // Menü odağı bir kare sonra taşır. Enter, odak ikinci öğeye geçince basılır.
+    // The menu moves focus one frame later. Enter is pressed once focus moves to the second item.
     await expect(items.nth(1)).toBeFocused();
     await page.keyboard.press('Enter');
     await expect(menu(page)).toBeHidden();
@@ -104,11 +104,11 @@ test.describe('çalışma alanı menüsü: Tab ve fareyle açma (Ö-1, K-1)', ()
 
     await expect(menu(page)).toBeHidden();
     await expect(button).toHaveAttribute('aria-expanded', 'false');
-    // Odak listede ve gövdede kalmaz. Sayfada düğmeden sonra gelen bir öğeye geçer.
+    // Focus stays neither in the list nor on the body. It moves to an element after the button on the page.
     expect(await focusAfter(page, button)).toBe('after');
     if (browserName === 'chromium') {
-      // Chromium düğmeleri Tab sırasına alır. Geri Tab düğmeye döner.
-      // Böylece odağın düğmeden hemen sonraki öğede olduğu görülür.
+      // Chromium puts buttons in the Tab order. Shift+Tab returns to the button.
+      // This shows focus is on the element right after the button.
       await page.keyboard.press('Shift+Tab');
       await expect(button).toBeFocused();
     }
@@ -124,7 +124,7 @@ test.describe('çalışma alanı menüsü: Tab ve fareyle açma (Ö-1, K-1)', ()
 
     await expect(menu(page)).toBeHidden();
     await expect(button).toHaveAttribute('aria-expanded', 'false');
-    // Masaüstünde düğme sayfanın ilk öğesidir. Odak o zaman tarayıcıya geçer.
+    // On desktop the button is the page's first element. Focus then moves to the browser.
     expect(await focusAfter(page, button)).not.toBe('after');
     expect(await focusAfter(page, button)).not.toBe('menu');
   });
@@ -168,7 +168,7 @@ test.describe('çalışma alanı menüsü: fareyle açılınca Tab (inceleme 2, 
     page,
     browserName,
   }) => {
-    // Chromium tıklanan düğmeye odak verir. WebKit vermez; orada odağın yeri tarayıcıya kalır.
+    // Chromium focuses the clicked button. WebKit does not; there the focus location is left to the browser.
     test.skip(browserName !== 'chromium', 'Yalnız Chromium tıklanan düğmeye odak verir.');
     const button = await switcher(page);
     await button.click();
@@ -188,7 +188,7 @@ test.describe('çalışma alanı menüsü: fareyle seçim (inceleme 1, K-3)', ()
     await button.click();
     await expect(menu(page)).toBeVisible();
     const before = await focusAfter(page, button);
-    // Tarayıcı tıklanan öğeye odak verdi mi? Chromium verir, WebKit vermeyebilir.
+    // Did the browser focus the clicked element? Chromium does, WebKit may not.
     await page.evaluate(() => {
       const store = window as unknown as { __focusInMenu: boolean };
       store.__focusInMenu = false;
@@ -205,10 +205,10 @@ test.describe('çalışma alanı menüsü: fareyle seçim (inceleme 1, K-3)', ()
       () => (window as unknown as { __focusInMenu: boolean }).__focusInMenu,
     );
     if (focusWasInMenu) {
-      // Odak listedeydi. Liste kapanınca odak tetik düğmesine döner.
+      // Focus was in the list. When the list closes, focus returns to the trigger button.
       await expect(button).toBeFocused();
     } else {
-      // Odak listede değildi. Seçim odağa dokunmaz.
+      // Focus was not in the list. The selection does not touch focus.
       expect(await focusAfter(page, button)).toBe(before);
     }
   });

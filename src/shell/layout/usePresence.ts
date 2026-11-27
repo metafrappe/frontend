@@ -3,8 +3,8 @@ import { useEffect, useState } from 'react';
 export type PresenceState = 'open' | 'closing' | 'closed';
 
 /**
- * Kapanış hareketi için öğeyi süre boyunca tutar.
- * Anlam hemen güncellenir: çağıran `closing` durumunda öğeyi gizli işaretler.
+ * Keeps the element mounted for the duration of the closing animation.
+ * Semantics update immediately: in the `closing` state the caller marks the element hidden.
  */
 export function usePresence(open: boolean, duration: number): PresenceState {
   const [state, setState] = useState<PresenceState>(open ? 'open' : 'closed');

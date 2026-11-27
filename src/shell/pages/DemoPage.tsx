@@ -7,9 +7,9 @@ import { routes } from '../paths';
 const noop = () => undefined;
 
 /**
- * Kabuğun deneme sayfası. Yalnız e2e derlemesinde `/_demo/shell` yolunda açılır.
- * Menü burada örnek gruplarla çizilir. Sayfada ekmek kırıntısı bağlantısı ve metin bağlantısı var.
- * Tarayıcı testleri odak, alt çizgi ve dokunma alanını bu öğelerde dener.
+ * The shell's test page. Opens at `/_demo/shell` only in the e2e build.
+ * Here the menu is rendered with sample groups. The page has a breadcrumb link and a text link.
+ * Browser tests check focus, underline and touch area on these elements.
  */
 export default function DemoPage() {
   return (

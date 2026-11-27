@@ -1,9 +1,9 @@
 import { expect, test } from '../../../tests/setup/playwright-fixtures';
 
 /**
- * "İletişim" listesi (AJA-812, G-63). Sahte sunucu gerçek Communication şemasının
- * bir parçasını verir: boş seçim seçeneği, Dynamic Link, Code ve Text Editor alanı.
- * İki menü grubu da aynı türü açar: "Müşteri Yönetimi" ve "E-posta".
+ * Communication list (AJA-812, G-63). The mock server serves part of the real
+ * Communication schema: an empty select option, Dynamic Link, Code and Text Editor fields.
+ * Both menu groups open the same type: Customer Management and Email.
  */
 for (const path of ['/crm/Communication', '/email/Communication']) {
   test(`${path} listesi açılır ve sayfa yana taşmaz`, async ({ page }) => {
@@ -11,7 +11,7 @@ for (const path of ['/crm/Communication', '/email/Communication']) {
     await expect(page.getByRole('heading', { level: 1, name: 'Communication' })).toBeAttached();
     await expect(page.getByRole('alert')).toHaveCount(0);
     await expect(page.getByText('ILETISIM-0001').first()).toBeVisible();
-    // Zengin metin düz metin olarak görünür; HTML etiketi ekrana yazılmaz.
+    // Rich text is shown as plain text; HTML tags are not written to the screen.
     await expect(page.getByText('<strong>')).toHaveCount(0);
     const overflow = await page.evaluate(
       () => document.documentElement.scrollWidth - document.documentElement.clientWidth,

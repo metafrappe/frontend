@@ -1,14 +1,14 @@
 /**
- * Sayfa kapısının bilgisi (G-94, G-169). Kabuk menü için sunucuya okuma yetkisini sorar.
- * Modül sayfası aynı bilgiyi bu bağlamdan okur. Böylece menü ve sayfa tek kuralı kullanır.
- * Bağlam yoksa kapı uygulanmaz. Örnek: kabuksuz birim testi.
+ * Page gate information (G-94, G-169). The shell asks the server for read permission for the menu.
+ * The module page reads the same information from this context. So the menu and page share one rule.
+ * Without the context the gate is not applied. Example: a unit test without the shell.
  */
 import { createContext, useContext } from 'react';
 
 export interface ShellAccess {
-  /** Sunucu yanıt verdi ya da yetki bilgisi hiç gelmeyecek. */
+  /** The server has responded, or permission information will never arrive. */
   ready: boolean;
-  /** Kullanıcının okuyabildiği DocType adları. */
+  /** DocType names the user can read. */
   readable: ReadonlySet<string>;
 }
 

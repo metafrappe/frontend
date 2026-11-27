@@ -32,7 +32,7 @@ async function ready(page: Page) {
 
 const panel = (page: Page) => page.locator('#shell-assist');
 
-/** Odak perdesi açık mı? Kabuk perdesi ve motor perdesi birlikte denetlenir. */
+/** Is the focus overlay open? The shell overlay and the engine overlay are checked together. */
 async function dimOn(page: Page) {
   return page.evaluate(
     () =>
@@ -103,7 +103,7 @@ test.describe('yardımcı panel', () => {
     await settle(page);
     const box = await dialog.boundingBox();
     const vp = page.viewportSize();
-    // Örnek veri notu kabuğun dışındadır. Panel notun altından başlar ve not görünür kalır.
+    // The sample data notice is outside the shell. The panel starts below the notice and the notice stays visible.
     const note = page.getByRole('status').filter({ hasText: 'Örnek veri' });
     await expect(note).toBeVisible();
     const noteBox = await note.boundingBox();
@@ -114,7 +114,7 @@ test.describe('yardımcı panel', () => {
     expect(Math.round(box.y)).toBe(Math.round(noteBox.y + noteBox.height));
     expect(Math.round(box.width)).toBe(vp.width);
     expect(Math.round(box.y + box.height)).toBe(vp.height);
-    // Notun üstünde başka öğe yoktur. Panel notu örtmez.
+    // No other element sits on top of the notice. The panel does not cover the notice.
     const topAtNote = await page.evaluate(
       ([x, y]) => document.elementFromPoint(x, y)?.closest('#shell-assist') === null,
       [noteBox.x + noteBox.width / 2, noteBox.y + noteBox.height / 2] as const,
@@ -136,8 +136,8 @@ test.describe('yardımcı panel', () => {
     await page.keyboard.press('Enter');
     const close = panel(page).getByRole('button', { name: 'Asistanı kapat' });
     await expect(close).toBeFocused();
-    // Görünür odak modunu Tab açar. WebKit Tab ile düğmeye uğramaz.
-    // Bu yüzden odak sonra kapatma düğmesine doğrudan verilir.
+    // Tab turns on visible focus mode. WebKit does not stop on the button with Tab.
+    // So focus is then given directly to the close button.
     await page.keyboard.press('Tab');
     await close.focus();
     await expect(close).toBeFocused();
@@ -156,7 +156,7 @@ test.describe('yardımcı panel', () => {
     });
     expect(m.small).toBe(0);
     expect(m.outline).toBe('none');
-    // Tek gösterge: alt kenarda iç gölge çizgisi. Halka ve ikinci alt çizgi yoktur.
+    // Single indicator: an inset shadow line on the bottom edge. There is no ring and no second underline.
     const parts = splitShadows(m.shadow ?? '');
     expect(parts).toHaveLength(1);
     expect(parts.some(isRingShadow)).toBe(false);
@@ -167,7 +167,7 @@ test.describe('yardımcı panel', () => {
 
   test('kimlik şeridindeki düğmede çevreleyen halka yoktur', async ({ page }) => {
     const trigger = await ready(page);
-    // Görünür odak modunu Tab açar. Sonra odak düğmeye doğrudan verilir.
+    // Tab turns on visible focus mode. Then focus is given directly to the button.
     await page.keyboard.press('Tab');
     await trigger.focus();
     await expect(trigger).toBeFocused();
@@ -185,7 +185,7 @@ test.describe('yardımcı panel', () => {
     expect(m.mode).toBe('keyboard');
     expect(m.visible).toBe(true);
     expect(m.outline).toBe('none');
-    // Tek gösterge: alt kenarda iç gölge çizgisi. Halka ve ikinci alt çizgi yoktur.
+    // Single indicator: an inset shadow line on the bottom edge. There is no ring and no second underline.
     const parts = splitShadows(m.shadow);
     expect(parts).toHaveLength(1);
     expect(parts.some(isRingShadow)).toBe(false);
@@ -240,7 +240,7 @@ test.describe('odak perdesi', () => {
       expect(await dimOn(page)).toBe(false);
       return;
     }
-    // Geniş ekranda alt menü paneli ve çalışma alanı menüsü perde açmaz.
+    // On wide screens the submenu panel and the workspace menu do not open an overlay.
     await page.goto('/_demo/shell');
     const parent = page.getByRole('button', { name: 'Satış', exact: true });
     await parent.focus();

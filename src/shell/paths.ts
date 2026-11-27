@@ -1,6 +1,6 @@
 /**
- * Adres sözleşmesi (RE-9). Bütün adresler buradan üretilir.
- * Rota kaydı `routes.ts` dosyasındadır.
+ * Address contract (RE-9). All addresses are generated here.
+ * The route registry is in `routes.ts`.
  */
 import type { ViewType } from './tokens';
 
@@ -24,10 +24,10 @@ export const routes = {
   agent: (id: string) => `/ajanlar/${encodeURIComponent(id)}`,
 };
 
-/** Adres parametreleri. */
+/** Address parameters. */
 export const queryKeys = {
   view: 'gorunum',
-  /** Örnek veri durumunu zorlamak için. Yalnız örnek sayfalarda okunur. */
+  /** Forces a sample data state. Read only on sample pages. */
   demoState: 'durum',
   search: 'ara',
 } as const;

@@ -9,7 +9,7 @@ import type { ShellViewData } from '../view-data';
 import { ViewDataProvider } from '../view-data';
 import CollectionRoute from './CollectionRoute';
 
-/** Sahte sunucuya gitmeyen yerel kaynak. Tek örnek satır döner. */
+/** Local source that does not call the mock server. Returns a single sample row. */
 const sampleSource: CollectionSource = {
   list: () =>
     Promise.resolve({

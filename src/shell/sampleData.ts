@@ -1,5 +1,5 @@
 /**
- * Örnek veri. Kişi adları "Örnek Kişi" etiketidir. Gerçek veri değildir.
+ * Sample data. Person names use the Turkish "sample person" label. This is not real data.
  */
 import type { Icon } from '@phosphor-icons/react';
 import {
@@ -25,9 +25,9 @@ export interface NavLeaf {
   to: string;
   icon: Icon;
   badge?: number;
-  /** Bağlantının açtığı sayfanın okuduğu DocType adları. Bkz. `permittedNav`. */
+  /** DocType names read by the page the link opens. See `permittedNav`. */
   requires?: readonly string[];
-  /** Bu türlerden biri okunabilirse bağlantı görünmez. Bkz. `permittedNav`. */
+  /** If one of these types is readable, the link is hidden. See `permittedNav`. */
   excludes?: readonly string[];
 }
 
@@ -125,7 +125,7 @@ export const sampleAgents: Agent[] = [
   },
 ];
 
-/** Deneme sayfasının örnek çalışma alanları. Canlı panelde görünmez. */
+/** The test page's sample workspaces. Not shown in the live panel. */
 export const sampleWorkspaces = [
   { id: 'a', name: 'Örnek Şirket A', note: 'Ana çalışma alanı' },
   { id: 'b', name: 'Örnek Şirket B', note: 'Deneme çalışma alanı' },
@@ -134,10 +134,10 @@ export const sampleWorkspaces = [
 
 export const sampleUser = { name: 'Örnek Kişi', role: 'Yönetici', initials: 'ÖK' };
 
-/** Deneme sayfasının örnek kredisi. Canlı panelde görünmez. */
+/** The test page's sample credit. Not shown in the live panel. */
 export const sampleCredit = { used: 6200, total: 10000 };
 
-/** Deneme sayfasının örnek hızlı eylemleri. İstek asistana gider. */
+/** The test page's sample quick actions. The request goes to the assistant. */
 export const samplePrompts = [
   { key: 'ozet', label: 'Günün özeti', prompt: 'Günün özeti' },
   { key: 'teklif', label: 'Yeni teklif', prompt: 'Yeni teklif' },

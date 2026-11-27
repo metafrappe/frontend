@@ -57,7 +57,7 @@ describe('kabuk menüsü (Ö2)', () => {
   });
 
   it('aynı listeye giden ikinci bağlantıyı menüye koymaz (AJA-807)', () => {
-    // Sunucu `User` listesini iki grupta verir: "Kurulum" ve "Kullanıcılar".
+    // The server lists `User` in two groups: Setup and Users.
     const groups = navFromSidebars([
       {
         id: 'Kurulum',
@@ -81,7 +81,7 @@ describe('kabuk menüsü (Ö2)', () => {
     const links = groups.flatMap((g) => g.children);
     const userLinks = links.filter((l) => l.requires?.includes('User'));
     expect(userLinks.map((l) => l.label)).toEqual(['Kullanıcılar']);
-    // Başka grup ve bağlantı kaybolmaz.
+    // No other group or link is lost.
     expect(labels(groups)).toEqual(['Kurulum', 'Kullanıcılar']);
     expect(links.map((l) => l.label)).toEqual(['Kullanıcılar', 'Sistem ayarları', 'Rol']);
   });
@@ -210,7 +210,7 @@ describe('bayi menüsü ve "Müşteriler" sayfası (G-169, G-170)', () => {
   });
 
   it('bayi tanıma için tanım ucuna bağ türü sorulmaz (AJA-945)', () => {
-    // Bayi hesabını müşteri listesi ucu tanır. Tanım ucu bu türe iki bayi rolünde de 403 verir.
+    // The customer list endpoint identifies a reseller account. The definition endpoint returns 403 for this type in both reseller roles.
     expect(requiredDocTypes).not.toContain(LINK);
     expect(requiredDocTypes).toEqual(
       expect.arrayContaining(['Leave Application', 'PLT AI API', 'PLT AI Account']),
@@ -224,7 +224,7 @@ describe('bayi menüsü ve "Müşteriler" sayfası (G-169, G-170)', () => {
     expect(moduleAllowed('/ai-operations', RESELLER)).toBe(false);
     expect(moduleAllowed('/site-plan', RESELLER)).toBe(true);
     expect(moduleAllowed('/administration', TENANT)).toBe(true);
-    // Modül olmayan yol bu kapıdan geçmez. Örnek: ana sayfa.
+    // A non-module path does not go through this gate. Example: the home page.
     expect(moduleAllowed('/', new Set())).toBe(true);
   });
 });

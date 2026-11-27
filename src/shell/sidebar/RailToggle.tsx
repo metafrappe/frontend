@@ -5,7 +5,7 @@ interface RailToggleProps {
   onToggle: () => void;
 }
 
-/** RT2–RT3: başlıktaki 2D SVG anahtar. Ayraç kayar, ok döner. */
+/** RT2–RT3: 2D SVG toggle in the header. The divider slides, the arrow rotates. */
 export function RailToggle({ rail, onToggle }: RailToggleProps) {
   const label = rail ? t.nav.toSolid : t.nav.toRail;
   return (

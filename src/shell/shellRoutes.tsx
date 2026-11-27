@@ -8,16 +8,16 @@ import { RouteErrorPage } from './pages/RouteErrorPage';
 import type { RouteEntry } from './routes';
 import { isReservedSegment, toRouteObjects } from './routes';
 
-/** Ayrılmış önekler (`/_demo/`, `/panel/`) koleksiyon sayfasına düşmez. 404 verir. */
+/** Reserved prefixes (`/_demo/`, `/panel/`) do not fall through to the collection page. They return 404. */
 function guardReserved({ params }: LoaderFunctionArgs) {
   if (isReservedSegment(params['module'])) throw data(null, { status: 404 });
   return null;
 }
 
 /**
- * Kabuğun router kayıtları.
- * Önce `lazy` satırları gelir, sonra koleksiyon yolları, en sonda 404.
- * Her sayfanın kendi hata ekranı vardır. Böylece hata olunca kabuk yerinde kalır.
+ * The shell's router entries.
+ * First the `lazy` rows, then the collection paths, and finally 404.
+ * Each page has its own error screen. So the shell stays in place when an error occurs.
  */
 export function buildShellRoutes(lazy: RouteEntry[], collection: RouteEntry[]): RouteObject[] {
   const withError = (o: RouteObject): RouteObject => ({ ...o, errorElement: <RouteErrorPage /> });

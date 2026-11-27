@@ -1,11 +1,11 @@
 import { useSyncExternalStore } from 'react';
 
 /**
- * Telefon kabuğu sorgusu. Dar genişlik ya da kısa yükseklik telefon sayılır.
- * Yatay telefon kısa yüksekliği yüzünden telefon kabuğunda kalır.
+ * Phone shell query. A narrow width or a short height counts as a phone.
+ * A landscape phone stays in the phone shell because of its short height.
  */
 export const COMPACT_QUERY = '(max-width: 767px), (max-height: 499px)';
-/** Yatay telefon sorgusu. `shell.css` içindeki yatay telefon bölümüyle aynıdır. */
+/** Landscape phone query. Matches the landscape phone section in `shell.css`. */
 export const LANDSCAPE_PHONE_QUERY = '(orientation: landscape) and (max-height: 499px)';
 export const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
 

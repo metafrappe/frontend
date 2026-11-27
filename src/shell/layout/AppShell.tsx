@@ -54,11 +54,11 @@ function writeVariant(v: SidebarVariant) {
   try {
     window.localStorage.setItem(STORAGE_KEY, v);
   } catch {
-    // Tarayıcı saklamaya izin vermiyor. Tercih yalnız bu oturumda kalır.
+    // The browser does not allow storage. The preference lasts only for this session.
   }
 }
 
-/** Kabuk CSS değişkenleri antd tokenlarından ve kaynak dosyadan gelir. */
+/** Shell CSS variables come from antd tokens and the source file. */
 function useThemeVars(): CSSProperties {
   const { token } = theme.useToken();
   const dark = isDarkColor(token.colorBgLayout);
@@ -89,13 +89,13 @@ function useThemeVars(): CSSProperties {
   } as CSSProperties;
 }
 
-/** Deneme sayfaları yalnız e2e derlemesinde vardır. Koşul derleme zamanında sabittir. */
+/** Demo pages exist only in the e2e build. The condition is fixed at build time. */
 const DEMO_ENABLED = isDemoEnabled(import.meta.env.MODE);
 
 /**
- * Menü verisi. Canlı menü rota kaydından ve sunucunun sidebar verisinden gelir.
- * Örnek gruplar ve örnek ajanlar yalnız deneme sayfasında (`/_demo/...`) görünür.
- * Ajan listesi için sunucuda veri yoktur; canlı menüde ajan bölümü gizlidir.
+ * Menu data. The live menu comes from the route registry and the server's sidebar data.
+ * Sample groups and sample agents appear only on the demo page (`/_demo/...`).
+ * The server has no data for the agent list; the agent section is hidden in the live menu.
  */
 function useShellNav(): {
   access: ShellAccess;
@@ -109,14 +109,14 @@ function useShellNav(): {
   const { pathname } = useLocation();
   const demo = DEMO_ENABLED && isDemoPath(pathname);
   const [groups, setGroups] = useState<NavGroup[]>([]);
-  // Sunucunun okumaya izin verdiği DocType adları (G-94). Yanıt gelene kadar küme boştur.
-  // Boş kümede yetki isteyen sayfa menüde görünmez.
+  // DocType names the server allows reading (G-94). The set is empty until the response arrives.
+  // With an empty set, pages that need permission do not appear in the menu.
   const [probed, setProbed] = useState<ReadonlySet<string>>(() => new Set());
-  // Sayfa kapısı yanıtı bekler. Yanıtın hangi bağlantıdan geldiği saklanır.
-  // Bağlantı ya da yetki ucu yoksa kapı beklemez ve boş kümeyle karar verir.
+  // The page gate waits for the response. The connection the response came from is stored.
+  // If there is no connection or permission endpoint, the gate does not wait and decides with an empty set.
   const [probedFrom, setProbedFrom] = useState<unknown>(null);
-  // Bayi hesabı mı (AJA-945)? Karar müşteri listesi ucundan gelir. Yanıtın kaynağı da saklanır.
-  // Uç başka hata verirse hesap bayi sayılmaz. Kabuk bunun yerine hata notu gösterir.
+  // Is this a reseller account (AJA-945)? The decision comes from the customer list endpoint. The response source is stored too.
+  // If the endpoint returns another error, the account is not treated as a reseller. The shell shows an error note instead.
   const [accountKind, setAccountKind] = useState<{
     from: unknown;
     kind: AccountKind | 'failed';
@@ -133,7 +133,7 @@ function useShellNav(): {
         setProbed(readable);
         setProbedFrom(navigation);
       },
-      // Yetki bilgisi gelmezse küme boş kalır. Menü yetki isteyen sayfayı göstermez.
+      // If permission data does not arrive, the set stays empty. The menu hides pages that need permission.
       () => {
         if (!ctrl.signal.aborted) setProbedFrom(navigation);
       },
@@ -149,9 +149,9 @@ function useShellNav(): {
     return () => ctrl.abort();
   }, [navigation]);
   const kind = navigation && accountKind?.from === navigation ? accountKind.kind : null;
-  // Sunucunun sidebar grupları Frappe'nin izin süzgecinden geçmiştir (`resolve_sidebar`).
-  // Gruptaki DocType'lar bu yüzden okunabilir sayılır. Modül sayfaları tanım ucuyla denenir.
-  // Bayi hesabında bağ türü okunabilir sayılır. Menü ve sayfa kapısı bu adı tek kuralla kullanır.
+  // The server's sidebar groups have passed Frappe's permission filter (`resolve_sidebar`).
+  // DocTypes in a group are therefore treated as readable. Module pages are probed via the definition endpoint.
+  // For a reseller account the link type is treated as readable. The menu and page gate use this name with one rule.
   const readable = useMemo(
     () =>
       new Set([
@@ -169,7 +169,7 @@ function useShellNav(): {
     () => (demo ? [...routeNav, ...sampleNav] : buildShellNav(permittedGroups, readable)),
     [demo, permittedGroups, readable],
   );
-  // Hızlı eylemler menüyle aynı süzgeçten geçer. Örnek istekler yalnız denemede.
+  // Quick actions pass the same filter as the menu. Sample requests appear only in the demo.
   const quickActions = useMemo(
     () => (demo ? samplePrompts : quickActionsFrom(permittedGroups)),
     [demo, permittedGroups],
@@ -193,19 +193,19 @@ function useShellNav(): {
   };
 }
 
-/** Deneme sayfasının örnek çalışma alanları. Canlı panelde kullanılmaz. */
+/** Sample workspaces for the demo page. Not used in the live panel. */
 const DEMO_WORKSPACES: ShellWorkspaceData = {
   items: sampleWorkspaces,
   current: sampleWorkspaces[0]?.id ?? '',
 };
 
 /**
- * AI kredisi. Canlıda sayı yalnız sunucu ucundan gelir. Uç yoksa ya da yanıt boşsa sayaç gizlidir.
- * Örnek kredi yalnız deneme sayfasında görünür.
+ * AI credit. In live use the number comes only from the server endpoint. With no endpoint or an empty response the counter is hidden.
+ * Sample credit appears only on the demo page.
  */
 function useShellCredit(demo: boolean): ShellCredit | null {
   const source = useViewData()?.credit;
-  // Yanıt hangi kaynaktan geldiyse onunla saklanır. Kaynak değişince eski sayı görünmez.
+  // The response is stored with the source it came from. When the source changes, the old number is not shown.
   const [loaded, setLoaded] = useState<{ from: unknown; value: ShellCredit | null }>({
     from: null,
     value: null,
@@ -217,7 +217,7 @@ function useShellCredit(demo: boolean): ShellCredit | null {
       (value) => {
         if (!ctrl.signal.aborted) setLoaded({ from: source, value });
       },
-      // İstek başarısızsa sayaç gizli kalır. Uydurma sayı gösterilmez.
+      // If the request fails, the counter stays hidden. No made-up number is shown.
       () => undefined,
     );
     return () => ctrl.abort();
@@ -228,19 +228,19 @@ function useShellCredit(demo: boolean): ShellCredit | null {
 
 interface AppShellProps {
   children: ReactNode;
-  /** Yardımcı panelin içeriği. İçerik `ai-studio` işinindir. Yoksa kısa bir not görünür. */
+  /** Assist panel content. The content belongs to the `ai-studio` work. Without it, a short note appears. */
   assistant?: ReactNode;
 }
 
 /**
- * Uygulama kabuğu. Sidebar her ekranda aynı DOM yerindedir.
- * Telefonda sidebar çekmece olur. Böylece yön değişiminde durum ve odak korunur.
+ * Application shell. The sidebar sits at the same DOM position on every screen.
+ * On phones the sidebar becomes a drawer. This keeps state and focus across orientation changes.
  */
 export function AppShell({ children, assistant }: AppShellProps) {
   const compact = useCompactLayout();
   const [variant, setVariant] = useState<SidebarVariant>(readVariant);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  // Menüyü açan düğme. Odak kapanınca bu düğmeye döner.
+  // The button that opened the menu. Focus returns to this button on close.
   const [opener, setOpener] = useState<'header' | 'menu' | 'search'>('header');
   const openerEl = useRef<HTMLElement | null>(null);
   const barRef = useRef<HTMLElement>(null);
@@ -263,11 +263,11 @@ export function AppShell({ children, assistant }: AppShellProps) {
   const assistPanelRef = useRef<HTMLDivElement>(null);
   const assistCloseRef = useRef<HTMLButtonElement>(null);
   const assistReturnFocus = useRef(false);
-  // Telefonda panel tam boy iletişim kutusudur. Geri kalan kabuk etkileşime kapanır.
+  // On phones the panel is a full-height dialog. The rest of the shell becomes non-interactive.
   const assistModal = isDrawer && assistOpen;
   const shellRef = useRef<HTMLDivElement>(null);
-  // Telefon paneli "Örnek veri" notunu örtmez. Not kabuğun dışında ve üstündedir.
-  // Notun görünen yüksekliği kabuğun ekrandaki üst kenarıdır. Not yoksa değer 0 olur.
+  // The phone panel does not cover the sample data note. The note sits outside and above the shell.
+  // The note's visible height is the shell's top edge on screen. Without a note the value is 0.
   useLayoutEffect(() => {
     const shell = shellRef.current;
     if (!assistModal || !shell) return undefined;
@@ -330,13 +330,13 @@ export function AppShell({ children, assistant }: AppShellProps) {
     [assistOpen, toggleAssist, closeAssist],
   );
 
-  // Panel açılınca odak kapatma düğmesine geçer.
+  // When the panel opens, focus moves to the close button.
   useEffect(() => {
     if (assistOpen) assistCloseRef.current?.focus();
   }, [assistOpen]);
 
-  // Çekmece ya da telefon paneli açıkken geri kalan kabuk etkileşime kapanır.
-  // Panel kapanınca odak paneli açan düğmeye döner. Düğme önce etkileşime açılır.
+  // While the drawer or phone panel is open, the rest of the shell is non-interactive.
+  // When the panel closes, focus returns to the button that opened it. The button is made interactive first.
   useLayoutEffect(() => {
     const drawer = drawerRef.current;
     for (const el of [mainRef.current, topRef.current, barRef.current]) {
@@ -363,9 +363,9 @@ export function AppShell({ children, assistant }: AppShellProps) {
     setDrawerOpen(true);
   };
 
-  // Çekmece açıkken çekmece dışı etkileşime kapanır.
-  // Kapanınca odak menü düğmesine döner. Düğme önce etkileşime açılmalıdır.
-  // `inert` yukarıdaki etkide kurulur. Bu etki ondan sonra çalışır.
+  // While the drawer is open, everything outside it is non-interactive.
+  // On close, focus returns to the menu button. The button must be made interactive first.
+  // `inert` is set in the effect above. This effect runs after it.
   useLayoutEffect(() => {
     if (!modalOpen && returnFocus.current) {
       returnFocus.current = false;
@@ -374,12 +374,12 @@ export function AppShell({ children, assistant }: AppShellProps) {
     }
   }, [modalOpen]);
 
-  // Açılınca odak çekmeceye geçer. Odak zaten içerideyse yerinde kalır.
+  // On open, focus moves into the drawer. If focus is already inside, it stays put.
   useEffect(() => {
     if (!modalOpen) return;
     const d = drawerRef.current;
     if (!d || d.contains(document.activeElement)) return;
-    // "Ara" düğmesi komut alanını açar. Öteki düğmeler kapatma düğmesini açar.
+    // The "Ara" (search) button opens the command field. Other buttons open (focus) the close button.
     const field =
       opener === 'search' ? d.querySelector<HTMLElement>('.shell-sender textarea') : null;
     (field ?? d.querySelector<HTMLElement>('[data-drawer-close]'))?.focus();
@@ -394,7 +394,7 @@ export function AppShell({ children, assistant }: AppShellProps) {
     return () => document.removeEventListener('keydown', onKey);
   }, [modalOpen, closeDrawer]);
 
-  // Üst çubuk açık çalışma alanının adını yazar. Veri yoksa ad gizlidir.
+  // The top bar shows the open workspace's name. Without data the name is hidden.
   const ws = workspaces?.items.find((w) => w.id === workspaces.current) ?? workspaces?.items[0];
 
   return (
@@ -427,7 +427,7 @@ export function AppShell({ children, assistant }: AppShellProps) {
               environment={demo ? 'example' : moduleEnvironment}
               mode={commandMode}
             />
-            {/* Panel yalnız tıklama, dokunma, Enter ve Space ile açılır. Fare üstüne gelmek açmaz. */}
+            {/* The panel opens only on click, touch, Enter and Space. Mouse hover does not open it. */}
             <button
               ref={assistBtn}
               type="button"

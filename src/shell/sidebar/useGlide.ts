@@ -2,18 +2,18 @@ import type { FocusEvent, PointerEvent } from 'react';
 import { useCallback, useRef, useState } from 'react';
 
 /**
- * Kayan hover zemini (G1–G3).
- * G1: Zemin öğeler arasında kayarak geçer. Tek katman vardır.
- * G2: Listeye dışarıdan girilince zemin hareketsiz yerleşir. Sonra kayar.
- * G3: Listeden çıkınca zemin yerinde solar. Klavye odağı da zemini taşır.
+ * Gliding hover background (G1–G3).
+ * G1: the background glides between items. There is a single layer.
+ * G2: on entering the list from outside, the background settles without motion, then glides.
+ * G3: on leaving the list, the background fades in place. Keyboard focus also moves the background.
  */
-/** Ana menü öğeleri. Flyout paneli kendi seçicisini verir. */
+/** Main menu items. The flyout panel supplies its own selector. */
 export const MAIN_GLIDE_ITEM = '.shell-list > li > .shell-item';
 export const FLY_GLIDE_ITEM = '.shell-fly-list > li > .shell-item';
 
 export interface GlideState {
   on: boolean;
-  /** G2: dışarıdan girişte konum hareketsiz değişir. */
+  /** G2: on entry from outside, the position changes without motion. */
   jump: boolean;
   top: number;
   height: number;

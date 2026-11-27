@@ -28,15 +28,15 @@ export interface SidebarProps {
   onVariantChange: (v: SidebarVariant) => void;
   nav: NavEntry[];
   agents: Agent[];
-  /** Çalışma alanları. Yoksa yalnız logo görünür. */
+  /** Workspaces. If absent, only the logo is shown. */
   workspaces?: ShellWorkspaceData | undefined;
-  /** Komut alanının hızlı eylemleri. Boşsa bölüm çizilmez. */
+  /** Quick actions of the command box. If empty, the section is not rendered. */
   quickActions?: readonly QuickAction[];
-  /** AI kredisi. Yoksa sayaç çizilmez. */
+  /** AI credit. If absent, the meter is not rendered. */
   credit?: ShellCredit | null;
-  /** Telefon kabuğu. Flyout öğenin altında açılır. */
+  /** Phone shell. The flyout opens below the item. */
   compact?: boolean;
-  /** Bir sayfaya gidilince çağrılır. Telefonda çekmeceyi kapatır. */
+  /** Called on navigating to a page. On phones it closes the drawer. */
   onNavigate?: (() => void) | undefined;
   /** Live work is grouped by task. The isolated legacy demo retains its flyouts. */
   grouped?: boolean;
@@ -83,7 +83,7 @@ export function Sidebar({
 
   useEffect(() => clearTimers, []);
 
-  // Sayfa değişince açık flyout kapanır.
+  // An open flyout closes when the page changes.
   const [prevPath, setPrevPath] = useState(location.pathname);
   if (prevPath !== location.pathname) {
     setPrevPath(location.pathname);
@@ -128,7 +128,7 @@ export function Sidebar({
     onNavigate?.();
   }, [close, onNavigate]);
 
-  // Dış tıklama açık flyout'u kapatır.
+  // An outside click closes the open flyout.
   useEffect(() => {
     if (!open) return undefined;
     const onDown = (e: PointerEvent) => {
@@ -143,7 +143,7 @@ export function Sidebar({
 
   const isActive = (to: string) => isPathActive(to, location.pathname);
 
-  // Üst düzey öğeler arasında yukarı ve aşağı ok tuşları gezinir.
+  // Up and down arrow keys move between top-level items.
   const onNavKeyDown = (e: React.KeyboardEvent<HTMLElement>) => {
     if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
     const target = e.target as HTMLElement;
@@ -368,7 +368,7 @@ export function Sidebar({
               </ul>
             </>
           )}
-          {/* Ajan verisi yoksa bölüm gizlidir. Uydurma ajan gösterilmez. */}
+          {/* Without agent data the section is hidden. No made-up agents are shown. */}
           {agents.length > 0 && (
             <>
               {!rail && <h2 className="shell-sec">{t.nav.sectionAgents}</h2>}

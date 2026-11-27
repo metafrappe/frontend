@@ -9,7 +9,7 @@ import { AppShell } from './AppShell';
 const original = window.matchMedia;
 const originalViewport = Object.getOwnPropertyDescriptor(window, 'visualViewport');
 
-/** Sahte görünür alan. Sanal klavye görünür alanın yüksekliğini küçültür. */
+/** Fake visual viewport. The virtual keyboard reduces the visual viewport's height. */
 class FakeViewport extends EventTarget {
   height = window.innerHeight;
   scale = 1;
