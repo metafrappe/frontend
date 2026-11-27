@@ -1,5 +1,6 @@
 import { ArrowCounterClockwise, CheckCircle, Warning, XCircle } from '@phosphor-icons/react';
-import { Alert, Button, Checkbox, Input } from 'antd';
+import { Alert, Button, Checkbox } from 'antd';
+import { Input } from '@/components/controls';
 import { useEffect, useId, useState } from 'react';
 
 import type { ConfirmBlock, ConfirmRisk, GenUIActionHandler, GenUIDecision } from '../types';

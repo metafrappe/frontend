@@ -458,3 +458,13 @@ html[data-focus-mode='keyboard'] .atonota-tabs .ant-segmented-item:focus-within 
     box-shadow: none;
   }
 }
+
+/* Text read by a screen reader only. Example: the characters-left message of a text counter. */
+.atonota-visually-hidden {
+  position: absolute;
+  inline-size: 0;
+  block-size: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

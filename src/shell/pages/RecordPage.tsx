@@ -1,5 +1,6 @@
 import { Minus, Plus } from '@phosphor-icons/react';
-import { Button, Form, Input, InputNumber, Space } from 'antd';
+import { Button, Form, InputNumber, Space } from 'antd';
+import { Input } from '@/components/controls';
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 

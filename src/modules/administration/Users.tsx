@@ -1,4 +1,5 @@
-import { Alert, Button, Input, Modal, Select } from 'antd';
+import { Alert, Button, Modal, Select } from 'antd';
+import { Input } from '@/components/controls';
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import type { InviteInput, InvitePreview, UserAdminClient, UserRecord } from '../runtime';
 import { failureKind, useMutation, useRead, type FailureKind } from '../data';

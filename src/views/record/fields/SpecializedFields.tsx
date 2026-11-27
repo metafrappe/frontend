@@ -7,7 +7,8 @@ import {
   Trash,
   UploadSimple,
 } from '@phosphor-icons/react';
-import { Button, ColorPicker, Input, InputNumber, Rate, Segmented, Upload } from 'antd';
+import { Button, ColorPicker, InputNumber, Rate, Segmented, Upload } from 'antd';
+import { Input } from '@/components/controls';
 import { type PointerEvent, useCallback, useEffect, useRef, useState } from 'react';
 
 import { formatRecordMessage } from '../messages';

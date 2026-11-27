@@ -1,15 +1,5 @@
-import {
-  Alert,
-  Button,
-  Checkbox,
-  ConfigProvider,
-  Input,
-  Modal,
-  Select,
-  Switch,
-  Tabs,
-  theme,
-} from 'antd';
+import { Alert, Button, Checkbox, ConfigProvider, Modal, Select, Switch, Tabs, theme } from 'antd';
+import { Input } from '@/components/controls';
 import { useCallback, useId, useState, type ReactNode } from 'react';
 import { useModule } from '../context';
 import { useMutation, useRead } from '../data';

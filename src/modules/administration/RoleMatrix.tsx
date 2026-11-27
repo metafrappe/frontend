@@ -1,4 +1,5 @@
-import { Alert, Button, Checkbox, Input, Modal, Select } from 'antd';
+import { Alert, Button, Checkbox, Modal, Select } from 'antd';
+import { Input } from '@/components/controls';
 import {
   useCallback,
   useEffect,

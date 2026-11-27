@@ -1,5 +1,6 @@
 import { CalendarBlank, Clock, Sparkle, WarningCircle } from '@phosphor-icons/react';
-import { Button, Checkbox, Input, InputNumber, Select } from 'antd';
+import { Button, Checkbox, InputNumber, Select } from 'antd';
+import { Input } from '@/components/controls';
 import type { ReactNode } from 'react';
 
 import { CATALOG_VERSION, resolveCatalogEntry } from './catalogRegistry';

@@ -7,6 +7,7 @@ import {
 import type { InputNumberProps, InputProps, InputRef, SelectProps } from 'antd';
 import { forwardRef, useCallback, useEffect, useRef } from 'react';
 import type {
+  ComponentProps,
   ComponentRef,
   ForwardedRef,
   ReactElement,
@@ -16,14 +17,24 @@ import type {
 } from 'react';
 
 import './controls.css';
+import { useTextRules } from './text-rules';
 
 const InputField = forwardRef<InputRef, InputProps>(function Input(
-  { className, suffix, ...props },
+  { className, suffix, maxLength, showCount, count, onPressEnter, onKeyDown, ...props },
   ref,
 ) {
+  const rules = useTextRules<HTMLInputElement>({
+    maxLength,
+    showCount,
+    count,
+    onPressEnter,
+    onKeyDown,
+    'aria-describedby': props['aria-describedby'],
+  });
   return (
     <AntInput
       {...props}
+      {...rules}
       ref={ref}
       className={['atonota-input', className].filter(Boolean).join(' ')}
       suffix={suffix ?? <span className="hit-sfx" aria-hidden="true" />}
@@ -31,10 +42,29 @@ const InputField = forwardRef<InputRef, InputProps>(function Input(
   );
 });
 
+type TextAreaProps = ComponentProps<typeof AntInput.TextArea>;
+type TextAreaRef = ComponentRef<typeof AntInput.TextArea>;
+
+/** The text area follows the same text rules as the input (AJA-1764). */
+const TextAreaField = forwardRef<TextAreaRef, TextAreaProps>(function TextArea(
+  { maxLength, showCount, count, onPressEnter, onKeyDown, ...props },
+  ref,
+) {
+  const rules = useTextRules<HTMLTextAreaElement>({
+    maxLength,
+    showCount,
+    count,
+    onPressEnter,
+    onKeyDown,
+    'aria-describedby': props['aria-describedby'],
+  });
+  return <AntInput.TextArea {...props} {...rules} ref={ref} />;
+});
+
 Object.assign(InputField, {
   Group: AntInput.Group,
   Search: AntInput.Search,
-  TextArea: AntInput.TextArea,
+  TextArea: TextAreaField,
   Password: AntInput.Password,
   OTP: AntInput.OTP,
 });

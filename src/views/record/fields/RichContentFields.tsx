@@ -1,5 +1,6 @@
 import { Code, ListBullets, TextB, TextHOne, TextItalic } from '@phosphor-icons/react';
-import { Button, Input, Segmented } from 'antd';
+import { Button, Segmented } from 'antd';
+import { Input } from '@/components/controls';
 import { type ReactNode, useState } from 'react';
 
 import { stripHtmlTagsSafe } from '../adapter';

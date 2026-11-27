@@ -39,6 +39,7 @@ const items: DropdownItem[] = [
 
 export default function ControlsDemoPage() {
   const [action, setAction] = useState('');
+  const [submits, setSubmits] = useState(0);
 
   return (
     <div className="controls-demo">
@@ -113,6 +114,18 @@ export default function ControlsDemoPage() {
             { value: 'sms', label: 'Kısa mesaj' },
           ]}
         />
+      </section>
+      <section className="controls-demo-row">
+        <form
+          data-testid="text-form"
+          onSubmit={(event) => {
+            event.preventDefault();
+            setSubmits((count) => count + 1);
+          }}
+        >
+          <Input aria-label="Kısa not" maxLength={10} showCount data-testid="limited" />
+          <output data-testid="submit-count">{submits}</output>
+        </form>
       </section>
     </div>
   );

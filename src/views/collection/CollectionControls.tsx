@@ -1,5 +1,6 @@
 import { CaretDown, Check } from '@phosphor-icons/react';
-import { Button, Input, Select } from 'antd';
+import { Button, Select } from 'antd';
+import { Input } from '@/components/controls';
 import type { ButtonProps, InputProps, InputRef, RefSelectProps, SelectProps } from 'antd';
 import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
 

@@ -52,7 +52,7 @@ describe('grapheme counter', () => {
     expect(spy).toHaveBeenCalledWith('tr-TR', { granularity: 'grapheme' });
     // string.length is 14 here. The counter shows 3 of 3.
     expect(screen.getByLabelText('Name')).toHaveValue(`${HINDI}${FAMILY}${ACCENT}`);
-    expect(document.querySelector('.ant-input-data-count')).toHaveTextContent('3 / 3');
+    expect(document.querySelector('.ant-input-show-count-suffix')).toHaveTextContent('3 / 3');
   });
 
   it('cuts the text at a character boundary when the limit is reached', () => {

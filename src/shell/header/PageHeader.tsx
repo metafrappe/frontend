@@ -12,7 +12,8 @@ import {
   WarningCircle,
   X,
 } from '@phosphor-icons/react';
-import { Button, Dropdown, Input, Segmented, Select, Tag } from 'antd';
+import { Button, Dropdown, Segmented, Select, Tag } from 'antd';
+import { Input } from '@/components/controls';
 import { Fragment, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 

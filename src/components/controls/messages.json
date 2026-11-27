@@ -1,0 +1,13 @@
+{
+  "tr": {
+    "controls.textCount.remaining": {
+      "other": "{count} karakter kaldı"
+    }
+  },
+  "en": {
+    "controls.textCount.remaining": {
+      "one": "{count} character remaining",
+      "other": "{count} characters remaining"
+    }
+  }
+}

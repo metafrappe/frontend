@@ -1,5 +1,6 @@
 import { CheckCircle, Lightning, XCircle } from '@phosphor-icons/react';
-import { Alert, Button, Checkbox, Form, Input, Select, Tag } from 'antd';
+import { Alert, Button, Checkbox, Form, Select, Tag } from 'antd';
+import { Input } from '@/components/controls';
 import { useState } from 'react';
 
 import type {
