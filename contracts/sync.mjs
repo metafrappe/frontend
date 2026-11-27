@@ -5,13 +5,14 @@
 // Kaynak klasör bir ayardır. Sıra şöyledir:
 //   1. --source <klasör> argümanı
 //   2. ATONOTA_BACKEND_DIR ortam değişkeni
-// Kaynak klasör `backend/contracts/` ve `backend/docs/contracts.md` taşımalıdır.
+// Kaynak, metafrappe/backend deposunun yerel kopyasıdır.
+// Kaynak klasör `contracts/` ve `docs/contracts.md` taşımalıdır.
 // Kaynak bir git deposuysa commit kimliği git ile okunur.
 // Değilse kaynak klasördeki `SOURCE_COMMIT` dosyası okunur.
 //
 // Kullanım:
-//   node contracts/sync.mjs --source ../frappesetup
-//   node contracts/sync.mjs --source ../frappesetup --check
+//   node contracts/sync.mjs --source ../backend
+//   node contracts/sync.mjs --source ../backend --check
 //
 // --check bir şey yazmaz. Kopya kaynaktan farklıysa 1 ile çıkar.
 
@@ -30,6 +31,8 @@ import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
+
+export const REPOSITORY = 'metafrappe/backend';
 
 export const CONTRACT_PATTERN = /\.openapi\.(ya?ml|json)$/;
 
@@ -68,8 +71,8 @@ export function readCommit(source) {
       'status',
       '--porcelain',
       '--',
-      'backend/contracts',
-      'backend/docs/contracts.md',
+      'contracts',
+      'docs/contracts.md',
     ]);
     return { commit, dirty: status.length > 0, origin: 'git' };
   } catch {
@@ -85,8 +88,8 @@ export function readCommit(source) {
 
 /** Kaynaktaki dosyaları okur. Dönen her öğe hedef yolunu ve içeriğini taşır. */
 export function collectSource(source) {
-  const contractsDir = join(source, 'backend', 'contracts');
-  const docFile = join(source, 'backend', 'docs', 'contracts.md');
+  const contractsDir = join(source, 'contracts');
+  const docFile = join(source, 'docs', 'contracts.md');
   if (!existsSync(contractsDir)) throw new Error(`Klasör yok: ${contractsDir}`);
   if (!existsSync(docFile)) throw new Error(`Dosya yok: ${docFile}`);
 
@@ -104,7 +107,7 @@ export function collectSource(source) {
 
 export function buildManifest(files, commitInfo) {
   return {
-    repository: 'frappesetup',
+    repository: REPOSITORY,
     commit: commitInfo.commit,
     dirty: commitInfo.dirty,
     commitSource: commitInfo.origin,
@@ -138,6 +141,9 @@ export function diffTarget(target, files, manifest) {
     return problems;
   }
   const stored = JSON.parse(readFileSync(manifestPath, 'utf8'));
+  // Eski kayıt başka bir depoyu yazabilir. Örneğin `frappesetup`. O kayıt yeni kaynakla eşleşmez.
+  if (stored.repository !== manifest.repository)
+    problems.push(`farklı depo: ${stored.repository} ve ${manifest.repository}`);
   // SOURCE_COMMIT dosyası kısa kimlik taşıyabilir. Bu yüzden kimlikler önekle karşılaştırılır.
   const sameCommit =
     typeof stored.commit === 'string' &&

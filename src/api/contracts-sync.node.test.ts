@@ -8,11 +8,12 @@ import { readCommit, run } from '../../contracts/sync.mjs';
 
 function makeSource({ git = false, commitFile }: { git?: boolean; commitFile?: string } = {}) {
   const root = mkdtempSync(join(tmpdir(), 'sozlesme-kaynak-'));
-  mkdirSync(join(root, 'backend', 'contracts'), { recursive: true });
-  mkdirSync(join(root, 'backend', 'docs'), { recursive: true });
-  writeFileSync(join(root, 'backend', 'contracts', 'a.openapi.yaml'), 'openapi: 3.1.0\n');
-  writeFileSync(join(root, 'backend', 'contracts', 'notlar.txt'), 'kopyalanmaz\n');
-  writeFileSync(join(root, 'backend', 'docs', 'contracts.md'), '# Sözleşmeler\n');
+  // metafrappe/backend düzeni: sözleşmeler depo kökündedir.
+  mkdirSync(join(root, 'contracts'), { recursive: true });
+  mkdirSync(join(root, 'docs'), { recursive: true });
+  writeFileSync(join(root, 'contracts', 'a.openapi.yaml'), 'openapi: 3.1.0\n');
+  writeFileSync(join(root, 'contracts', 'notlar.txt'), 'kopyalanmaz\n');
+  writeFileSync(join(root, 'docs', 'contracts.md'), '# Sözleşmeler\n');
   if (commitFile) writeFileSync(join(root, 'SOURCE_COMMIT'), `${commitFile}\n`);
   if (git) {
     const env = {
@@ -45,6 +46,7 @@ describe('sözleşme kopyalama betiği', () => {
     );
     expect(readFileSync(join(target, 'docs', 'contracts.md'), 'utf8')).toBe('# Sözleşmeler\n');
     const manifest = JSON.parse(readFileSync(join(target, 'SOURCE.json'), 'utf8'));
+    expect(manifest.repository).toBe('metafrappe/backend');
     expect(manifest.commit).toBe('abc1234');
     expect(manifest.files.map((f: { path: string }) => f.path)).toEqual([
       'openapi/a.openapi.yaml',
@@ -62,7 +64,7 @@ describe('sözleşme kopyalama betiği', () => {
   it('kaynak başka deponun alt klasörü ise SOURCE_COMMIT dosyasını okur', () => {
     const outer = makeSource({ git: true });
     const inner = join(outer, 'ic');
-    mkdirSync(join(inner, 'backend', 'contracts'), { recursive: true });
+    mkdirSync(join(inner, 'contracts'), { recursive: true });
     writeFileSync(join(inner, 'SOURCE_COMMIT'), 'def5678\n');
     expect(readCommit(inner)).toMatchObject({ commit: 'def5678', origin: 'SOURCE_COMMIT' });
   });
@@ -71,12 +73,50 @@ describe('sözleşme kopyalama betiği', () => {
     const source = makeSource({ commitFile: 'abc1234' });
     const target = mkdtempSync(join(tmpdir(), 'sozlesme-hedef-'));
     run(['--source', source, '--target', target]);
-    writeFileSync(join(source, 'backend', 'contracts', 'a.openapi.yaml'), 'openapi: 3.1.1\n');
+    writeFileSync(join(source, 'contracts', 'a.openapi.yaml'), 'openapi: 3.1.1\n');
 
     const result = run(['--source', source, '--target', target, '--check']);
 
     expect(result.ok).toBe(false);
     expect(result.problems).toContain('farklı: openapi/a.openapi.yaml');
+  });
+
+  it('eski düzendeki backend/contracts klasörünü kabul etmez', () => {
+    const root = mkdtempSync(join(tmpdir(), 'sozlesme-eski-'));
+    mkdirSync(join(root, 'backend', 'contracts'), { recursive: true });
+    mkdirSync(join(root, 'backend', 'docs'), { recursive: true });
+    writeFileSync(join(root, 'backend', 'contracts', 'a.openapi.yaml'), 'openapi: 3.1.0\n');
+    writeFileSync(join(root, 'backend', 'docs', 'contracts.md'), '# Sözleşmeler\n');
+    writeFileSync(join(root, 'SOURCE_COMMIT'), 'abc1234\n');
+    const target = mkdtempSync(join(tmpdir(), 'sozlesme-hedef-'));
+
+    expect(() => run(['--source', root, '--target', target])).toThrow(/contracts/);
+  });
+
+  it('eski frappesetup kaydı yeni kaynakla eşleşmez', () => {
+    const source = makeSource({ commitFile: 'abc1234' });
+    const target = mkdtempSync(join(tmpdir(), 'sozlesme-hedef-'));
+    run(['--source', source, '--target', target]);
+    // Dosyalar ve commit aynı kalır. Yalnız depo adı eski kaynağı yazar.
+    const path = join(target, 'SOURCE.json');
+    const stored = JSON.parse(readFileSync(path, 'utf8'));
+    writeFileSync(path, `${JSON.stringify({ ...stored, repository: 'frappesetup' }, null, 2)}\n`);
+
+    const result = run(['--source', source, '--target', target, '--check']);
+
+    expect(result.ok).toBe(false);
+    expect(result.problems).toContain('farklı depo: frappesetup ve metafrappe/backend');
+  });
+
+  it('yeni kaynaktan yazılan kopya --check ile geçer', () => {
+    const source = makeSource({ commitFile: 'abc1234' });
+    const target = mkdtempSync(join(tmpdir(), 'sozlesme-hedef-'));
+    run(['--source', source, '--target', target]);
+
+    expect(run(['--source', source, '--target', target, '--check'])).toMatchObject({
+      ok: true,
+      problems: [],
+    });
   });
 
   it('kaynak verilmezse açık bir hata verir', () => {

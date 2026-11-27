@@ -1,6 +1,6 @@
 {
-  "repository": "frappesetup",
-  "commit": "c404bdeb4092c209c4054a6f3f086e539238cc87",
+  "repository": "metafrappe/backend",
+  "commit": "b94af6ac99818e0b5ddcf3073402620f082f65ac",
   "dirty": false,
   "commitSource": "git",
   "files": [
@@ -10,7 +10,7 @@
     },
     {
       "path": "openapi/identity_sync.openapi.yaml",
-      "sha256": "7651bb35f4ec572836aa9831ca57e8b8592e1a6189da6fbca4ef23220b46ff3c"
+      "sha256": "91b26c46bf8c8235172e27be7c53f8bd7bef54afb249760fbb6113096189a1c1"
     },
     {
       "path": "openapi/platform_core-access.openapi.yaml",
@@ -30,7 +30,7 @@
     },
     {
       "path": "openapi/platform_core-identity.openapi.yaml",
-      "sha256": "271993d304b884a8c5df120814adc83174f34cfad90d2ae1fa99b5868367a656"
+      "sha256": "6aa0cf093a5d9125e58f3fe99de54977d086a482581bb9aeb80fe83a2aea9c80"
     },
     {
       "path": "openapi/platform_core-mobile.openapi.yaml",
@@ -54,7 +54,7 @@
     },
     {
       "path": "docs/contracts.md",
-      "sha256": "7d1dab931a2b115a04e6b2f86617abdaa5d43ef49514df3798a665cf234453ca"
+      "sha256": "460b996034abec5a46d9a702ecb086cde5b8e9cdd7ad000040f5fbb71354d00d"
     }
   ]
 }
