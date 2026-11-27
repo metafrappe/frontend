@@ -1,6 +1,7 @@
 import type { DocTypeMeta } from '@/api';
 import { sampleDocTypeMeta } from '@/mocks/fixtures';
 import { createDefinition } from './model';
+import type { SavedView } from './types';
 
 /**
  * Önizleme ve test için örnek kayıt tanımı. Veri burada yoktur.
@@ -52,3 +53,10 @@ export const sampleDefinition = createDefinition(sampleMeta, {
   label: 'Örnek kayıtlar',
   groupField: 'status',
 });
+
+/** Örnek kayıtlı görünümler. Sahte kayıtlarda tarih alanı yoktur. Bu yüzden "Bu ay" yerine tutar sırası vardır. */
+export const sampleSavedViews: readonly SavedView[] = [
+  { id: 'bekleyen', label: 'Bekleyenler', query: { filter: 'status', value: 'Açık' } },
+  { id: 'tutar', label: 'Tutara göre', query: { sort: 'amount', direction: 'desc' } },
+  { id: 'tumu', label: 'Tümü', query: {} },
+];

@@ -1,3 +1,4 @@
+import { Funnel, SortAscending } from '@phosphor-icons/react';
 import { theme } from 'antd';
 import {
   CollectionButton as Button,
@@ -11,16 +12,26 @@ import {
   useCallback,
   useSyncExternalStore,
   useId,
+  useLayoutEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
-import type { ErrorInfo, ReactNode } from 'react';
+import type { ErrorInfo, ReactNode, RefObject } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { BulkActions } from './BulkActions';
+import { useCollectionText } from './messages';
+import { CardView } from './CardView';
 import { CollectionState } from './CollectionState';
 import { TableView } from './TableView';
-import { collectionVariables, collectionViewOptions } from './collection-tokens';
+import {
+  collectionPhoneMaxRem,
+  collectionVariables,
+  collectionViewOptions,
+} from './collection-tokens';
+import type { CollectionRowHeight } from './collection-tokens';
 import { createCollectionCache } from './query-cache';
-import { readQuery, toListRequest, writeQuery } from './query';
+import { applySavedView, isSavedViewActive, readQuery, toListRequest, writeQuery } from './query';
 import { toGroupSummaryRequest } from './summary';
 import { useGroupSummary } from './use-group-summary';
 import type {
@@ -28,6 +39,7 @@ import type {
   CollectionQuery,
   CollectionSource,
   CollectionSummarySource,
+  SavedView,
   ViewType,
 } from './types';
 import './collection.css';
@@ -64,6 +76,29 @@ class ViewBoundary extends Component<{ children: ReactNode }, { failed: boolean 
     );
   }
 }
+/**
+ * Koleksiyon kendi genişliği telefon kırılımının altındaysa `true` döner.
+ * Ölçü pencereye değil koleksiyon kutusuna bakar. Kök yazı büyüyünce kırılım da büyür.
+ * ResizeObserver yoksa (ör. jsdom) geniş düzen kalır.
+ */
+function useNarrow(ref: RefObject<HTMLElement | null>) {
+  const [narrow, setNarrow] = useState(false);
+  useLayoutEffect(() => {
+    const element = ref.current;
+    if (!element || typeof ResizeObserver === 'undefined') return;
+    const measure = () => {
+      const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+      setNarrow(element.getBoundingClientRect().width < collectionPhoneMaxRem * rem);
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    return () => {
+      observer.disconnect();
+    };
+  }, [ref]);
+  return narrow;
+}
 export interface CollectionViewProps {
   definition: CollectionDefinition;
   source: CollectionSource;
@@ -83,6 +118,16 @@ export interface CollectionViewProps {
    * Adres sözleşmesi kabuğundur; görünüm adres üretmez.
    */
   recordHref?: ((name: string) => string) | undefined;
+  /**
+   * Kayıtlı görünümler. Örnek: "Bekleyenler", "Bu ay" ve "Tümü".
+   * Seçilen görünüm adreste `saved` alanında tutulur.
+   */
+  savedViews?: readonly SavedView[] | undefined;
+  /**
+   * Tablo satır yüksekliği: `sm` 36, `md` 42, `lg` 48 px. Varsayılan `md`.
+   * Dokunmatik ekranda (`any-pointer: coarse`) satır en az `lg` olur.
+   */
+  rowHeight?: CollectionRowHeight | undefined;
 }
 export function CollectionView({
   definition,
@@ -91,9 +136,39 @@ export function CollectionView({
   summarySource,
   enableExperimentalCollectionViews = false,
   recordHref,
+  savedViews: givenSavedViews,
+  rowHeight = 'md',
 }: CollectionViewProps) {
+  const text = useCollectionText();
+  // Kayıtlı görünüm verilmezse liste yalnız "Tümü" görünümünü sunar.
+  const allLabel = text('collection.savedView.all');
+  const savedViews = useMemo<readonly SavedView[]>(
+    () => givenSavedViews ?? [{ id: 'tumu', label: allLabel, query: {} }],
+    [givenSavedViews, allLabel],
+  );
+  const rootRef = useRef<HTMLDivElement>(null);
+  const narrow = useNarrow(rootRef);
+  // Telefonda "Süzgeç" ve "Sırala" kendi alanlarını açar. Liste önce kart olarak görünür.
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [sortOpen, setSortOpen] = useState(false);
+  const [layout, setLayout] = useState<'cards' | 'table'>('cards');
+  const filterPanelRef = useRef<HTMLDivElement>(null);
+  const sortFieldsRef = useRef<HTMLDivElement>(null);
+  const filterFieldsRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    // Ekran daralınca odak gizlenecek bir alandaysa o alan açık kalır. Odak ve girdi kaybolmaz.
+    if (!narrow) return;
+    const active = document.activeElement;
+    if (!active) return;
+    if (filterPanelRef.current?.contains(active) || filterFieldsRef.current?.contains(active))
+      setFilterOpen(true);
+    if (sortFieldsRef.current?.contains(active)) setSortOpen(true);
+  }, [narrow]);
   const [params, setParams] = useSearchParams();
-  const requestedQuery = useMemo(() => readQuery(params, definition), [params, definition]);
+  const requestedQuery = useMemo(
+    () => readQuery(params, definition, savedViews),
+    [params, definition, savedViews],
+  );
   const query = useMemo(
     () =>
       enableExperimentalCollectionViews
@@ -134,11 +209,21 @@ export function CollectionView({
     source,
     definition,
   });
-  const [inspect, setInspect] = useState(false);
+  // "Seç" düğmesi seçim kipini açar. Kip kapalıyken satırlarda seçim kutusu yoktur.
+  const [selecting, setSelecting] = useState(false);
   const { token } = theme.useToken();
   const titleId = useId();
   const contentId = useId();
+  const selectId = useId();
+  const filterPanelId = useId();
+  const filterFieldsId = useId();
+  const sortFieldsId = useId();
   const page = current?.status === 'ready' ? current.page : undefined;
+  // Sayfa düğmeleri ilk yanıt gelene kadar gizlidir. Böylece düğme ilk çizimde son rengindedir.
+  // Kapalıdan açığa renk geçişi koşmaz. Hata yanıtında da düğmeler görünür, kullanıcı geri dönebilir.
+  // Sonraki yüklemelerde düğmeler görünür kalır, odak kaybolmaz.
+  const [settled, setSettled] = useState(false);
+  if (current && !settled) setSettled(true);
   const scope = key + query.view;
   const selected =
     selection.key === scope &&
@@ -147,20 +232,60 @@ export function CollectionView({
     page
       ? selection.names.filter((name) => page.data.some((row) => row.name === name))
       : [];
+  function navigate(next: CollectionQuery) {
+    setDraft({ base: next.search, search: next.search });
+    setParams(writeQuery(params, next));
+  }
   function update(patch: Partial<CollectionQuery>) {
-    if (patch.search !== undefined) setDraft({ base: patch.search, search: patch.search });
-    setParams(writeQuery(params, { ...query, page: 1, ...patch }));
-    setInspect(false);
+    // Kullanıcı süzgeci, aramayı ya da sıralamayı elle değiştirirse kayıtlı görünüm seçimi kalkar.
+    const custom = ['search', 'sort', 'direction', 'filter', 'value'].some(
+      (field) => field in patch,
+    );
+    navigate({ ...query, page: 1, ...(custom ? { saved: '' } : {}), ...patch });
   }
   const HeavyView = query.view === 'table' ? undefined : heavyViews[query.view];
   const activeFilter = definition.columns.find((field) => field.fieldname === query.filter);
   const activeFilterValue =
     activeFilter?.choices.find((choice) => choice.value === query.value)?.label ?? query.value;
+  const activeTags = [
+    ...(query.search
+      ? [
+          {
+            key: 'search',
+            label: text('collection.tags.search', { search: query.search }),
+            remove: text('collection.tags.removeSearch'),
+            patch: { search: '' },
+          },
+        ]
+      : []),
+    ...(activeFilter && query.value
+      ? [
+          {
+            key: 'filter',
+            label: text('collection.tags.filter', {
+              label: activeFilter.label,
+              value: activeFilterValue,
+            }),
+            remove: text('collection.tags.removeFilter', { label: activeFilter.label }),
+            patch: { filter: '', value: '' },
+          },
+        ]
+      : []),
+  ];
   const filterFields = definition.columns.filter(
     (field) => field.filterable && field.choices.length > 0,
   );
+  const showCards = narrow && layout === 'cards';
+  const filtersHidden = narrow && !filterOpen;
+  const sortHidden = narrow && !sortOpen;
   return (
-    <div className="collection" style={collectionVariables(token, mode)}>
+    <div
+      ref={rootRef}
+      className="collection"
+      data-row={rowHeight}
+      data-layout={narrow ? 'phone' : 'wide'}
+      style={collectionVariables(token, mode)}
+    >
       <section aria-labelledby={titleId}>
         <header className="collection-header">
           <div>
@@ -169,136 +294,240 @@ export function CollectionView({
             {definition.sensitivity === 'restricted' && <p>Hassas kayıtlar</p>}
           </div>
         </header>
-        {!enableExperimentalCollectionViews && requestedQuery.view !== 'table' && (
-          <p role="status">İstenen görünüm şu anda kapalı. Tablo gösteriliyor.</p>
-        )}
-        <form
-          role="search"
-          className="collection-search"
-          onSubmit={(event) => {
-            event.preventDefault();
-            update({ search });
-          }}
-        >
-          <label className="collection-grow">
-            <span>Kayıt ara</span>
-            <Input
-              aria-label="Kayıt ara"
-              value={search}
-              maxLength={200}
-              onChange={(event) => {
-                setDraft({ base: query.search, search: event.target.value });
-              }}
-            />
-          </label>
-          <Button htmlType="submit">Ara</Button>
-        </form>
-        <div className="collection-tools">
-          <label>
-            <span>Görünüm</span>
-            <Select
-              aria-label="Görünüm"
-              value={query.view}
-              options={
-                enableExperimentalCollectionViews
-                  ? collectionViewOptions
-                  : collectionViewOptions.filter((option) => option.value === 'table')
-              }
-              onChange={(view: ViewType) => {
-                update({ view, page: query.page });
-              }}
-            />
-          </label>
-          <label>
-            <span>Sıralama alanı</span>
-            <Select
-              aria-label="Sıralama alanı"
-              value={query.sort}
-              options={definition.columns.map((field) => ({
-                value: field.fieldname,
-                label: field.label,
-              }))}
-              onChange={(sort: string) => {
-                update({ sort });
-              }}
-            />
-          </label>
-          <label>
-            <span>Sıralama yönü</span>
-            <Select
-              aria-label="Sıralama yönü"
-              value={query.direction}
-              options={[
-                { value: 'asc', label: 'Artan' },
-                { value: 'desc', label: 'Azalan' },
-              ]}
-              onChange={(direction: 'asc' | 'desc') => {
-                update({ direction });
-              }}
-            />
-          </label>
-          {filterFields.map((field) => (
-            <label key={field.fieldname}>
-              <span>{field.label}</span>
+        <div className="collection-viewbar" data-collection-part="views">
+          <fieldset className="collection-saved">
+            <legend className="collection-sr-only">{text('collection.savedView.legend')}</legend>
+            {savedViews.map((view) => (
+              <label key={view.id} className="collection-saved-option">
+                <input
+                  type="radio"
+                  name={titleId + '-saved'}
+                  value={view.id}
+                  checked={isSavedViewActive(query, view)}
+                  onChange={() => {
+                    navigate(applySavedView(query, view));
+                  }}
+                />
+                <span>{view.label}</span>
+              </label>
+            ))}
+          </fieldset>
+          {(!narrow || enableExperimentalCollectionViews) && (
+            <label className="collection-view-type">
+              <span>{text('collection.viewType.label')}</span>
               <Select
-                aria-label={field.label}
-                value={query.filter === field.fieldname ? query.value : ''}
-                options={[{ value: '', label: 'Tümü' }, ...field.choices]}
-                onChange={(value: string) => {
-                  update({ filter: value ? field.fieldname : '', value });
+                aria-label={text('collection.viewType.label')}
+                value={query.view}
+                options={
+                  enableExperimentalCollectionViews
+                    ? collectionViewOptions
+                    : collectionViewOptions.filter((option) => option.value === 'table')
+                }
+                onChange={(view: ViewType) => {
+                  update({ view, page: query.page });
                 }}
               />
             </label>
-          ))}
+          )}
+          <div
+            className="collection-listbar"
+            role="group"
+            aria-label={text('collection.toolbar.label')}
+          >
+            {narrow && (
+              <Button
+                icon={<Funnel aria-hidden />}
+                aria-expanded={filterOpen}
+                aria-controls={filterPanelId + ' ' + filterFieldsId}
+                onClick={() => {
+                  setFilterOpen(!filterOpen);
+                }}
+              >
+                {activeTags.length
+                  ? text('collection.toolbar.filterCount', { count: activeTags.length })
+                  : text('collection.toolbar.filter')}
+              </Button>
+            )}
+            {narrow && (
+              <Button
+                icon={<SortAscending aria-hidden />}
+                aria-expanded={sortOpen}
+                aria-controls={sortFieldsId}
+                onClick={() => {
+                  setSortOpen(!sortOpen);
+                }}
+              >
+                {text('collection.toolbar.sort')}
+              </Button>
+            )}
+            {query.view === 'table' && (
+              <Button
+                id={selectId}
+                aria-pressed={selecting}
+                onClick={() => {
+                  // Kip kapanınca seçim de kalkar.
+                  if (selecting) setSelection({ key: scope, names: [], source, definition });
+                  setSelecting(!selecting);
+                }}
+              >
+                {text('collection.toolbar.select')}
+              </Button>
+            )}
+            {narrow && query.view === 'table' && (
+              <Button
+                aria-pressed={layout === 'table'}
+                onClick={() => {
+                  setLayout(layout === 'table' ? 'cards' : 'table');
+                }}
+              >
+                {text('collection.toolbar.table')}
+              </Button>
+            )}
+          </div>
+          {!enableExperimentalCollectionViews && requestedQuery.view !== 'table' && (
+            <p role="status">{text('collection.viewType.disabled')}</p>
+          )}
         </div>
-        {(query.search || query.filter) && (
-          <div className="collection-applied">
-            <p>{query.search ? '"' + query.search + '" metni aranıyor.' : 'Arama metni yok.'}</p>
-            <p>
-              {activeFilter
-                ? activeFilter.label + ' alanında "' + activeFilterValue + '" değeri aranıyor.'
-                : 'Etkin süzgeç yok.'}
-            </p>
-            <Button
-              onClick={() => {
-                setDraft({ search: '', base: '' });
-                update({ search: '', filter: '', value: '' });
+        <div className="collection-filterbar" data-collection-part="filters">
+          <div id={filterPanelId} ref={filterPanelRef} hidden={filtersHidden}>
+            <div className="collection-applied">
+              <p role="status" className="collection-filter-count">
+                {activeTags.length
+                  ? text('collection.filters.activeCount', { count: activeTags.length })
+                  : text('collection.filters.none')}
+              </p>
+              {activeTags.length > 0 && (
+                <>
+                  <ul aria-label={text('collection.filters.listLabel')} className="collection-tags">
+                    {activeTags.map((tag) => (
+                      <li key={tag.key} className="collection-tag">
+                        <span>{tag.label}</span>
+                        <Button
+                          aria-label={tag.remove}
+                          onClick={() => {
+                            update(tag.patch);
+                          }}
+                        >
+                          {text('collection.filters.remove')}
+                        </Button>
+                      </li>
+                    ))}
+                  </ul>
+                  <Button
+                    onClick={() => {
+                      update({ search: '', filter: '', value: '' });
+                    }}
+                  >
+                    {text('collection.filters.clear')}
+                  </Button>
+                </>
+              )}
+            </div>
+            <form
+              role="search"
+              className="collection-search"
+              onSubmit={(event) => {
+                event.preventDefault();
+                update({ search });
               }}
             >
-              Süzgeçleri temizle
-            </Button>
+              <label className="collection-grow">
+                <span>{text('collection.search.label')}</span>
+                <Input
+                  aria-label={text('collection.search.label')}
+                  value={search}
+                  maxLength={200}
+                  onChange={(event) => {
+                    setDraft({ base: query.search, search: event.target.value });
+                  }}
+                />
+              </label>
+              <Button htmlType="submit">{text('collection.search.submit')}</Button>
+            </form>
           </div>
-        )}
-        {selected.length > 0 && query.view === 'table' && (
-          <div role="toolbar" aria-label="Seçilen kayıtlar" className="collection-bulk">
-            <strong>{selected.length} kayıt seçildi.</strong>
-            <Button
-              aria-expanded={inspect}
-              aria-controls={contentId + '-selection'}
-              onClick={() => {
-                setInspect(!inspect);
-              }}
+          <div className="collection-tools" hidden={filtersHidden && sortHidden}>
+            <div
+              id={sortFieldsId}
+              ref={sortFieldsRef}
+              className="collection-tool-group"
+              role="group"
+              aria-label={text('collection.sort.label')}
+              hidden={sortHidden}
             >
-              Seçilenleri göster
-            </Button>
-            <Button
-              onClick={() => {
+              <label>
+                <span>{text('collection.sort.field')}</span>
+                <Select
+                  aria-label={text('collection.sort.field')}
+                  value={query.sort}
+                  options={definition.columns.map((field) => ({
+                    value: field.fieldname,
+                    label: field.label,
+                  }))}
+                  onChange={(sort: string) => {
+                    update({ sort });
+                  }}
+                />
+              </label>
+              <label>
+                <span>{text('collection.sort.direction')}</span>
+                <Select
+                  aria-label={text('collection.sort.direction')}
+                  value={query.direction}
+                  options={[
+                    { value: 'asc', label: text('collection.sort.asc') },
+                    { value: 'desc', label: text('collection.sort.desc') },
+                  ]}
+                  onChange={(direction: 'asc' | 'desc') => {
+                    update({ direction });
+                  }}
+                />
+              </label>
+            </div>
+            <div
+              id={filterFieldsId}
+              ref={filterFieldsRef}
+              className="collection-tool-group"
+              role="group"
+              aria-label={text('collection.filters.fieldsLabel')}
+              hidden={filtersHidden}
+            >
+              {filterFields.map((field) => (
+                <label key={field.fieldname}>
+                  <span>{field.label}</span>
+                  <Select
+                    aria-label={field.label}
+                    value={query.filter === field.fieldname ? query.value : ''}
+                    options={[
+                      { value: '', label: text('collection.filters.all') },
+                      ...field.choices,
+                    ]}
+                    onChange={(value: string) => {
+                      update({ filter: value ? field.fieldname : '', value });
+                    }}
+                  />
+                </label>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div className="collection-bulk-slot" data-collection-part="bulk">
+          {selecting && query.view === 'table' && (
+            <BulkActions
+              selected={selected}
+              onClear={() => {
                 setSelection({ key: scope, names: [], source, definition });
-                setInspect(false);
+                document.getElementById(selectId)?.focus();
               }}
-            >
-              Seçimi kaldır
-            </Button>
-          </div>
-        )}
-        {inspect && selected.length > 0 && (
-          <ul id={contentId + '-selection'}>
-            {selected.map((name) => (
-              <li key={name}>{name}</li>
-            ))}
-          </ul>
-        )}
-        <div id={contentId} role="region" aria-label="Koleksiyon içeriği" aria-busy={!current}>
+            />
+          )}
+        </div>
+        <div
+          id={contentId}
+          role="region"
+          aria-label={text('collection.content.label')}
+          aria-busy={!current}
+          data-collection-part="table"
+        >
           {!current ? (
             <CollectionState state="loading" />
           ) : current.status !== 'ready' ? (
@@ -315,11 +544,23 @@ export function CollectionView({
               <Suspense fallback={<CollectionState state="loading" />}>
                 {HeavyView ? (
                   <HeavyView definition={definition} rows={page.data} summary={summary} />
+                ) : showCards ? (
+                  <CardView
+                    definition={definition}
+                    rows={page.data}
+                    recordHref={recordHref}
+                    selecting={selecting}
+                    selected={selected}
+                    onSelect={(names) => {
+                      setSelection({ key: scope, names, source, definition });
+                    }}
+                  />
                 ) : (
                   <TableView
                     definition={definition}
                     rows={page.data}
                     recordHref={recordHref}
+                    selecting={selecting}
                     selected={selected}
                     onSelect={(names) => {
                       setSelection({ key: scope, names, source, definition });
@@ -332,7 +573,7 @@ export function CollectionView({
         </div>
         <nav aria-label="Kayıt sayfaları" className="collection-pagination">
           <p>{query.page}. sayfa.</p>
-          <div className="collection-page-actions">
+          <div className="collection-page-actions" hidden={!settled}>
             <Button
               disabled={query.page <= 1}
               onClick={() => {

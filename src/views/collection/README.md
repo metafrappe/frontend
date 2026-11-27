@@ -162,15 +162,78 @@ Gerçek uygulamada ayarı yalnız çağıran kod açabilir.
 Seçim çubuğu seçilen kayıtları gösterir ve seçimi kaldırır.
 Bu teslimde kayıt değiştiren toplu işlem yoktur.
 
+## Dört parça
+
+Her liste aynı dört parçayı bu sırayla çizer:
+
+1. Görünüm satırı. Kayıtlı görünümler ve görünüm türü buradadır.
+2. Süzgeç satırı. Etkin süzgeç etiketleri, arama, sıralama ve süzgeçler buradadır.
+3. Toplu işlem satırı. Kayıt seçilince seçim çubuğu burada görünür.
+4. Tablo.
+
+Her parçanın `data-collection-part` alanı vardır. Değerler `views`, `filters`, `bulk` ve `table` olur.
+Toplu işlem içeriği sonraki işte gelir.
+
+## Kayıtlı görünüm
+
+Kayıtlı görünümler `savedViews` özelliğinden gelir.
+Örnek görünümler "Bekleyenler", "Bu ay" ve "Tümü" olabilir.
+Özellik verilmezse liste yalnız "Tümü" görünümünü gösterir.
+
+```ts
+const savedViews = [
+  { id: 'bekleyen', label: 'Bekleyenler', query: { filter: 'status', value: 'Açık' } },
+  { id: 'tumu', label: 'Tümü', query: {} },
+];
+```
+
+Görünüm seçilince arama, süzgeç ve sıralama baştan kurulur.
+Sayfa boyutu ve görünüm türü korunur.
+Kullanıcı süzgeci elle değiştirirse kayıtlı görünüm seçimi kalkar.
+Adreste görünüm yoksa, sorgusu birebir uyan görünüm seçili görünür.
+
 ## Adres durumu
 
-Adreste sekiz sorgu alanı bulunur. Bu alanlar `view`, `page`, `size`, `search`, `sort`, `direction`, `filter` ve `value` alanlarıdır.
+Adreste dokuz sorgu alanı bulunur. Bu alanlar `view`, `page`, `size`, `search`, `sort`, `direction`, `filter`, `value` ve `saved` alanlarıdır.
+`saved` alanı seçilen kayıtlı görünümün kimliğini tutar.
+Bilinmeyen alan, değer ya da görünüm kimliği yok sayılır. Liste bozulmaz.
 
 Sayfa boyutu 10, 20 veya 50 kayıttır.
 Arama ve süzgeç değişince ilk sayfa açılır.
 Geri tuşu önceki sorguyu geri getirir.
 Sorgu dışındaki adres alanları korunur.
 Gizli bilgileri adres süzgeçlerine yazmayın.
+
+## Satır yüksekliği
+
+Tablo satırı üç düzeydedir: `sm` 36 px, `md` 42 px ve `lg` 48 px.
+Düzeyi `rowHeight` özelliği seçer. Varsayılan düzey `md` olur.
+Değerler `design/source/control-size-config.json` dosyasındaki denetim boyutlarından gelir.
+Dokunmatik ekranda (`any-pointer: coarse`) satır en az 48 px olur.
+Uzun metin satırı büyütür. Sözcük harf arasından bölünmez.
+
+```tsx
+<CollectionView definition={definition} source={source} rowHeight="sm" />
+```
+
+## Telefon düzeni
+
+Koleksiyon kendi genişliği 48rem altına inince telefon düzenine geçer.
+Ölçü pencereye değil koleksiyon kutusuna bakar.
+Telefonda kayıtlar kart olarak görünür.
+Kartın başında ilk alan kalın yazılır. Öteki alanlar ad ve değer olarak sıralanır.
+
+"Liste araçları" satırında dört düğme vardır:
+
+1. "Süzgeç" arama ve süzgeç alanını açar. Etkin süzgeç sayısı düğmede yazılır.
+2. "Sırala" sıralama alanını açar.
+3. "Seç" seçim kipini açar.
+4. "Tablo" kart ile tablo arasında geçiş yapar.
+
+Dört düğme 320 px'te tek satıra sığar. Her düğmenin dokunma alanı en az 48 px'tir.
+Tablo kendi kutusunda yatay kayar. Sayfa yatay kaymaz.
+Ekran daralınca odak süzgeç alanındaysa o alan açık kalır.
+Tek seçenekli "Görünüm" listesi telefonda gösterilmez.
 
 ## Ortak tasarım bağlantısı
 

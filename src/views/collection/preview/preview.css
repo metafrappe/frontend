@@ -1,3 +1,19 @@
 body {
   margin: 0;
 }
+/* Sayfa arka planı temanın yerleşim rengidir. Koyu temada üstte beyaz şerit kalmaz. */
+[data-collection-preview] {
+  min-height: 100dvh;
+  color: var(--preview-text);
+  background: var(--preview-bg);
+  color-scheme: var(--preview-scheme);
+}
+/* Sayfanın tek h1 başlığı. Liste kendi başlığını h2 ile çizer. Başlık yalnız ekran okuyucuya görünür. */
+.preview-title {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

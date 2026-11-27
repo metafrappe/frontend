@@ -3,11 +3,12 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { createApiClient, createCsrfStore, readApiConfig } from '@/api';
 import { RESTRICTED_SAMPLE_DOCTYPE, SAMPLE_CSRF_TOKEN } from '@/mocks/fixtures';
-import { SampleDataNotice } from '@/mocks/SampleDataNotice';
 import { createApiSource } from '../api-source';
 import { CollectionView } from '../CollectionView';
-import { sampleDefinition } from '../sample';
+import { sampleDefinition, sampleSavedViews } from '../sample';
 import type { CollectionSource } from '../types';
+import { PreviewNotice } from './PreviewNotice';
+import { PreviewTitle } from './PreviewTitle';
 import { TemporaryFoundation } from './TemporaryFoundation';
 import './preview.css';
 
@@ -59,17 +60,22 @@ const definition =
   state === 'unauthorized'
     ? { ...sampleDefinition, doctype: RESTRICTED_SAMPLE_DOCTYPE }
     : sampleDefinition;
+const row = params.get('row');
+const rowHeight = row === 'sm' || row === 'lg' ? row : 'md';
 const mode = params.get('theme') === 'light' ? 'light' : 'dark';
 const container = document.getElementById('root');
 if (!container) throw new Error('Missing preview root');
 createRoot(container).render(
   <TemporaryFoundation mode={mode}>
-    {mocks.active ? <SampleDataNotice /> : null}
+    <PreviewTitle />
+    {mocks.active ? <PreviewNotice /> : null}
     <BrowserRouter>
       <CollectionView
         enableExperimentalCollectionViews={params.get('experimentalViews') === '1'}
         definition={definition}
         source={source}
+        savedViews={sampleSavedViews}
+        rowHeight={rowHeight}
         mode={mode}
       />
     </BrowserRouter>

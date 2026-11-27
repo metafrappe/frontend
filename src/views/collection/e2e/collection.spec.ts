@@ -1,11 +1,13 @@
 import { expect, test } from '../../../../tests/setup/playwright-fixtures';
 import AxeBuilder from '@axe-core/playwright';
 import designSource from '../../../../design/source/control-size-config.json' with { type: 'json' };
+import { isPhone, openPhoneTools, showTable } from './phone-helpers';
 test('expanded input and select targets work without covering their centers', async ({
   page,
 }, testInfo) => {
   await page.goto(preview + '?experimentalViews=1');
   await expect(page.getByText('ORNEK-0001', { exact: true })).toBeVisible();
+  await openPhoneTools(page);
   const input = page.getByRole('textbox', { name: 'Kayıt ara' });
   const wrapper = page.locator('.collection-input');
   const inputBox = await wrapper.boundingBox();
@@ -65,9 +67,13 @@ test('expanded input and select targets work without covering their centers', as
 const preview = '/src/views/collection/preview/';
 test('table preserves readability, keyboard focus, selection and URL history', async ({
   page,
+  browserName,
 }, testInfo) => {
   await page.goto(preview + '?experimentalViews=1');
   await expect(page.getByText('ORNEK-0001', { exact: true })).toBeVisible();
+  // Telefonda tablo "Tablo" düğmesiyle açılır. Arama "Süzgeç" düğmesiyle açılır.
+  await openPhoneTools(page);
+  await showTable(page);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   const scroller = page.getByRole('region', { name: 'Kayıt tablosu yatay kaydırma' });
   // Dar telefonda tablo kendi kapsayıcısında kayar. Geniş ekranda sığabilir.
@@ -85,6 +91,26 @@ test('table preserves readability, keyboard focus, selection and URL history', a
         .map((element) => parseFloat(getComputedStyle(element).fontSize)),
     );
   expect(Math.min(...fontSizes)).toBeGreaterThanOrEqual(14);
+  // Görünüm satırı önce gelir: kayıtlı görünüm, görünüm türü ve "Seç", sonra arama.
+  // macOS WebKit varsayılan ayarda Tab ile radyo düğmesine ve düğmelere gitmez. Safari de böyle davranır.
+  // Linux WebKit bu ayarı kullanmaz. Orada Tab, Chromium gibi her denetime gider.
+  const tabSkipsControls = browserName === 'webkit' && process.platform === 'darwin';
+  // Telefon düğmelerine basıldıysa Tab sırası başlıktan yeniden başlar.
+  if (isPhone(page)) await page.getByRole('heading', { name: 'Örnek kayıtlar' }).click();
+  await page.keyboard.press('Tab');
+  if (!tabSkipsControls) {
+    await expect(page.getByRole('radio', { name: 'Tümü' })).toBeFocused();
+    await page.keyboard.press('Tab');
+  }
+  await expect(page.getByRole('combobox', { name: 'Görünüm', exact: true })).toBeFocused();
+  // Telefonda sıra "Süzgeç", "Sırala", "Seç" ve "Tablo" olur. Geniş ekranda yalnız "Seç" vardır.
+  if (!tabSkipsControls) {
+    const order = isPhone(page) ? [/^Süzgeç/, /^Sırala$/, /^Seç$/, /^Tablo$/] : [/^Seç$/];
+    for (const name of order) {
+      await page.keyboard.press('Tab');
+      await expect(page.getByRole('button', { name })).toBeFocused();
+    }
+  }
   await page.keyboard.press('Tab');
   await expect(page.getByRole('textbox', { name: 'Kayıt ara' })).toBeFocused();
   const wrapper = page.locator('.collection-input');
@@ -96,8 +122,9 @@ test('table preserves readability, keyboard focus, selection and URL history', a
   ).toBe('none');
   await page.keyboard.press('Shift+Tab');
   await page.keyboard.press('Tab');
+  await page.getByRole('button', { name: 'Seç', exact: true }).click();
   await page.getByRole('checkbox', { name: 'ORNEK-0001 seç', exact: true }).check();
-  await expect(page.getByRole('toolbar', { name: 'Seçilen kayıtlar' })).toContainText(
+  await expect(page.getByRole('region', { name: 'Toplu işlem', exact: true })).toContainText(
     '1 kayıt seçildi',
   );
   await page.getByRole('button', { name: 'Sonraki sayfa' }).click();
@@ -117,6 +144,7 @@ test('loads only requested views and supports keyboard dropdown navigation', asy
   });
   await page.goto(preview + '?experimentalViews=1');
   await expect(page.getByText('ORNEK-0001', { exact: true })).toBeVisible();
+  await openPhoneTools(page);
   expect(scripts.some((url) => /(?:Kanban|Pivot|Report|Gantt|Timesheet)View-/.test(url))).toBe(
     false,
   );
@@ -202,10 +230,15 @@ test('shows all data states, light theme and reduced motion', async ({ page }, t
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto(preview + '?theme=light');
   await expect(page.getByText('ORNEK-0001', { exact: true })).toBeVisible();
-  await page
-    .locator('.collection-select')
-    .filter({ has: page.getByRole('combobox', { name: 'Görünüm', exact: true }) })
-    .click();
+  await openPhoneTools(page);
+  // Telefonda tek seçenekli "Görünüm" listesi yoktur. Açılır liste "Sıralama alanı" ile denenir.
+  const popupOwner = page.getByRole('combobox', {
+    name: isPhone(page) ? 'Sıralama alanı' : 'Görünüm',
+    exact: true,
+  });
+  // Liste klavyeyle açılır. Seçili değer metni alanın üstünde durur ve tıklamayı kendisi alır.
+  await popupOwner.focus();
+  await page.keyboard.press('ArrowDown');
   expect(
     await page
       .locator('.collection-popup')
@@ -253,17 +286,19 @@ test('default gate prevents summary rendering and downloads from a shared URL', 
   });
   await page.goto(preview + '?view=pivot');
   await expect(page.getByText('ORNEK-0001', { exact: true })).toBeVisible();
+  await showTable(page);
   await expect(page.locator('[data-view="table"]')).toBeVisible();
   await expect(
     page.getByText('İstenen görünüm şu anda kapalı. Tablo gösteriliyor.', { exact: true }),
   ).toBeVisible();
-  await page
-    .locator('.collection-select')
-    .filter({
-      has: page.getByRole('combobox', { name: 'Görünüm', exact: true }),
-    })
-    .click();
-  await expect(page.getByRole('option')).toHaveCount(1);
+  const viewType = page.getByRole('combobox', { name: 'Görünüm', exact: true });
+  // Telefonda tek seçenekli görünüm listesi gösterilmez.
+  if (isPhone(page)) await expect(viewType).toHaveCount(0);
+  else {
+    await viewType.focus();
+    await page.keyboard.press('ArrowDown');
+    await expect(page.getByRole('option')).toHaveCount(1);
+  }
   expect(scripts.some((url) => /(?:Kanban|Pivot|Report|Gantt|Timesheet)View-/.test(url))).toBe(
     false,
   );
