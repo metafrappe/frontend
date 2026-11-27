@@ -244,10 +244,20 @@ html[data-focus-mode='keyboard']
   flex-direction: column;
   flex: 1 1 auto;
   min-height: 0;
+  /* The page never grows past the main area, even as a fixed-size side panel. */
+  max-height: 100%;
+}
+
+/* A header taller than the page (long filters, large text, narrow panel) scrolls inside
+   its own box. Nothing in it is cut off (AJA-1746). The body takes the remaining height. */
+.shell[data-layout='wide'] .shell-hd {
+  flex: 0 1 auto;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .shell[data-layout='wide'] .shell-body {
-  flex: 1 1 auto;
+  flex: 1 1 0;
   min-height: 0;
   overflow: auto;
 }
@@ -1442,7 +1452,12 @@ html:has(.shell[data-layout='compact']) {
   font-size: var(--shell-hd-title);
   font-weight: var(--shell-hd-title-fw);
   line-height: var(--shell-hd-title-lh);
-  overflow-wrap: normal;
+  /* Words wrap whole. Only a word longer than the whole line breaks,
+     so a long compound title stays on screen (AJA-1746).
+     As a flex item the title may shrink below its longest word. */
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: break-word;
   word-break: normal;
   text-wrap: balance;
 }
@@ -1671,16 +1686,99 @@ html:has(.shell[data-layout='compact']) {
   font-variant-numeric: tabular-nums;
 }
 
+/* Active filters (AJA-1746). A filter that does not fit wraps onto a new line.
+   No filter is hidden. "Clear" wraps with the chips and never leaves the row. */
 .shell-hd-chips {
   display: flex;
   flex-basis: 100%;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--shell-space-sm);
+  min-width: 0;
+}
+
+.shell-hd-chiplist {
+  display: contents;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
 .shell-hd-chip {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  min-width: 0;
   margin: 0;
+  padding-inline-start: var(--shell-space-md);
+  border-radius: var(--shell-radius);
+  background: var(--shell-ghost);
+  color: var(--shell-tx);
+  font-size: var(--shell-fs);
+}
+
+/* The label wraps between words. Only a word longer than the whole line breaks. */
+.shell-hd-chip-label {
+  min-width: 0;
+  padding-block: var(--shell-space-xs);
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
+.shell-hd-chip-x {
+  all: unset;
+  position: relative;
+  box-sizing: border-box;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: var(--hit-target);
+  height: var(--hit-target);
+  border-radius: var(--shell-radius);
+  color: var(--shell-tx2);
+  font-size: var(--shell-item-icon);
+  cursor: pointer;
+}
+
+.shell-hd-chip-x:hover {
+  color: var(--shell-tx);
+}
+
+.shell-hd-chip-x::after {
+  content: '';
+  position: absolute;
+  inset-inline: var(--shell-space-ml);
+  bottom: var(--shell-focus-offset);
+  height: var(--shell-focus-line);
+  background: var(--shell-pri);
+  opacity: 0;
+  pointer-events: none;
+}
+
+html[data-focus-mode='keyboard'] .shell-hd-chip-x:focus-visible::after {
+  opacity: 1;
+}
+
+@media (forced-colors: active) {
+  html[data-focus-mode='keyboard'] .shell-hd-chip-x:focus-visible {
+    outline: var(--shell-focus-line) solid CanvasText;
+  }
+}
+
+/* "Clear" keeps the touch area and wraps its own label instead of leaving the row. */
+.shell-hd-clear.ant-btn {
+  max-width: 100%;
+  height: auto;
+  min-width: var(--hit-target);
+  min-height: var(--hit-target);
+  padding-inline: var(--shell-space-md);
+  white-space: normal;
+}
+
+.shell-hd-clear.ant-btn > span {
+  min-width: 0;
+  overflow-wrap: break-word;
 }
 
 /* Dar kapsayıcı: kenar boşluğu telefona iner. */
