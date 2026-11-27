@@ -1,12 +1,12 @@
 /**
- * Sunucudan gelen GenUI bloklarını doğrular (U2, AX-4).
+ * Validates GenUI blocks from the server (U2, AX-4).
  *
- * Türü, alanları ve boyutu denetler. Geçmeyen blok `unknown` olur.
- * `unknown` bloğun türü ilk altı bloktan biriyse düz JSON metni olarak çizilir.
- * Başka her `unknown` blok hiç çizilmez (model belgesi: "Liste dışı blok çizilmez").
+ * Checks type, fields and size. A block that fails becomes `unknown`.
+ * If an `unknown` block's type is one of the first six blocks, it is drawn as plain JSON text.
+ * Every other `unknown` block is not drawn (model document: "Off-list blocks are not drawn").
  *
- * Altı yapay zekâ yüzeyi (AJA-1156) katı doğrulanır. Tanımsız alan bloğu reddeder.
- * Böylece güven yüzdesi ya da modelin iç düşüncesi ekrana gelemez.
+ * The six AI surfaces (AJA-1156) are validated strictly. An undefined field rejects the block.
+ * So a confidence percentage or the model's internal reasoning cannot reach the screen.
  */
 import type {
   AssistMode,
@@ -29,7 +29,7 @@ import type {
   ToolEventStatus,
 } from './types';
 
-/** Boyut sınırları. Büyük blok ekranı ve belleği zorlamasın. */
+/** Size limits. A large block must not strain the screen or memory. */
 export const LIMITS = {
   text: 500,
   items: 12,
@@ -75,7 +75,7 @@ function isTarget(value: unknown): value is ConfirmTarget {
     isObj(value) &&
     str(value['label']) &&
     str(value['name']) &&
-    // Boşluktan ibaret ad yazılarak onaylanamaz.
+    // Typing a whitespace-only name cannot approve.
     value['name'].trim().length > 0
   );
 }
@@ -141,14 +141,14 @@ function isChoice(value: unknown): value is string {
   return str(value);
 }
 
-/* --- Yapay zekâ yüzeyleri --- */
+/* --- AI surfaces --- */
 
-/** Nesnede yalnız izinli alanlar varsa `true` döner. Fazladan alan reddedilir. */
+/** Returns `true` if the object has only allowed fields. Extra fields are rejected. */
 function only(value: Obj, keys: readonly string[]): boolean {
   return Object.keys(value).every((key) => keys.includes(key));
 }
 
-/** Boş olabilen liste. Kaynak kartı ve karar kuyruğu boş durumu kendisi yazar. */
+/** List that may be empty. The source card and decision queue render their own empty state. */
 function listOrEmpty<T>(
   value: unknown,
   max: number,
@@ -171,8 +171,8 @@ const RISKS: readonly RiskLevel[] = ['R0', 'R1', 'R2', 'R3'];
 const OUTCOMES: readonly ResultOutcome[] = ['succeeded', 'failed', 'unknown'];
 
 /**
- * Bağlantı yalnız `http(s)://` ya da uygulama içi `/yol` olur.
- * `javascript:`, `data:` ve `//alan` biçimleri reddedilir.
+ * A link is only `http(s)://` or an in-app `/yol` path.
+ * `javascript:`, `data:` and `//alan` forms are rejected.
  */
 function isSafeUrl(value: unknown): value is string {
   if (typeof value !== 'string' || value.length === 0 || value.length > LIMITS.url) return false;
@@ -221,7 +221,7 @@ function isQueueItem(value: unknown): value is QueueItem {
   );
 }
 
-/** Altı yüzeyi doğrular. Yüzey türü değilse `undefined` döner. */
+/** Validates the six surfaces. Returns `undefined` if the type is not a surface. */
 function validateSurface(raw: Obj): boolean | undefined {
   switch (raw['type']) {
     case 'scope':
@@ -267,7 +267,7 @@ function validateSurface(raw: Obj): boolean | undefined {
   }
 }
 
-/** İlk altı blok. Bunlar doğrulanamazsa düz JSON metni olarak çizilir (AX-6). */
+/** The first six blocks. If these fail validation they are drawn as plain JSON text (AX-6). */
 const JSON_FALLBACK_TYPES: readonly string[] = [
   'kpis',
   'chart',
@@ -277,7 +277,7 @@ const JSON_FALLBACK_TYPES: readonly string[] = [
   'choices',
 ];
 
-/** Güven, olasılık ya da iç düşünce taşıyan alan adları. */
+/** Field names that carry confidence, probability or internal reasoning. */
 const FORBIDDEN_KEY =
   /^(confidence|certainty|probability|g(u|ü)ven|reasoning|thinking|thoughts?|chain_?of_?thought|rationale)/i;
 
@@ -291,9 +291,9 @@ function hasForbiddenKey(value: unknown, depth = 0): boolean {
 }
 
 /**
- * Doğrulanamayan blok ham JSON olarak gösterilsin mi?
- * Yalnız ilk altı bloğun türü ve yasak alan taşımayan veri gösterilir.
- * Kayıtta olmayan tür ve yüzey türleri hiç çizilmez.
+ * Should a block that failed validation be shown as raw JSON?
+ * Only the first six block types with data carrying no forbidden field are shown.
+ * Unregistered types and surface types are not drawn at all.
  */
 export function showsRawJson(raw: unknown): boolean {
   return (
@@ -304,7 +304,7 @@ export function showsRawJson(raw: unknown): boolean {
   );
 }
 
-/** Bloğu doğrular. Geçerliyse aynı nesneyi tipli döndürür. */
+/** Validates a block. If valid, returns the same object, typed. */
 function validate(raw: Obj): KnownBlock | null {
   const surface = validateSurface(raw);
   if (surface !== undefined) return surface ? (raw as unknown as KnownBlock) : null;
@@ -321,12 +321,12 @@ function validate(raw: Obj): KnownBlock | null {
       if (!list(raw['rows'], LIMITS.rows, isRow)) return null;
       const rowKey = raw['rowKey'];
       const keys = raw['rows'].map((row) => row[rowKey]);
-      // AD-9: satır anahtarı kararlı ve tekil olmalı.
+      // AD-9: the row key must be stable and unique.
       if (keys.some((key) => key === undefined) || new Set(keys).size !== keys.length) return null;
       return raw as unknown as KnownBlock;
     }
     case 'confirm':
-      // AX-6: değişiklik listesi olmayan onay çizilmez. Düğmesiz JSON görünümüne düşer.
+      // AX-6: a confirm without changes is not drawn. It falls back to the buttonless JSON view.
       return str(raw['id']) &&
         str(raw['title']) &&
         str(raw['summary']) &&
@@ -338,7 +338,7 @@ function validate(raw: Obj): KnownBlock | null {
           (str(raw['expiresAt']) && Number.isFinite(Date.parse(raw['expiresAt'])))) &&
         (raw['risk'] === undefined || isRisk(raw['risk'])) &&
         (raw['target'] === undefined || isTarget(raw['target'])) &&
-        // R3 onayında kullanıcı hedefin adını yazar. Hedef yoksa onay çizilmez.
+        // For R3 the user types the target's name. Without a target the confirm is not drawn.
         (raw['risk'] !== 'R3' || raw['target'] !== undefined) &&
         (raw['undoProposal'] === undefined || typeof raw['undoProposal'] === 'boolean')
         ? (raw as unknown as KnownBlock)
@@ -363,7 +363,7 @@ export function parseBlock(raw: unknown): GenUIBlock {
   return validate(raw) ?? { type: 'unknown', raw };
 }
 
-/** `ui` alanını doğrular. Dizi değilse tek bir JSON bloğu döner. */
+/** Validates the `ui` field. If it is not an array, returns a single JSON block. */
 export function parseBlocks(raw: unknown): GenUIBlock[] {
   if (raw === undefined || raw === null) return [];
   if (!Array.isArray(raw)) return [{ type: 'unknown', raw }];

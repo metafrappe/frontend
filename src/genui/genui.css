@@ -1,6 +1,6 @@
 /*
- * GenUI stilleri. Bütün değerler `useGenuiVars` CSS değişkenlerinden gelir.
- * Gradyan yok (flat 2.0). Hareket `prefers-reduced-motion` açıkken durur.
+ * GenUI styles. All values come from the `useGenuiVars` CSS variables.
+ * No gradients (flat 2.0). Motion stops when `prefers-reduced-motion` is on.
  */
 .genui {
   font-family: var(--font-ui);
@@ -145,7 +145,7 @@
   overflow-x: auto;
 }
 
-/* Başlıklar ve kimlik hücreleri sarılmaz. Açıklamalar kelime arasından sarılır. */
+/* Headers and ID cells do not wrap. Descriptions wrap between words. */
 .genui-table-scroll th,
 .genui-table-scroll td.genui-cell-id {
   white-space: nowrap;
@@ -175,7 +175,7 @@
   table-layout: fixed;
 }
 
-/* Onay tablosu kaydırma istemez. Kelimeler ortasından bölünmez. */
+/* The confirm table needs no scrolling. Words are not broken in the middle. */
 .genui-changes th,
 .genui-changes td {
   padding: var(--ai-gap-xs) var(--ai-gap-sm);
@@ -187,7 +187,7 @@
 }
 
 .genui-changes thead th {
-  /* Onay kartının uyarı zemininde üçüncül renk 4,5:1 karşıtlığı tutmaz. */
+  /* On the confirm card's warning background the tertiary colour misses 4.5:1 contrast. */
   color: var(--ai-text-2);
   font-size: var(--font-min);
   font-weight: 600;
@@ -231,7 +231,7 @@
   color: var(--ai-error);
 }
 
-/* Risk düzeyi ve hedef kayıt. Etiket solda, değer sağda durur. */
+/* Risk level and target record. Label on the left, value on the right. */
 .genui-facts {
   display: grid;
   grid-template-columns: max-content minmax(0, 1fr);
@@ -250,7 +250,7 @@
   margin: 0;
 }
 
-/* Risk rozeti. Yazı ana metin rengindedir. Böylece her zeminde karşıtlık korunur. */
+/* Risk badge. Text uses the main text colour, so contrast holds on every background. */
 .genui-risk {
   display: inline-block;
   padding: 0 var(--ai-gap-sm);
@@ -267,8 +267,8 @@
 }
 
 /*
- * Onay kartının kontrolleri dokunma alanı tokenını karşılar.
- * İnce işaretçide en az 44 px, dokunmatik ekranda en az 48 px olur.
+ * Confirm card controls meet the touch target token.
+ * At least 44 px with a fine pointer, at least 48 px on a touch screen.
  */
 .genui-confirm .genui-actions .ant-btn,
 .genui-done .genui-undo,
@@ -356,8 +356,8 @@
 }
 
 /*
- * Yapay zekâ yüzeyleri (AJA-1156). Onaylı taslağın asistan panelini izler.
- * Ayrım boşluk ve yüzey tonuyla kurulur. Renkli vurgu kenarı kullanılmaz.
+ * AI surfaces (AJA-1156). They follow the assistant panel of the approved draft.
+ * Separation uses spacing and surface tone. No coloured accent edge is used.
  */
 .genui-sr {
   position: absolute;
@@ -491,7 +491,7 @@
   background: var(--ai-error-bg);
 }
 
-/* Kart içindeki kaynak satırı sayfa zeminini alır. Koyu temada bağlantı karşıtlığı korunur. */
+/* A source row inside a card takes the page background. Link contrast holds in dark theme. */
 .genui-diff-review .genui-source {
   background: var(--ai-bg);
 }
@@ -602,7 +602,7 @@
   background: var(--ai-fill);
 }
 
-/* AI önerileri: kart 2 px yükselir, ikon sallanır. */
+/* AI suggestions: the card lifts 2 px and the icon wiggles. */
 .genui-choices .ant-prompts-item {
   transition:
     transform var(--motion-duration-focus-dim) var(--motion-easing-standard),
@@ -674,11 +674,11 @@
 }
 
 /*
- * Odak (genel kural: çevreleyen odak halkası yasak).
- * antd giriş alanı odakta dört kenarını vurgu rengine boyar ve halka gölgesi çizer.
- * Bu da çevreleyen odaktır. GenUI içinde kenar rengi odakta değişmez.
- * Klavye modunda yalnız alt kenarda tek çizgi görünür. Renk ve kalınlık
- * foundation değişkenleridir. Klavye modunu foundation motoru açar.
+ * Focus (general rule: a surrounding focus ring is forbidden).
+ * On focus an antd input paints all four edges in the accent colour and draws a ring shadow.
+ * That is also surrounding focus. Inside GenUI the border colour does not change on focus.
+ * In keyboard mode only a single line shows on the bottom edge. Colour and thickness
+ * are foundation variables. The foundation engine turns keyboard mode on.
  */
 .genui .ant-input.ant-input-outlined:focus,
 .genui .ant-input.ant-input-outlined:focus-within,
@@ -690,10 +690,10 @@
 }
 
 /*
- * Açılır listenin odak kenar rengi ve halkası tema tokenıyla kapanır
- * (`useGenuiFocusTheme`). Aşağıdaki klavye kuralı antd odak kuralından
- * ağırdır. antd kuralı üç `:not()` parçası taşır. Bu kural da aynı parçaları
- * ve ek sınıflar taşır. Böylece alt çizgi antd halkasının yerine geçer.
+ * The select's focus border colour and ring are turned off by a theme token
+ * (`useGenuiFocusTheme`). The keyboard rule below outweighs the antd focus rule.
+ * The antd rule has three `:not()` parts. This rule has the same parts
+ * plus extra classes. So the bottom line replaces the antd ring.
  */
 html[data-focus-mode='keyboard'] .genui .ant-input.ant-input-outlined:focus-visible,
 html[data-focus-mode='keyboard']

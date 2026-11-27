@@ -5,9 +5,9 @@ function isExternal(url: string): boolean {
 }
 
 /**
- * Kaynak listesi. Kaynak kartı ve değişiklik incelemesi bunu kullanır.
- * Liste boşsa "Kaynak yok." yazar. Güven yüzdesi gösterilmez.
- * Dış bağlantı yeni sekmede açılır ve yönlendiren bilgisi gitmez.
+ * Source list. Used by the source card and the change review.
+ * If the list is empty it shows "No sources." No confidence percentage is shown.
+ * External links open in a new tab and send no referrer.
  */
 export function SourceList({ items }: { items: SourceItem[] }) {
   if (items.length === 0) return <p className="genui-source-empty">Kaynak yok.</p>;

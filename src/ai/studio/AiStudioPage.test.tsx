@@ -6,8 +6,8 @@ import { ViewDataProvider } from '@/shell/view-data';
 import AiStudioPage from './AiStudioPage';
 
 /**
- * MVP denetimi: canlı panelde sahte ajan yoktur.
- * Model geçidi bağlantısı verilmezse ekran bunu açıkça yazar. Sahte ilerleme görünmez.
+ * MVP check: the live panel has no mock agent.
+ * If no model gateway connection is given, the screen says so clearly. No fake progress shows.
  */
 describe('AiStudioPage bağlantısı', () => {
   it('bağlantı yoksa "bağlantı kurulmadı" yazar, sahte sunucu açılmaz', () => {

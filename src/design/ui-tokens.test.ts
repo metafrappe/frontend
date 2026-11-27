@@ -1,7 +1,7 @@
 /**
- * Arayüz yenileme 1a (AJA-997): yeni görsel dil tokenları.
- * Kararlar model belgesinin 6. bölümündedir: en küçük metin 14 px, gövde 16 px,
- * açık temada #00aacc yazı rengi olmaz, dokunma alanı ayrı tokendır, dropdown varsayılan eğriyi kullanır.
+ * UI refresh 1a (AJA-997): new visual language tokens.
+ * The decisions are in section 6 of the model document: smallest text 14 px, body 16 px,
+ * no #00aacc text colour in the light theme, the touch area is a separate token, dropdown uses the default curve.
  */
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -20,7 +20,7 @@ const STANDARD_EASING = 'cubic-bezier(.65,0,.35,1)';
 const squash = (v: string) => v.replace(/\s/g, '').toLowerCase();
 const pxValue = (v: string) => Number(/^(\d+(?:\.\d+)?)px$/.exec(v)?.[1] ?? NaN);
 
-/** `rgba(r,g,b,a)` ya da `#rrggbb` rengini verilen zemine bindirip düz renk verir. */
+/** Lays an `rgba(r,g,b,a)` or `#rrggbb` colour over the given background and returns a solid colour. */
 function solid(color: string, surface: string): string {
   const m = /^rgba\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)$/.exec(color);
   if (!m) return color;
@@ -94,7 +94,7 @@ describe('renk kontrastı', () => {
             4.5,
           );
         }
-        // Vurgu zemini (tint) üstündeki vurgu metni de okunur kalır.
+        // Accent text on the accent background (tint) also stays readable.
         const tinted = solid(p.tint, surface);
         expect(contrastRatio(p.ink, tinted), `${mode} ink / tint`).toBeGreaterThanOrEqual(4.5);
       }
@@ -123,7 +123,7 @@ describe('renk kontrastı', () => {
       expect(light[name]?.toLowerCase(), name).not.toBe(primary);
     }
     expect(buildAntdTheme('light').token?.colorLink?.toLowerCase()).not.toBe(primary);
-    // Düğme zemini birincil renkte kalır.
+    // The button background stays the primary colour.
     expect(light['--color-primary']).toBe(designSource.primary.color);
   });
 
@@ -183,7 +183,8 @@ describe('AGENTS.md ortak kurallarla ilişki', () => {
 
   it('12 px ve ayrı dropdown eğrisi istisnası kalmaz', () => {
     expect(section).not.toBe('');
-    // "12 px istisnası geçersizdir" cümlesi kararın kendisidir; başka hiçbir yerde 12 px kalmaz.
+    // The sentence removed on the next line ("the 12 px exception is void") is the decision itself;
+    // no other 12 px remains.
     expect(agents.replace('12 px istisnası geçersizdir', '')).not.toMatch(/\b12 px\b/);
     expect(agents).not.toMatch(/cubic-bezier\(\.2, \.9/);
     expect(agents).not.toMatch(/Skew \+ Scale/);

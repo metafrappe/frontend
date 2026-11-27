@@ -17,9 +17,9 @@ import type { BlockType, GenUIActionHandler, GenUIDecision, KnownBlock } from '.
 export interface BlockProps<T extends KnownBlock> {
   block: T;
   onAction: GenUIActionHandler;
-  /** Sohbet yanıt beklerken `true`. Eylem düğmeleri kapanır. */
+  /** `true` while the chat awaits a reply. Action buttons are disabled. */
   busy?: boolean;
-  /** Sohbet geçmişindeki karar. Varsa blok kilitli çizilir. */
+  /** Decision from chat history. If present, the block is drawn locked. */
   decided?: GenUIDecision | undefined;
 }
 
@@ -28,8 +28,8 @@ type Registry = {
 };
 
 /**
- * Onaylı bileşen kaydı (U2). Yeni tür yalnız buraya eklenerek çizilir.
- * Kayıtta olmayan tür hiç çizilmez (`GenUI.tsx`).
+ * Approved component registry (U2). A new type is drawn only once added here.
+ * An unregistered type is never drawn (`GenUI.tsx`).
  */
 export const GENUI_REGISTRY: Registry = {
   kpis: KpisView,
@@ -38,7 +38,7 @@ export const GENUI_REGISTRY: Registry = {
   confirm: ConfirmView,
   form: FormView,
   choices: ChoicesView,
-  // Yapay zekâ yüzeyleri (AJA-1156). Onay kartı bu listede yoktur (6b işi).
+  // AI surfaces (AJA-1156). The confirm card is not in this list (task 6b).
   scope: ScopeView,
   events: EventsView,
   source: SourceView,

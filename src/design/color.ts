@@ -1,4 +1,4 @@
-/** `#rrggbb` rengini `rgba(r,g,b,a)` biçimine çevirir. Kaynaktaki opaklık kararları için kullanılır. */
+/** Converts a `#rrggbb` colour to `rgba(r,g,b,a)`. Used for the opacity decisions in the source. */
 export function hexToRgba(hex: string, alpha: number): string {
   const clean = hex.replace('#', '');
   const full =
@@ -41,13 +41,13 @@ function toHex([r, g, b]: [number, number, number]): string {
   return `#${[r, g, b].map((v) => Math.round(v).toString(16).padStart(2, '0')).join('')}`;
 }
 
-/** WCAG 2.x göreli parlaklık. */
+/** WCAG 2.x relative luminance. */
 export function relativeLuminance(hex: string): number {
   const [r, g, b] = parseHex(hex);
   return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
 }
 
-/** WCAG 2.x kontrast oranı (1 ile 21 arası). */
+/** WCAG 2.x contrast ratio (between 1 and 21). */
 export function contrastRatio(a: string, b: string): number {
   const la = relativeLuminance(a);
   const lb = relativeLuminance(b);
@@ -56,9 +56,9 @@ export function contrastRatio(a: string, b: string): number {
 }
 
 /**
- * Rengi, verilen zemin üzerinde en az `minRatio` kontrast verene kadar koyulaştırır.
- * Ton korunur; yalnız parlaklık düşer. Kaynak renk zaten yeterliyse aynen döner.
- * Kullanım: açık temada metin bağlantıları (WCAG 2.2 AA, 4.5:1).
+ * Darkens the colour until it gives at least `minRatio` contrast on the given background.
+ * The hue is kept; only the brightness drops. If the source colour is already enough, it is returned as is.
+ * Use: text links in the light theme (WCAG 2.2 AA, 4.5:1).
  */
 export function darkenToContrast(hex: string, background: string, minRatio = 4.5): string {
   let rgb = parseHex(hex);
@@ -71,9 +71,9 @@ export function darkenToContrast(hex: string, background: string, minRatio = 4.5
 }
 
 /**
- * Rengi, verilen zemin üzerinde en az `minRatio` kontrast verene kadar açar (beyaza yaklaştırır).
- * Her adımda kanal, beyaza olan uzaklığının %3'ü kadar artar; ton korunur. Yeterliyse aynen döner.
- * Kullanım: koyu temada tehlike yazı rengi (WCAG 2.2 AA, 4.5:1).
+ * Lightens the colour (moves it towards white) until it gives at least `minRatio` contrast on the
+ * given background. Each step raises a channel by 3% of its distance to white; the hue is kept.
+ * If already enough, it is returned as is. Use: danger text colour in the dark theme (WCAG 2.2 AA, 4.5:1).
  */
 export function lightenToContrast(hex: string, background: string, minRatio = 4.5): string {
   let rgb = parseHex(hex);
@@ -85,7 +85,7 @@ export function lightenToContrast(hex: string, background: string, minRatio = 4.
   return current;
 }
 
-/** `fg` rengini `alpha` opaklıkla `background` üzerine bindirir; düz renk döner. */
+/** Lays `fg` over `background` at `alpha` opacity; returns a solid colour. */
 export function blendOver(fg: string, alpha: number, background: string): string {
   const f = parseHex(fg);
   const b = parseHex(background);
@@ -97,9 +97,9 @@ export function blendOver(fg: string, alpha: number, background: string): string
 }
 
 /**
- * Yarı saydam metnin, yarı saydam zemin üzerinde en az `minRatio` kontrast verdiği
- * en küçük opaklığı bulur. Başlangıç `startAlpha` değeridir; 0.01 adımla artar, en çok 1.
- * `surfaces`: zeminin altındaki olası sayfa renkleri; hepsinde sınır sağlanmalıdır.
+ * Finds the lowest opacity at which semi-transparent text gives at least `minRatio` contrast on a
+ * semi-transparent background. Starts at `startAlpha`, rises in 0.01 steps, up to 1.
+ * `surfaces`: possible page colours under the background; the limit must hold on all of them.
  */
 export function minAlphaForContrast(options: {
   text: string;

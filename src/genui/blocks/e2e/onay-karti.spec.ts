@@ -3,9 +3,9 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '../../../../tests/setup/playwright-fixtures';
 
 /**
- * Onay kartı tarayıcıda (AJA-1157). Kart sahte asistan yanıtından gelir.
- * Sahte yanıtta risk düzeyi yoktur. Bu yüzden kart R1 gibi davranır.
- * R2 ve R3 davranışını `ConfirmView.test.tsx` denetler.
+ * Confirm card in the browser (AJA-1157). The card comes from a fake assistant reply.
+ * The fake reply has no risk level, so the card behaves as R1.
+ * `ConfirmView.test.tsx` checks R2 and R3 behaviour.
  */
 const STUDIO = '/panel/ai';
 
@@ -49,7 +49,7 @@ test.describe('onay kartı', () => {
     const card = page.locator('[data-genui="confirm"]');
     const reject = card.getByRole('button', { name: 'Vazgeç' });
     await card.getByRole('button', { name: 'Gönder' }).focus();
-    // WebKit, Safari gibi, düğmeye düz Tab ile gitmez. Bu tarayıcıda Alt+Tab kullanılır.
+    // WebKit, like Safari, does not reach buttons with plain Tab. This browser uses Alt+Tab.
     await page.keyboard.press(browserName === 'webkit' ? 'Alt+Tab' : 'Tab');
     await expect(reject).toBeFocused();
     await page.keyboard.press('Enter');

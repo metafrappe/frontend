@@ -1,13 +1,13 @@
 /**
- * Dokunma alanı motoru: DOM uygulaması (R7, R8, R9 ve algoritma 1–7).
- * Hesap compute.ts dosyasındadır. Bu dosya hedefleri toplar, ölçer ve
- * `--hit-t/r/b/l` değişkenlerini yazar. `::after` katmanı kaynaktaki CSS ile çizilir.
+ * Touch area engine: the DOM side (R7, R8, R9 and algorithm steps 1–7).
+ * The maths lives in compute.ts. This file collects and measures the targets and
+ * writes the `--hit-t/r/b/l` variables. The source CSS draws the `::after` layer.
  */
 import { hitArea as hitAreaTokens } from '@/design/tokens';
 
 import { computeHitAreas, round2, type Box, type HitResult, type HitTarget } from './compute';
 
-/** Algoritma 1 + C4: buton, input sarmalayıcı, select, link ve seçim kontrolleri. */
+/** Algorithm step 1 + C4: buttons, input wrappers, selects, links and choice controls. */
 export const HIT_TARGET_SELECTOR = [
   '.ant-btn',
   '.ant-input-affix-wrapper',
@@ -22,10 +22,10 @@ export const HIT_TARGET_SELECTOR = [
   '.ant-segmented-item',
 ].join(', ');
 
-/** Engel: hedef değildir, genişlemez; hedeflerin genişlemesi üstüne taşmaz (R3). */
+/** Obstacle: not a target and does not expand; target expansion does not spill over it (R3). */
 export const HIT_OBSTACLE_SELECTOR = '[data-hit-obstacle]';
 
-/** R6: disabled kontroller. */
+/** R6: disabled controls. */
 export const HIT_DISABLED_SELECTOR = [
   '[disabled]',
   '[aria-disabled="true"]',
@@ -38,7 +38,7 @@ export const HIT_DISABLED_SELECTOR = [
   '.ant-segmented-item-disabled',
 ].join(', ');
 
-/** R9: Input için görünmez suffix sınıfı. Kaynak CSS `.ant-input-suffix:has(> .hit-sfx)` gizler. */
+/** R9: invisible suffix class for Input. The source CSS hides `.ant-input-suffix:has(> .hit-sfx)`. */
 export const HIT_SUFFIX_CLASS = 'hit-sfx';
 export const HIT_CLASS = 'hit';
 export const HIT_UPDATE_EVENT = 'hitarea:update';
@@ -60,7 +60,7 @@ function toBox(r: DOMRect): Box {
   };
 }
 
-/** R5: başka bir hedefin içinde olmayan hedefler. */
+/** R5: targets that are not inside another target. */
 export function collectTargets(root: ParentNode): HTMLElement[] {
   return Array.from(root.querySelectorAll<HTMLElement>(HIT_TARGET_SELECTOR)).filter(
     (el) => !el.parentElement?.closest(HIT_TARGET_SELECTOR),
@@ -82,7 +82,7 @@ function borderOf(el: HTMLElement) {
   };
 }
 
-/** Yalnız değer değişince yazar; böylece motorun kendi yazımı yeni bir hesaplama tetiklemez. */
+/** Writes only when the value changes, so the engine's own writes do not trigger a new run. */
 function setVar(el: HTMLElement, name: string, value: string): boolean {
   if (el.style.getPropertyValue(name) === value) return false;
   el.style.setProperty(name, value);
@@ -94,7 +94,7 @@ function setData(el: HTMLElement, key: string, value: string): boolean {
   return true;
 }
 
-/** R7 + R8 + R10: sonucu CSS değişkenlerine ve veri niteliklerine yazar. Değişiklik olduysa true döner. */
+/** R7 + R8 + R10: writes the result to CSS variables and data attributes. Returns true on change. */
 export function applyResult(el: HTMLElement, result: HitResult): boolean {
   if (!result.active) {
     return clearElement(el);
@@ -141,10 +141,10 @@ export function clearElement(el: HTMLElement): boolean {
   return true;
 }
 
-/** Motorun son geçişte yazdığı öğeler. Bu öğelerin style/class mutasyonları yeni hesap tetiklemez. */
+/** Elements the engine wrote in its last pass. Their style/class mutations do not trigger a new run. */
 const writtenByEngine = new WeakSet<Element>();
 
-/** Bir kez hesaplar ve uygular. Testler ve manuel yenileme için dışa açıktır. */
+/** Calculates and applies once. Exported for tests and manual refresh. */
 export function computeOnce(options: HitAreaEngineOptions = {}): HitResult[] {
   const root = options.root ?? document;
   const elements = collectTargets(root);
@@ -161,7 +161,7 @@ export function computeOnce(options: HitAreaEngineOptions = {}): HitResult[] {
       return { box, active: box.width > 0 && box.height > 0 };
     },
   );
-  // Sayfa kenarı: dokunma katmanı yatay kaydırma yaratmasın (yalnız sol ve sağ kenar).
+  // Page edge: the touch layer must not cause horizontal scrolling (left and right edges only).
   const computeOptions: {
     expand?: number;
     minTarget?: number;
@@ -181,9 +181,9 @@ export function computeOnce(options: HitAreaEngineOptions = {}): HitResult[] {
 }
 
 /**
- * R11: Select'in +%12 katmanı (::after) kök öğeye aittir; tıklama kök öğeye düşer ve antd'nin
- * seçici üzerindeki dinleyicisine ulaşmaz. Motor, kök öğeye düşen mousedown olayını seçiciye aktarır.
- * Böylece genişletilmiş alan da listeyi açar. Disabled Select'e dokunulmaz.
+ * R11: the Select's +12% layer (::after) belongs to the root element. A click lands on the root
+ * and does not reach antd's listener on the selector. The engine relays a mousedown on the root to
+ * the selector, so the expanded area also opens the list. A disabled Select is left alone.
  */
 export function relaySelectMouseDown(event: MouseEvent): boolean {
   const t = event.target;
@@ -220,8 +220,8 @@ export interface HitAreaEngine {
 }
 
 /**
- * Algoritma 7: DOM değişikliği, yeniden boyutlanma ve font yüklenmesinde yeniden hesaplar.
- * requestAnimationFrame ile tek seferde çalışır.
+ * Algorithm step 7: recalculates on DOM change, resize and font load.
+ * Runs once per frame via requestAnimationFrame.
  */
 export function startHitAreaEngine(options: HitAreaEngineOptions = {}): HitAreaEngine {
   const root = options.root ?? document;
@@ -245,7 +245,7 @@ export function startHitAreaEngine(options: HitAreaEngineOptions = {}): HitAreaE
     const relevant = records.some((rec) => {
       if (rec.type !== 'attributes') return true;
       const target = rec.target;
-      // Motorun kendi yazdığı style/class ve data-hit-* değişiklikleri döngü yaratmasın.
+      // The engine's own style/class and data-hit-* changes must not cause a loop.
       if (target instanceof Element && writtenByEngine.has(target)) {
         const n = rec.attributeName ?? '';
         if (n === 'style' || n === 'class' || n.startsWith('data-hit')) return false;

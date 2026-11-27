@@ -2,10 +2,10 @@ import { Typography } from 'antd';
 
 import messages from './messages.json';
 
-/** Sahte sunucu açıkken ekranda “Örnek veri” yazar (SZ-12). */
+/** Shows a sample data notice on screen while the mock server is on (SZ-12). */
 export function SampleDataNotice() {
   return (
-    // K3: metin ekran kenarına yapışmaz. Kenar boşluğu boşluk tokenıdır (`--space-md`).
+    // K3: the text does not touch the screen edge. The margin is a spacing token (`--space-md`).
     <Typography.Paragraph
       role="status"
       type="secondary"

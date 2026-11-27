@@ -1,13 +1,13 @@
 /**
- * Hareket tokenları. Bütün süre ve eğriler yalnız bu dosyadadır.
- * Değerler kaynak dosyadan okunur. Kaynakta olmayan temel süreler burada tek yerde tanımlanır.
- * `prefers-reduced-motion: reduce` açıkken hareket durur (bkz. css-variables.ts).
+ * Motion tokens. All durations and curves live only in this file.
+ * Values are read from the source file. Base durations missing from the source are defined here, in one place.
+ * Motion stops while `prefers-reduced-motion: reduce` is on (see css-variables.ts).
  */
 import { designSource } from './source';
 
 const s = designSource;
 
-/** "520 ms cubic-bezier(.65,0,.35,1)" gibi metinlerden ilk milisaniye değerini okur. */
+/** Reads the first millisecond value from text such as "520 ms cubic-bezier(.65,0,.35,1)". */
 export function parseMs(text: string): number {
   const match = /(\d+(?:\.\d+)?)\s*ms/.exec(text);
   if (!match || match[1] === undefined) {
@@ -16,7 +16,7 @@ export function parseMs(text: string): number {
   return Number(match[1]);
 }
 
-/** Metinden `cubic-bezier(...)` ifadesini okur. */
+/** Reads the `cubic-bezier(...)` expression from text. */
 export function parseEasing(text: string): string {
   const match = /cubic-bezier\([^)]*\)/.exec(text);
   if (!match) {
@@ -26,24 +26,24 @@ export function parseEasing(text: string): string {
 }
 
 export const easing = {
-  /** Genel S eğrisi. Kaynaktaki odak perdesi ve AI hareketi aynı eğriyi kullanır. */
+  /** General S curve. The source focus dim layer and AI motion use the same curve. */
   standard: s.focusDim.easing,
-  /** Dropdown açılışı: ayrı eğri yoktur, varsayılan eğridir (AJA-997). */
+  /** Dropdown opening: no separate curve; it is the default curve (AJA-997). */
   dropdown: s.dropdown.animation.easing,
-  /** Baykuş rozeti: kaynaktaki belgeli istisna. */
+  /** Owl badge: the documented exception in the source. */
   owlPop: parseEasing(s.owlAssist.badge.animation),
-  /** Kayan hover zemini: kaynak örnek sayfadaki `.glide` kuralı (`.2s cubic-bezier(.2,0,0,1)`). */
+  /** Gliding hover background: the `.glide` rule on the source sample page (`.2s cubic-bezier(.2,0,0,1)`). */
   glide: 'cubic-bezier(.2, 0, 0, 1)',
-  /** Doğrusal: dönen yükleme simgesi ve `visibility` gibi anahtar geçişler. */
+  /** Linear: the spinning loading icon and switch-like transitions such as `visibility`. */
   linear: 'linear',
 } as const;
 
 export const duration = {
-  /** antd temel süreleri. Kaynakta yok; tek yer burasıdır. */
+  /** antd base durations. Not in the source; this is their only place. */
   fast: 100,
   mid: 200,
   slow: 300,
-  /** Dropdown: varsayılan orta süreden kısa (AJA-997). */
+  /** Dropdown: shorter than the default mid duration (AJA-997). */
   dropdown: s.dropdown.animation.duration,
   focusDim: s.focusDim.duration,
   flyout: parseMs(s.sidebar.flyout.animation),
@@ -52,15 +52,15 @@ export const duration = {
   rail: parseMs(s.sidebar.railToggle.motion),
   owlPop: parseMs(s.owlAssist.badge.animation),
   owlDwell: s.owlAssist.dwell,
-  /** Kabuk hareketleri. Kaynak örnek sayfadan: kayan zemin .2s, solma .15s, iskelet 1.2s. */
+  /** Shell motion. From the source sample page: glide background .2s, fade .15s, skeleton 1.2s. */
   glide: 200,
   glideFade: 150,
   skeleton: 1200,
-  /** Dönen yükleme simgesi (kaynak örnek sayfa). */
+  /** Spinning loading icon (source sample page). */
   spin: 900,
 } as const;
 
-/** Anında geçiş (0 ms). `visibility` gibi anahtar özellikler için. `duration` listesinde değildir; süreler pozitiftir. */
+/** Instant transition (0 ms). For switch-like properties such as `visibility`. Not in the `duration` list; durations are positive. */
 export const instantMs = 0;
 
 export const dropdownAnimation = {

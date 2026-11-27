@@ -50,7 +50,7 @@ describe('CSS değişkenleri', () => {
     const vars = darkVariables();
     expect(vars['--shadow-input']).toBe(designSource.derived.shadowCssDark.input);
     expect(vars['--focus-dim-color']).toBe('rgba(50,58,70,0.66)');
-    // Koyu birincil düğme zemini saydam değildir (türetilmiş karar 1).
+    // The dark primary button background is not transparent (derived decision 1).
     expect(vars['--primary-bg']).toMatch(/^#[0-9a-f]{6}$/);
     expect(vars['--primary-bg-hover']).toMatch(/^#[0-9a-f]{6}$/);
     expect(vars['--primary-bg-active']).toMatch(/^#[0-9a-f]{6}$/);
@@ -74,10 +74,10 @@ describe('CSS değişkenleri', () => {
     for (const rule of rules) {
       expect(rule, rule).toContain('.ant-btn-primary:not(.ant-btn-dangerous)');
     }
-    // antd düz düğmenin üzerine gelme metnini primaryColor yapar; tehlike düğmesi beyaz kalır.
+    // antd sets the solid button hover text to primaryColor; the danger button stays white.
     expect(rootVariables()['--danger-text']).toBe('#ffffff');
     expect(darkVariables()['--danger-text']).toBe('#ffffff');
-    // Düz zemin CSS değişkeninden gelir; antd Button `colorError` tokenı artık yazı rengidir.
+    // The solid background comes from a CSS variable; the antd Button `colorError` token is now a text colour.
     expect(rootVariables()['--danger-bg']).toBe(danger.light.background);
     expect(rootVariables()['--danger-bg-hover']).toBe(danger.light.backgroundHover);
     expect(rootVariables()['--danger-bg-active']).toBe(danger.light.backgroundActive);
@@ -101,8 +101,8 @@ describe('CSS değişkenleri', () => {
     const css = buildDesignCss();
     const rest = css.split('\n').find((line) => line.includes('text-underline-offset: 0.15em'));
     expect(rest).toContain(':not([data-nav-link])');
-    // Odaklı bağlantı kuralı yalnız metin bağlantısına uygulanır. Menü bağlantısının kendi tek
-    // göstergesi vardır; çıplak `a:focus-visible` ikinci bir gösterge eklerdi.
+    // The focused link rule applies only to text links. Menu links have their own single
+    // indicator; a bare `a:focus-visible` would add a second one.
     const focus = css.split('\n').find((line) => line.includes('text-decoration-thickness'));
     expect(focus).not.toMatch(/keyboard"\] a:focus-visible/);
   });

@@ -11,11 +11,11 @@ import { useGenuiFocusTheme, useGenuiVars } from './useGenuiVars';
 
 export interface GenUIProps {
   blocks: GenUIBlock[];
-  /** Eylem sohbete kabul edilirse `true` döner (U4). */
+  /** Returns `true` if the chat accepts the action (U4). */
   onAction: GenUIActionHandler;
-  /** Sohbet yanıt beklerken `true`. Onay ve form düğmeleri kapanır. */
+  /** `true` while the chat awaits a reply. Confirm and form buttons are disabled. */
   busy?: boolean;
-  /** Sohbet geçmişinden çıkarılan kararlar. Blok kimliğine göre okunur. */
+  /** Decisions derived from chat history. Read by block ID. */
   decisions?: GenUIDecisions;
 }
 
@@ -27,7 +27,7 @@ export function GenUI({ blocks, onAction, busy = false, decisions = {} }: GenUIP
     <ConfigProvider theme={focusTheme}>
       <div className="genui" style={vars}>
         {blocks.map((block, index) => {
-          // Kayıtta olmayan blok çizilmez. Yalnız bozuk gelen ilk altı blok JSON olarak görünür.
+          // Unregistered blocks are not drawn. Only malformed first-six blocks show as JSON.
           if (block.type === 'unknown') {
             return showsRawJson(block.raw) ? <JsonView key={index} raw={block.raw} /> : null;
           }
@@ -43,7 +43,7 @@ export function GenUI({ blocks, onAction, busy = false, decisions = {} }: GenUIP
   );
 }
 
-/** Akış sürerken blokların yerinde iskelet görünür (U5). */
+/** While streaming, a skeleton shows in place of the blocks (U5). */
 export function GenUISkeleton() {
   const vars = useGenuiVars();
   return (

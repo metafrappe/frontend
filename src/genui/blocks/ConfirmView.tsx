@@ -13,7 +13,7 @@ import {
   useDecision,
 } from './useDecision';
 
-/** Risk düzeyinin yazılı adı. Düzey renkle değil yazıyla anlatılır. */
+/** Written name of the risk level. The level is conveyed by text, not colour. */
 const RISK_LABEL: Record<ConfirmRisk, string> = {
   R1: 'R1 Düşük',
   R2: 'R2 Orta',
@@ -25,12 +25,13 @@ export const R3_HINT = '"Onayla" düğmesi ad doğru yazılınca açılır.';
 export const R3_OK = 'Ad doğru. "Onayla" düğmesi açıldı.';
 export const UNDO_LABEL = 'Geri almayı öner';
 
-/** Tarayıcının bekleme süresi bu sayıyı aşamaz (yaklaşık 24,8 gün). */
+/** A browser timeout cannot exceed this number (about 24.8 days). */
 const MAX_TIMEOUT_MS = 2_147_483_647;
 
 /**
- * Son zaman geçtiyse `true` döner. Blok açıkken süre dolarsa değer kendiliğinden değişir.
- * Durum, süresi dolan zamanı saklar. Böylece yeni süre gelince eski karar geçerli kalmaz.
+ * Returns `true` if the deadline has passed. If time runs out while the block is open,
+ * the value updates by itself. State stores the expired time, so the old result does not
+ * stay valid when a new deadline arrives.
  */
 function useExpired(expiresAt: string | undefined): boolean {
   const at = expiresAt === undefined ? Number.NaN : Date.parse(expiresAt);
@@ -48,10 +49,10 @@ function useExpired(expiresAt: string | undefined): boolean {
 }
 
 /**
- * Sabit onay ekranı (U4, AX-4, AX-6). Kendi başına işlem yapmaz.
- * İşlem özetini ve değişecek alanları önce ve sonra biçiminde gösterir.
- * Sohbet meşgulken düğmeler kapalıdır. Blok yalnız karar sohbete kabul
- * edilince kilitlenir. Böylece aynı karar iki kez gitmez ve kaybolmaz.
+ * Fixed confirm screen (U4, AX-4, AX-6). It performs no operation itself.
+ * It shows the operation summary and the changing fields as before and after.
+ * Buttons are disabled while the chat is busy. The block locks only once the chat
+ * accepts the decision. So the same decision is neither sent twice nor lost.
  */
 export function ConfirmView({
   block,
@@ -65,14 +66,14 @@ export function ConfirmView({
   decided?: GenUIDecision | undefined;
 }) {
   const { decision, notice, locked, apply } = useDecision(decided);
-  // Süresi geçen öneri onaylanamaz; sunucu da reddeder.
+  // An expired proposal cannot be approved. The server rejects it too.
   const expired = useExpired(block.expiresAt);
   const risk = block.risk ?? 'R1';
   const [checked, setChecked] = useState(false);
   const [typed, setTyped] = useState('');
   const inputId = useId();
   const noteId = useId();
-  // R2 kutusu ya da R3 adı tamamlanmadan onay açılmaz. Ret her düzeyde açıktır.
+  // Approve stays disabled until the R2 box or R3 name is done. Reject is open at every level.
   const nameOk = block.target !== undefined && typed.trim() === block.target.name.trim();
   const ready = risk === 'R1' || (risk === 'R2' ? checked : nameOk);
 
@@ -98,7 +99,7 @@ export function ConfirmView({
             ? 'Onayınız gönderildi. Sonucu asistan yeni mesajla bildirecek.'
             : 'Vazgeçtiniz. Hiçbir işlem yapılmadı.'}
         </span>
-        {/* Sunucuda geri alma yok. Uç bildirilirse yalnız yeni öneri istenir. */}
+        {/* The server has no undo. If the endpoint is advertised, only a new proposal is asked. */}
         {decision === 'approved' && block.undoProposal === true && (
           <Button
             className="genui-undo"

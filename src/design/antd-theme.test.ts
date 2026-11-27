@@ -6,7 +6,7 @@ import { buildAntdTheme } from './antd-theme';
 import { blendOver, contrastRatio, darkenToContrast } from './color';
 import { danger, palette, primary, textDescription } from './tokens';
 
-/** `rgba(r,g,b,a)` -> blendOver için renk ve opaklık. */
+/** `rgba(r,g,b,a)` -> colour and opacity for blendOver. */
 function parseRgba(value: string): [string, number] {
   const m = /rgba\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)/.exec(value);
   if (!m) throw new Error(`rgba bekleniyordu: ${value}`);
@@ -58,7 +58,7 @@ describe('buildAntdTheme', () => {
   );
 
   it('açıklama metni antd varsayılanından başlar ve yalnız gerektiği kadar koyulaşır (Ö5)', () => {
-    // antd varsayılanı açık temada siyah %45, koyu temada beyaz %45'tir; ikisi de 4.5:1 vermez.
+    // The antd default is 45% black in the light theme and 45% white in the dark theme; neither gives 4.5:1.
     expect(textDescription.light.opacity).toBeGreaterThan(0.45);
     expect(textDescription.dark.opacity).toBeGreaterThan(0.45);
     expect(textDescription.light.surfaces).toContain(designSource.lightPalette.layout);
@@ -76,11 +76,11 @@ describe('buildAntdTheme', () => {
   it('koyu birincil düğme zemini saydam değildir ve kaynak tondan türetilir', () => {
     const { dark } = primary;
     const layout = designSource.darkPalette.layout;
-    // Saydam olmayan renk: zemin ne olursa olsun kontrast aynı kalır.
+    // Opaque colour: the contrast stays the same whatever the background.
     expect(dark.background).toMatch(/^#[0-9a-f]{6}$/);
     expect(dark.backgroundHover).toMatch(/^#[0-9a-f]{6}$/);
     expect(dark.backgroundActive).toMatch(/^#[0-9a-f]{6}$/);
-    // Türetme: kaynaktaki koyu tema tonu (%14, %22 ve basılı) yerleşim zemini üzerine bindirilir.
+    // Derivation: the source dark theme tint (14%, 22% and pressed) is laid over the layout background.
     expect(dark.background).toBe(blendOver(designSource.primary.color, designSource.primary.dark.background, layout));
     expect(dark.backgroundHover).toBe(
       blendOver(designSource.primary.color, designSource.primary.dark.hoverBackground, layout),
@@ -99,7 +99,7 @@ describe('buildAntdTheme', () => {
       { name: 'normal', bg: dark.background, textAlpha: dark.textOpacity },
       { name: 'üzerine gelme', bg: dark.backgroundHover, textAlpha: 1 },
       { name: 'basılı (fare)', bg: dark.backgroundActive, textAlpha: 1 },
-      // Klavyeyle basılı: üzerine gelme yoktur; metin yine %100 olur (CSS basılı kuralı rengi de verir).
+      // Pressed via keyboard: there is no hover; text is still 100% (the CSS pressed rule also sets the colour).
       { name: 'basılı (klavye)', bg: dark.backgroundActive, textAlpha: dark.textActiveOpacity },
     ];
     const surfaces = [
@@ -126,14 +126,14 @@ describe('buildAntdTheme', () => {
       expect(btn?.['dangerColor'], mode).toBe(white);
       expect(danger[mode].solidText, mode).toBe(white);
       const { background: bg, backgroundHover: hover, backgroundActive: active } = danger[mode];
-      // Türetme: antd hata rengi beyaz metinle 4.5:1 verene kadar koyulaşır. Ton korunur.
+      // Derivation: the antd error colour darkens until it gives 4.5:1 with white text. The hue is kept.
       expect(bg, mode).toBe(darkenToContrast(seed, white, 4.5));
-      // Tehlike rengi birincil rengin tonu değildir: kırmızı kanal baskındır.
+      // The danger colour is not a shade of the primary colour: the red channel dominates.
       const [r, g, b] = [bg.slice(1, 3), bg.slice(3, 5), bg.slice(5, 7)].map((h) => parseInt(h, 16));
       expect(r, mode).toBeGreaterThan(g!);
       expect(r, mode).toBeGreaterThan(b!);
       expect(bg, mode).not.toBe(primary.dark.background);
-      // Normal, üzerine gelme ve basılı: hepsi en az 4.5:1; her durum bir öncekinden koyudur.
+      // Normal, hover and pressed: all at least 4.5:1; each state is darker than the one before.
       const ratios = [bg, hover, active].map((c) => contrastRatio(white, c));
       for (const ratio of ratios) expect(ratio, mode).toBeGreaterThanOrEqual(4.5);
       expect(ratios[1], `${mode} üzerine gelme`).toBeGreaterThan(ratios[0]!);
@@ -147,12 +147,12 @@ describe('buildAntdTheme', () => {
       const t = antdThemeApi.getDesignToken({
         algorithm: mode === 'dark' ? antdThemeApi.darkAlgorithm : antdThemeApi.defaultAlgorithm,
       });
-      // antd bu tokenları kenarlıklı, metin, bağlantı ve dolgulu türde yazı rengi olarak kullanır.
+      // antd uses these tokens as the text colour of the outlined, text, link and filled variants.
       const ink = { normal: btn['colorError']!, hover: btn['colorErrorHover']!, active: btn['colorErrorActive']! };
       expect(ink.normal, mode).toBe(danger[mode].color);
       expect(ink.hover, mode).toBe(danger[mode].colorHover);
       expect(ink.active, mode).toBe(danger[mode].colorActive);
-      // Yazının durduğu zeminler: yerleşim, panel, yükseltilmiş zemin ve antd'nin kırmızımsı durum zeminleri.
+      // Backgrounds the text sits on: layout, panel, elevated background and antd's reddish status backgrounds.
       const dark = designSource.darkPalette;
       const surfaces =
         mode === 'dark'
@@ -168,10 +168,10 @@ describe('buildAntdTheme', () => {
         expect(r, `${mode} ${state} kırmızı kalır: ${color}`).toBeGreaterThan(g!);
         expect(r, `${mode} ${state} kırmızı kalır: ${color}`).toBeGreaterThan(b!);
       }
-      // Durumlar ayırt edilir: üzerine gelme ve basılı en kötü zeminde bir öncekinden daha çok kontrast verir.
+      // States are distinct: on the worst background, hover and pressed each give more contrast than the one before.
       expect(worst(ink.hover), `${mode} üzerine gelme`).toBeGreaterThan(worst(ink.normal));
       expect(worst(ink.active), `${mode} basılı`).toBeGreaterThan(worst(ink.hover));
-      // Düz (solid) zemin yazı renginden ayrıdır ve önceki türetmesini korur.
+      // The solid background is separate from the text colour and keeps its earlier derivation.
       expect(danger[mode].background, mode).not.toBe(ink.normal);
       expect(contrastRatio('#ffffff', danger[mode].background), mode).toBeGreaterThanOrEqual(4.5);
     }

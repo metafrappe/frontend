@@ -1,7 +1,7 @@
 /**
- * Ekranda gösterilmesine izin verilen araçlar.
- * Listede olmayan araç olayı yok sayılır. Modelin iç düşüncesi araç değildir.
- * Gerçek liste arka uçla birlikte belirlenir. Yeni araç buraya eklenir.
+ * Tools that may be shown on screen.
+ * A tool event not on the list is ignored. The model's inner thought is not a tool.
+ * The real list is decided together with the backend. New tools are added here.
  */
 export const ALLOWED_TOOLS = [
   'orders.read',

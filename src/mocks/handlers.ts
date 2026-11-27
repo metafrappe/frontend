@@ -1,5 +1,6 @@
-// Sözleşmeye uygun sahte uçlar (SZ-12). Geliştirme ve testler gerçek arka uca bağlanmaz.
-// Adresler `*/api/method/...` biçimindedir. Böylece her kökte çalışır.
+// Contract-compliant mock endpoints (SZ-12). Development and tests do not connect to a real
+// backend.
+// Addresses have the form `*/api/method/...`, so they work on every origin.
 import { http, HttpResponse, matchRequestUrl, type JsonBodyType } from 'msw';
 
 import { TOOL_RESULT_PREFIX } from '@/api/ai-protocol';
@@ -53,11 +54,11 @@ import { sampleCommunicationMeta, sampleCommunications } from './communication';
 
 const COMMUNICATION_DOCTYPE = sampleCommunicationMeta.schema.name;
 
-/** Sahte sunucunun durumu. Testler bu değerleri değiştirebilir. `resetMockState` ile sıfırlayın. */
+/** Mock server state. Tests can change these values. Reset with `resetMockState`. */
 /**
- * Sahte model geçidinin verebileceği hatalar ve HTTP durumları.
- * Kodlar model geçidi sözleşmesindeki `Error` listesindendir.
- * Durumlar sözleşmedeki yanıt adlarından gelir: BadRequest 400, PermissionError 403,
+ * Errors and HTTP statuses the mock model gateway can return.
+ * The codes come from the `Error` list in the model gateway contract.
+ * The statuses come from the response names in the contract: BadRequest 400, PermissionError 403,
  * Conflict 409, QuotaError 429, Unavailable 503.
  */
 export const GATEWAY_FAILURES = {
@@ -73,15 +74,21 @@ export const GATEWAY_FAILURES = {
 
 export type GatewayFailure = keyof typeof GATEWAY_FAILURES;
 
-/** Sahte `start_login` isteğinin adresi bu anahtarla oturum deposuna yazılır. Tarayıcı testi okur. */
+/**
+ * The mock `start_login` address is written to session storage under this key. A browser test reads
+ * it.
+ */
 export const MOCK_START_LOGIN_KEY = 'atonota.mock-start-login';
-/** Sahte `start_link` isteğinin adresi bu anahtarla oturum deposuna yazılır. Tarayıcı testi okur. */
+/**
+ * The mock `start_link` address is written to session storage under this key. A browser test reads
+ * it.
+ */
 export const MOCK_START_LINK_KEY = 'atonota.mock-start-link';
 
 /**
- * Sahte çıkış ucunun yanıtı.
- * `ok`: örnek Keycloak çıkış adresi. `failure`: sunucu hatası, oturum açık kalır.
- * `foreign_url`: başka kökenli bir çıkış adresi. Panel bu adrese gitmemelidir.
+ * Response of the mock sign-out endpoint.
+ * `ok`: sample Keycloak sign-out address. `failure`: server error, the session stays open.
+ * `foreign_url`: a sign-out address on another origin. The panel must not go there.
  */
 export type LogoutOutcome = 'ok' | 'failure' | 'foreign_url';
 
@@ -89,38 +96,41 @@ export const mockState: {
   signedIn: boolean;
   proposals: Map<string, ReturnType<typeof sampleProposal>>;
   leaves: Map<string, (typeof sampleLeaves)[number]>;
-  /** Ana sayfa özeti. `failure` doğruysa özet ucu 500 verir. */
+  /** Home page summary. If `failure` is true, the summary endpoint returns 500. */
   home: {
     failure: boolean;
-    /** Doğruysa özet, bekleyen taleplere eski bir sürüm yazar. Onay ve ret çakışma alır. */
+    /**
+     * If true, the summary gives pending requests an old version. Approve and reject get a
+     * conflict.
+     */
     staleVersions: boolean;
     problems: (typeof sampleHomeProblems)[number][];
     recentChanges: (typeof sampleRecentChanges)[number][];
   };
-  /** `Örnek Kayıt` türünün kayıtları. Liste, kayıt okuma ve kaydetme aynı veriyi kullanır. */
+  /** Records of the sample record DocType. List, read and save use the same data. */
   records: Map<string, CollectionRow>;
   installations: { installation_id: string; scope: 'mobile' | 'pwa'; revoked: boolean }[];
-  /** Doluysa model geçidi bu hatayı verir. Testler hata ekranını böyle sınar. */
+  /** If set, the model gateway returns this error. Tests use it to check the error screen. */
   gatewayFailure: GatewayFailure | undefined;
-  /** Çıkış ucunun yanıtı. Testler hata yolunu böyle sınar. */
+  /** Response of the sign-out endpoint. Tests use it to check the error path. */
   logoutOutcome: LogoutOutcome;
-  /** Giriş platformu kayıtları. Yalnız açık olanlar yanıta girer (G-159). */
+  /** Sign-in platform records. Only enabled ones are in the response (G-159). */
   loginProviders: { alias: string; display_name: string; enabled: boolean }[];
-  /** Örnek kullanıcının bağlı platformları (G-160). */
+  /** The sample user's linked platforms (G-160). */
   linkedAccounts: Set<string>;
-  /** Platform dışı giriş yollarının sayısı. Örnek: parola. */
+  /** Number of non-platform sign-in methods. Example: password. */
   localSignInMethods: number;
-  /** Yapay zekâ sağlayıcı, hesap ve API bağlantısı kayıtları. Parola alanı burada yoktur. */
+  /** AI provider, account and API connection records. The password field is not here. */
   aiProviders: Map<string, SampleAiProvider>;
   aiAccounts: Map<string, SampleAiAccount>;
   aiConnections: Map<string, SampleAiConnection>;
-  /** Doğruysa kaydetme ve deneme uçları hız sınırı (429 `gateway_busy`) verir. */
+  /** If true, the save and check endpoints return a rate limit (429 `gateway_busy`). */
   providerBusy: boolean;
-  /** Açılış verisindeki kullanıcı rolleri. Rol senaryoları değiştirir (AJA-831). */
+  /** User roles in the boot data. Role scenarios change them (AJA-831). */
   roles: string[];
-  /** Tanım ucunun 200 verdiği modül türleri (G-94). Öteki türlerde 403 döner. */
+  /** Module types the definition endpoint answers with 200 (G-94). Other types get 403. */
   readableDocTypes: Set<string>;
-  /** Gönderilen yeni müşteri istekleri (G-169). */
+  /** Submitted new customer requests (G-169). */
   customerRequests: { name: string; customer_name: string; contact_email: string }[];
 } = {
   roles: [...sampleBootstrap.user.roles],
@@ -149,7 +159,7 @@ function enabledProviders(): { alias: string; display_name: string }[] {
     .map(({ alias, display_name }) => ({ alias, display_name }));
 }
 
-/** Açık platformlar ve bağlı ama artık kapalı olan platformlar. */
+/** Enabled platforms, plus linked platforms that are now disabled. */
 function linkedAccounts() {
   const providers = mockState.loginProviders
     .filter((item) => item.enabled || mockState.linkedAccounts.has(item.alias))
@@ -172,7 +182,10 @@ function sampleHome(): (typeof mockState)['home'] {
 
 const STALE_VERSION = '2000-01-01 00:00:00.000000';
 
-/** Kararı son değişikliklere en başa yazar. Liste sözleşmedeki gibi en çok 5 öğe tutar. */
+/**
+ * Adds the decision to the top of recent changes. As in the contract, the list holds at most 5
+ * items.
+ */
 function recordLeaveChange(
   leave: (typeof sampleLeaves)[number],
   action: 'approved' | 'rejected' | 'cancelled',
@@ -248,16 +261,19 @@ export function resetMockState(): void {
 }
 
 /**
- * Kaydedilen sırlar. Yalnız sahte canlı denemenin sonucunu seçmek için tutulur.
- * Dışa aktarılmaz, hiçbir yanıta ve kayıt listesine yazılmaz.
+ * Saved secrets. Kept only to choose the result of the mock live check.
+ * Not exported, and never written to any response or record list.
  */
 const connectionSecrets = new Map<string, string>();
-/** Kullanıcı başına hız sınırı sayacı: uç başına istek zamanları (ms). */
+/** Per-user rate limit counter: request times per endpoint (ms). */
 const gatewayCalls: { save: number[]; check: number[] } = { save: [], check: [] };
 const GATEWAY_RATE_LIMIT = 10;
 const GATEWAY_RATE_WINDOW_MS = 60_000;
 
-/** Sözleşme: her kullanıcı her ucu 60 saniyede en çok 10 kez çağırır. Aşımda 429 `gateway_busy`. */
+/**
+ * Contract: each user calls each endpoint at most 10 times in 60 seconds. Beyond that, 429
+ * `gateway_busy`.
+ */
 function gatewayBusy(endpoint: keyof typeof gatewayCalls): boolean {
   if (mockState.providerBusy) return true;
   const now = Date.now();
@@ -286,7 +302,9 @@ interface ConnectionBody {
   fields?: unknown;
 }
 
-/** Kaydetme isteğini sözleşmeye göre denetler. Hata varsa yanıtı, yoksa `undefined` döner. */
+/**
+ * Checks a save request against the contract. Returns the error response, or `undefined` if valid.
+ */
 function validateConnection(body: ConnectionBody): Response | undefined {
   const provider = catalogProvider(body.provider);
   if (!provider) return gatewayError(400, 'unknown_provider');
@@ -324,7 +342,7 @@ function validateConnection(body: ConnectionBody): Response | undefined {
     if (field.required && value.trim().length === 0) invalid.push(field.name);
     else if (field.kind === 'url' && value.length > 0 && !URL_FIELD_PATTERN.test(value))
       invalid.push(field.name);
-    // Hesap alanı yalnız yeni hesapla yazılır (sözleşme: ConnectionInput.fields).
+    // The account field is written only with a new account (contract: ConnectionInput.fields).
     else if (field.scope === 'account' && hasAccount && value.length > 0) invalid.push(field.name);
   }
   if (invalid.length > 0) {
@@ -337,7 +355,7 @@ function nextAiName(prefix: string, size: number): string {
   return `${prefix}-${String(size + 1).padStart(4, '0')}`;
 }
 
-/** Sahte canlı denemenin sonucu. Gerçek sağlayıcıya istek gitmez. */
+/** Result of the mock live check. No request goes to a real provider. */
 function sampleCheckStatus(api: SampleAiConnection): SampleAiConnection['connection_status'] {
   const secret = connectionSecrets.get(api.name);
   if (secret !== undefined) {
@@ -350,10 +368,10 @@ function sampleCheckStatus(api: SampleAiConnection): SampleAiConnection['connect
   return 'connected';
 }
 
-/** Kaydı genel satır biçimine çevirir. */
+/** Converts a record to the generic row shape. */
 const asRow = (row: object): Record<string, unknown> => ({ ...row });
 
-/** Frappe API v2 listesi için genel alan seçimi ve sıralama. */
+/** Generic field selection and sorting for the Frappe API v2 list. */
 function listRows<T extends Record<string, unknown>>(rows: T[], url: URL) {
   const fields = parseJsonParam(url, 'fields') ?? ['name'];
   const filters = parseJsonParam(url, 'filters');
@@ -411,7 +429,7 @@ function leaveMatches(leave: Leave, filters: unknown): boolean {
 const SERVER_TIME = 1795340000;
 const MOCK_INSTALLATION_PAGE = 2;
 
-/** PWA uçları oturum ve CSRF ister. Hata gövdesi `code` alanını taşır. */
+/** PWA endpoints require a session and CSRF. The error body carries a `code` field. */
 function pwaError(status: number, code: string) {
   return HttpResponse.json({ server_time: SERVER_TIME, code }, { status });
 }
@@ -419,9 +437,9 @@ function pwaError(status: number, code: string) {
 const APP_VERSION_PATTERN = /^[0-9]{1,5}\.[0-9]{1,5}\.[0-9]{1,5}$/;
 
 /**
- * PWA uçlarının sözleşme denetimi: oturum, CSRF, köken ve iki sürüm başlığı.
- * Tarayıcıdaki işçi `Origin` başlığını göremeyebilir. Bu yüzden başlık yoksa geçer.
- * Başlık varsa isteğin kendi kökeniyle aynı olmalıdır.
+ * Contract check for PWA endpoints: session, CSRF, origin and two version headers.
+ * The worker in the browser may not see the `Origin` header, so a missing header passes.
+ * If the header is present, it must match the request's own origin.
  */
 function pwaGuard(request: Request): Response | undefined {
   if (request.headers.has('Authorization')) return pwaError(403, 'mixed_authentication');
@@ -566,8 +584,8 @@ const LEAVE_FIELDS = new Set([
 const REDIRECT_PATTERN = /^\/(?!\/)[A-Za-z0-9\-._~/?#@!$&()*+,;=%:[\]]*$/;
 
 /**
- * Kaydın bağlantı alanları. `kaynak_kayit` bir önceki kayıttır ve salt okunurdur.
- * `ilgili_kayit` kaydetmeyle değişir; değer `recordLinks` içinde tutulur.
+ * Link fields of the record. `kaynak_kayit` is the previous record and is read-only.
+ * `ilgili_kayit` changes on save; the value is kept in `recordLinks`.
  */
 function sampleRecordLinks(row: CollectionRow) {
   const number = Number(row.name.slice(-4));
@@ -590,14 +608,14 @@ function sampleRecordResponse(row: CollectionRow) {
   });
 }
 
-/** `ilgili_kayit` değerleri. `resetMockState` boşaltır. */
+/** `ilgili_kayit` values. `resetMockState` clears them. */
 const recordLinks = new Map<string, string>();
 
 function frappeError(status: number, excType: string, extra: Record<string, unknown> = {}) {
   return HttpResponse.json({ exc_type: excType, ...extra }, { status });
 }
 
-/** Bayi uçlarını yalnız bayi rolleri kullanır. Öteki hesaplar 403 alır. */
+/** Only reseller roles use reseller endpoints. Other accounts get 403. */
 function resellerGuard(): Response | undefined {
   const reseller = mockState.roles.some(
     (r) => r === 'Reseller Admin' || r === 'Reseller Assistant',
@@ -605,7 +623,7 @@ function resellerGuard(): Response | undefined {
   return reseller ? undefined : frappeError(403, 'PermissionError');
 }
 
-/** Oturumu ve CSRF başlığını sözleşmedeki gibi denetler. Sorun yoksa `undefined` döner. */
+/** Checks the session and CSRF header as in the contract. Returns `undefined` if all is well. */
 function guard(request: Request, { write }: { write: boolean }): Response | undefined {
   if (request.headers.has('Authorization')) return frappeError(403, 'PermissionError');
   if (!mockState.signedIn) return frappeError(401, 'SessionExpired', { session_expired: 1 });
@@ -668,7 +686,7 @@ interface CompletionBody {
   messages?: { role: string; content: string }[];
 }
 
-/** Örnek model. Gerçek model değildir. Davranışı sabittir ve testler buna güvenir. */
+/** Sample model, not a real one. Its behaviour is fixed and tests rely on it. */
 function sampleModel(body: CompletionBody) {
   const messages = body.messages ?? [];
   const last = messages[messages.length - 1];
@@ -706,9 +724,10 @@ function sampleModel(body: CompletionBody) {
 }
 
 export const handlers = [
-  // G-98 kullanıcı yönetimi. Genel kayıt uçlarından önce gelir.
+  // G-98 user management. Comes before the generic record endpoints.
   ...userAdminHandlers(guard, message, frappeError, listRows),
-  // "İletişim" listesi (AJA-812, G-63). Genel şema ucundan önce gelir; o uç başka türü reddeder.
+  // Communication list (AJA-812, G-63). Comes before the generic schema endpoint, which rejects
+  // other types.
   http.get('*/api/method/platform_core.api.meta.get_doctype', ({ request }) => {
     if (new URL(request.url).searchParams.get('doctype') !== COMMUNICATION_DOCTYPE)
       return undefined;
@@ -724,7 +743,7 @@ export const handlers = [
       HttpResponse.json({ errors: [{ type: 'ValidationError' }] }, { status: 417 })
     );
   }),
-  // G-62 ve G-98 yönetim uçları (`./admin.ts`). Genel kayıt işleyicilerinden önce gelir.
+  // G-62 and G-98 admin endpoints (`./admin.ts`). They come before the generic record handlers.
   ...adminHandlers({ guard, message, frappeError }),
   http.get('*/api/method/frappe.auth.get_logged_user', () =>
     mockState.signedIn
@@ -732,8 +751,8 @@ export const handlers = [
       : frappeError(401, 'SessionExpired', { session_expired: 1 }),
   ),
 
-  // Giriş düğmesi bir sayfa geçişidir. Arka uç tarayıcıyı Keycloak giriş adresine yönlendirir.
-  // Sahte sunucuda hedef AtonotA Login köküdür: `https://api.login.atonota.net`.
+  // The sign-in button is a page navigation. The backend redirects the browser to Keycloak sign-in.
+  // On the mock server the target is the AtonotA Login origin: `https://api.login.atonota.net`.
   http.get('*/api/method/platform_core.api.auth.start_login', ({ request }) => {
     const redirectTo = new URL(request.url).searchParams.get('redirect_to');
     if (redirectTo !== null && !REDIRECT_PATTERN.test(redirectTo)) {
@@ -742,13 +761,14 @@ export const handlers = [
     try {
       globalThis.sessionStorage?.setItem(MOCK_START_LOGIN_KEY, request.url);
     } catch {
-      // Depo yoksa kayıt yapılmaz. Yönlendirme yine olur.
+      // Without storage nothing is recorded. The redirect still happens.
     }
     return HttpResponse.redirect(sampleLoginUrl.login_url, 302);
   }),
 
-  // Hesap bağlama bir sayfa geçişidir. Arka uç Keycloak'ın bağlama akışını başlatır.
-  // Sahte sunucu adresi kaydeder ve tarayıcıyı dönüş yoluna geri gönderir. Bağ kurulmaz.
+  // Account linking is a page navigation. The backend starts Keycloak's linking flow.
+  // The mock server records the address and sends the browser back to the return path. No link is
+  // made.
   http.get('*/api/method/platform_core.api.auth.start_link', ({ request }) => {
     const url = new URL(request.url);
     const redirectTo = url.searchParams.get('redirect_to');
@@ -758,7 +778,7 @@ export const handlers = [
     try {
       globalThis.sessionStorage?.setItem(MOCK_START_LINK_KEY, request.url);
     } catch {
-      // Depo yoksa kayıt yapılmaz. Yönlendirme yine olur.
+      // Without storage nothing is recorded. The redirect still happens.
     }
     return HttpResponse.redirect(new URL(redirectTo, url.origin).toString(), 302);
   }),
@@ -785,7 +805,7 @@ export const handlers = [
     return message(sampleLogoutUrl);
   }),
 
-  // AtonotA Login (G-159, G-160). Sözleşme `src/auth/README.md` içindedir.
+  // AtonotA Login (G-159, G-160). The contract is in `src/auth/README.md`.
   http.get('*/api/method/platform_core.api.auth.list_login_providers', () =>
     message({ providers: enabledProviders() }),
   ),
@@ -800,7 +820,8 @@ export const handlers = [
     const body = (await request.json().catch(() => ({}))) as { provider?: unknown };
     const provider = typeof body.provider === 'string' ? body.provider : '';
     if (!mockState.linkedAccounts.has(provider)) return frappeError(404, 'DoesNotExistError');
-    // Son giriş yolu kaldırılamaz. Karar sunucunundur; panel yalnız sonucu gösterir.
+    // The last sign-in method cannot be removed. The server decides; the panel only shows the
+    // result.
     if (mockState.linkedAccounts.size + mockState.localSignInMethods <= 1) {
       return frappeError(409, 'LastSignInMethod');
     }
@@ -808,8 +829,8 @@ export const handlers = [
     return message(linkedAccounts());
   }),
 
-  // Bayi uçları (G-169, G-170). Biçim AJA-831 arka uç testlerinin sözleşmesidir.
-  // Yalnız bayi rolleri kullanır. Yeni müşteri isteğini yalnız "Reseller Admin" gönderir.
+  // Reseller endpoints (G-169, G-170). The shape is the contract of the AJA-831 backend tests.
+  // Only reseller roles use them. Only "Reseller Admin" submits a new customer request.
   http.get('*/api/method/platform_core.api.reseller.list_customers', ({ request }) => {
     const denied = guard(request, { write: false }) ?? resellerGuard();
     if (denied) return denied;
@@ -821,7 +842,7 @@ export const handlers = [
     if (denied) return denied;
     const tenant = new URL(request.url).searchParams.get('customer_tenant');
     const customer = sampleResellerCustomers.find((c) => c.customer_tenant === tenant);
-    // Başka bayinin müşterisi ile olmayan müşteri aynı yanıtı alır.
+    // Another reseller's customer and a missing customer get the same response.
     if (!customer) return frappeError(403, 'PermissionError');
     return message({ customer_tenant: customer.customer_tenant, status: customer.status });
   }),
@@ -857,7 +878,7 @@ export const handlers = [
     const denied = guard(request, { write: false });
     if (denied) return denied;
     const doctype = new URL(request.url).searchParams.get('doctype');
-    // Menü yetki denemesi (G-94): modül türlerinde yalnız okunabilirlik önemlidir.
+    // Menu permission probe (G-94): for module types, only readability matters.
     if (doctype && mockState.readableDocTypes.has(doctype)) {
       return message({
         ...sampleDocTypeMeta,
@@ -950,8 +971,8 @@ export const handlers = [
     return message(rejected);
   }),
 
-  // HRMS izin başvuruları (hrms_tr sözleşmesi).
-  // Yol yalnız izin başvurularını karşılar. Öteki kayıt türleri için sahte uç ayrıca eklenir.
+  // HRMS leave applications (hrms_tr contract).
+  // The route serves only leave applications. Other record types need their own mock endpoint.
   http.get('*/api/resource/Leave%20Application', ({ request }) => {
     const denied = guard(request, { write: false });
     if (denied) return denied;
@@ -1006,7 +1027,8 @@ export const handlers = [
     return message({ name: leave.name });
   }),
 
-  // Ret, onayla aynı kurala uyar. HRMS reddedilen başvuruyu "Rejected" durumuyla gönderir.
+  // Reject follows the same rule as approve. HRMS sends a rejected application with status
+  // "Rejected".
   http.post('*/api/method/hrms_tr.api.reject_leave', async ({ request }) => {
     const denied = guard(request, { write: true });
     if (denied) return denied;
@@ -1043,8 +1065,9 @@ export const handlers = [
     return message({ name: leave.name });
   }),
 
-  // Frappe API v2 kayıt listesi. Biçim Frappe 16.56.0 kaynağından doğrulandı (src/api/README.md).
-  // Yalnız örnek kayıt türleri karşılanır. Öteki türler sonraki işleyiciye geçer.
+  // Frappe API v2 record list. The shape was verified against Frappe 16.56.0 source
+  // (src/api/README.md).
+  // Only sample record types are served. Other types pass to the next handler.
   http.get('*/api/v2/document/:doctype', ({ request, params }) => {
     const doctype = String(params.doctype);
     if (doctype !== SAMPLE_COLLECTION_DOCTYPE && doctype !== RESTRICTED_SAMPLE_DOCTYPE) {
@@ -1080,8 +1103,9 @@ export const handlers = [
     });
   }),
 
-  // Frappe bağlantı araması. Yalnız `Örnek Kayıt` türü aranır. Öteki türler yetki reddi alır;
-  // yanıt kayıt adı içermez. Gerçek sunucu da izni olmayan türde arama yapmaz.
+  // Frappe link search. Only the sample record DocType is searched. Other types get a permission
+  // denial; the response has no record names. The real server also does not search types without
+  // permission.
   http.get('*/api/method/frappe.desk.search.search_link', ({ request }) => {
     const denied = guard(request, { write: false });
     if (denied) return denied;
@@ -1103,9 +1127,10 @@ export const handlers = [
     return message(rows);
   }),
 
-  // Frappe kayıt ucu (`/api/resource/<doctype>/<name>`). Yalnız `Örnek Kayıt` türü karşılanır.
-  // İzin başvuruları yukarıdaki kendi işleyicisindedir. Tür tanımı ucu gibi, öteki türler
-  // yetki reddi (403 `PermissionError`) alır. Kaydetme CSRF belirtecini ve kayıt sürümünü denetler.
+  // Frappe record endpoint (`/api/resource/<doctype>/<name>`). Only the sample record DocType is
+  // served.
+  // Leave applications have their own handler above. As with the type definition endpoint, other
+  // types get a permission denial (403 `PermissionError`). Save checks the CSRF token and version.
   http.get('*/api/resource/:doctype/:name', ({ request, params }) => {
     const denied = guard(request, { write: false });
     if (denied) return denied;
@@ -1207,7 +1232,7 @@ export const handlers = [
     },
   ),
 
-  // Erişim kuralı motoru (platform_core-access sözleşmesi).
+  // Access rule engine (platform_core-access contract).
   http.get('*/api/method/platform_core.api.access.explain_permission', ({ request }) => {
     const denied = guard(request, { write: false });
     if (denied) return denied;
@@ -1245,8 +1270,8 @@ export const handlers = [
       : frappeError(403, 'PermissionError');
   }),
 
-  // Telefon ve PWA kurulumları (platform_core-mobile sözleşmesi, PWA oturumu).
-  // Sözleşmede sayfa en çok 20 kayıttır. Örnek sunucu sayfalamayı göstermek için 2 kayıt verir.
+  // Phone and PWA installations (platform_core-mobile contract, PWA session).
+  // In the contract a page has at most 20 records. The mock server returns 2 to show paging.
   http.post(
     '*/api/method/platform_core.api.mobile_pwa.v1_list_installations',
     async ({ request }) => {
@@ -1293,7 +1318,7 @@ export const handlers = [
     },
   ),
 
-  // Yapay zekâ sağlayıcı kayıtları (Frappe API v2 listesi). Parola alanı kayıtlarda yoktur.
+  // AI provider records (Frappe API v2 list). The password field is not in the records.
   http.get('*/api/v2/document/:doctype', ({ request, params }) => {
     const doctype = String(params.doctype);
     const rows: Record<string, unknown>[] | undefined =
@@ -1314,7 +1339,7 @@ export const handlers = [
     );
   }),
 
-  // Sağlayıcı kataloğu, bağlantı kaydı ve canlı deneme (model geçidi sözleşmesi).
+  // Provider catalogue, connection save and live check (model gateway contract).
   http.post('*/api/method/platform_core.api.model.provider_catalog', ({ request }) => {
     return guard(request, { write: true }) ?? message(sampleProviderCatalog);
   }),

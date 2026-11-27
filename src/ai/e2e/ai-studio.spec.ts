@@ -1,8 +1,8 @@
 import { expect, test, type Page } from '../../../tests/setup/playwright-fixtures';
 
 /**
- * AI Studio tarayıcı testleri. Sayfa üretim derlemesinde `/panel/ai` yolundadır.
- * Yol `src/app/routes.ts` dosyasında kayıtlıdır. Kök Playwright ayarı bu klasörü koşar.
+ * AI Studio browser tests. In the production build the page is at `/panel/ai`.
+ * The route is registered in `src/app/routes.ts`. The root Playwright config runs this folder.
  */
 const PAGE = '/panel/ai';
 const WIDE = 1140;
@@ -23,7 +23,7 @@ async function ask(page: Page, text: string) {
   await page.getByRole('button', { name: 'Mesajı gönder' }).click();
 }
 
-/** Görünen metinlerin en küçük hesaplanmış yazı boyutu. */
+/** Smallest computed font size of the visible text. */
 async function smallestFont(page: Page) {
   return page.evaluate(() => {
     let min = Infinity;
@@ -40,7 +40,7 @@ async function smallestFont(page: Page) {
   });
 }
 
-/** Öğedeki metnin kaç satıra yayıldığını sayar. */
+/** Counts how many lines the element's text spans. */
 async function lineCount(page: Page, selector: string) {
   return page
     .locator(selector)
@@ -52,7 +52,7 @@ async function lineCount(page: Page, selector: string) {
     });
 }
 
-/** Odaktaki öğenin çerçevesi ve alt çizgi göstergesi. */
+/** Outline and underline indicator of the focused element. */
 async function focusLook(page: Page) {
   return page.evaluate(() => {
     const el = document.activeElement as HTMLElement | null;
@@ -100,12 +100,12 @@ test.describe('AI Studio', () => {
     await expect(table.getByRole('columnheader', { name: 'Önce' })).toBeVisible();
     await expect(table.getByRole('columnheader', { name: 'Sonra' })).toBeVisible();
     await expect(table.getByText('Gönderilmedi')).toBeVisible();
-    // Sonraki değer kaydırmadan görünmeli. Onay verirken gizli kalmamalı.
+    // The next value must be visible without scrolling. It must not stay hidden during approval.
     await confirm.scrollIntoViewIfNeeded();
     const box = await table.getByRole('columnheader', { name: 'Sonra' }).boundingBox();
     const width = page.viewportSize()?.width ?? 0;
     expect(box && box.x + box.width).toBeLessThanOrEqual(width);
-    // Hücreler kelime ortasından bölünmez ve taşmaz.
+    // Cells do not break mid-word and do not overflow.
     const cells = await table.locator('th, td').evaluateAll((els) =>
       els.map((el) => ({
         wrap: getComputedStyle(el).overflowWrap,
@@ -141,8 +141,8 @@ test.describe('AI Studio', () => {
   });
 
   test('iptal akışı durdurur', async ({ page }) => {
-    // Sahte akış düğmeye basılana kadar bekler: e2e derlemesinde `?gecikme=` iki olay arasını
-    // 60 saniye yapar. Böylece akış, durdurma düğmesine basılmadan bitemez.
+    // The mock stream waits until the button is pressed: in the e2e build `?gecikme=` sets the
+    // gap between two events to 60 seconds. So the stream cannot end before Stop is pressed.
     await page.goto(`${PAGE}?gecikme=60000`);
     await expect(page.getByRole('textbox', { name: 'Asistana mesaj yazın' })).toBeVisible();
     await ask(page, 'Bu haftanın satış özetini çıkar');
@@ -168,7 +168,7 @@ test.describe('AI Studio', () => {
   test('klavye odağı çevreleyen halka çizmez, alt çizgiyle görünür', async ({ page }, info) => {
     test.skip((page.viewportSize()?.width ?? 0) >= WIDE, `${info.project.name}: çekmece yok`);
     await open(page);
-    // WebKit Tab ile düğmeleri atlayabilir. Bu yüzden ilk odaklanan öğe tarayıcıya göre değişir.
+    // WebKit may skip buttons on Tab. So the first focused element depends on the browser.
     await page.keyboard.press('Tab');
     const first = await focusLook(page);
     expect(first).toMatchObject({ outline: true, indicator: true });
@@ -181,7 +181,7 @@ test.describe('AI Studio', () => {
       indicator: true,
     });
 
-    // Klavye modu açıkken çekmece düğmesi de çevrelemeyen göstergeyi kullanır.
+    // In keyboard mode the drawer button also uses the non-surrounding indicator.
     await page.getByRole('button', { name: 'Sohbetleri aç' }).focus();
     expect(await focusLook(page)).toMatchObject({
       label: 'Sohbetleri aç',
@@ -223,8 +223,8 @@ test.describe('AI Studio', () => {
     const select = selectRoot.locator('.ant-select-selector');
 
     /**
-     * Kenarları ölçer. Önce öğedeki bütün CSS geçişlerinin bitmesini bekler.
-     * Böylece ölçüm geçiş başlamadan yapılmaz ve sonuç kararlı olur.
+     * Measures the edges. First it waits for all CSS transitions on the element to finish.
+     * So the measurement is not taken before a transition starts and the result is stable.
      */
     const settled = (locator: typeof input) =>
       locator.evaluate(async (el) => {
@@ -236,14 +236,14 @@ test.describe('AI Studio', () => {
           outline: s.outlineStyle === 'none' || s.outlineWidth === '0px',
         };
       });
-    /** Çevreleyen halka gölgesi: x ve y sıfır, yayılma pozitif. */
+    /** Surrounding ring shadow: x and y zero, positive spread. */
     const ring = /0px 0px 0px [1-9]/;
-    /** Tek kenar göstergesi: yalnız alt kenarda içe gölge. x sıfır, y negatif, bulanıklık sıfır. */
+    /** Single-edge indicator: inset shadow on the bottom edge only. x zero, y negative, blur zero. */
     const bottomBar = /0px -\d+(\.\d+)?px 0px 0px inset|inset 0px -\d+(\.\d+)?px 0px 0px/;
 
-    // Dinlenme ölçümünde fare hiçbir alanın üstünde olmamalı. Gönder düğmesine tıklayan fare
-    // yerinde kalır. Dar ekranda form o noktanın altına gelebilir. O zaman Select'in dokunma
-    // katmanı üzerine gelme rengini alır. Bu durum Linux WebKit 320'de oldu (PR #3 CI hatası).
+    // In the resting measurement the mouse must not hover any field. The mouse that clicked Send
+    // stays in place. On a narrow screen the form can move under that point. Then the Select's touch
+    // layer takes the hover colour. This happened on Linux WebKit 320 (PR #3 CI failure).
     await page.mouse.move(0, 0);
     await expect(selectRoot).not.toHaveClass(/ant-select-focused/);
     await expect
@@ -255,7 +255,7 @@ test.describe('AI Studio', () => {
     const restSelect = await settled(select);
     expect(restSelect.shadow).not.toMatch(bottomBar);
 
-    // Fareyle odak: kenar rengi değişmez. Halka ve gösterge yoktur.
+    // Mouse focus: the border colour does not change. There is no ring and no indicator.
     await input.click();
     await page.mouse.move(0, 0);
     const mouseInput = await settled(input);
@@ -263,7 +263,7 @@ test.describe('AI Studio', () => {
     expect(mouseInput.shadow).not.toMatch(ring);
     expect(mouseInput.outline).toBe(true);
 
-    // Dokunma alanı katmanı select kutusundadır. Tıklama kutuya yapılır.
+    // The touch-area layer is on the select box. The click goes to the box.
     await selectRoot.click();
     await expect(selectRoot).toHaveClass(/ant-select-focused/);
     await page.mouse.move(0, 0);
@@ -273,7 +273,7 @@ test.describe('AI Studio', () => {
     expect(mouseSelect.shadow).not.toMatch(bottomBar);
     await page.keyboard.press('Escape');
 
-    // Klavye odağı: kenar rengi değişmez. Yalnız alt kenarda tek çizgi görünür.
+    // Keyboard focus: the border colour does not change. Only a single line shows on the bottom edge.
     await page.keyboard.press('Tab');
     await input.focus();
     const keyInput = await settled(input);

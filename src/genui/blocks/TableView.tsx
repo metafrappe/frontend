@@ -4,7 +4,7 @@ import { Table } from 'antd';
 import type { TableBlock, TableCell } from '../types';
 
 export function TableView({ block }: { block: TableBlock }) {
-  // Satır anahtarı sütunu her zaman kimliktir. Diğerleri açıklamadır, sarılır.
+  // The row key column is always an ID. The others are descriptions and wrap.
   const columns = block.columns.map((column) => {
     const kind = column.key === block.rowKey ? 'id' : (column.kind ?? 'text');
     return {
@@ -12,7 +12,7 @@ export function TableView({ block }: { block: TableBlock }) {
       dataIndex: column.key,
       title: column.title,
       className: kind === 'id' ? 'genui-cell-id' : 'genui-cell-text',
-      // Tablo hücresi en büyük genişliği dinlemez. Sınır içteki kutudadır.
+      // A table cell ignores max-width. The limit sits on the inner box.
       ...(kind === 'text'
         ? { render: (value: TableCell) => <span className="genui-wrap">{value}</span> }
         : {}),
@@ -25,7 +25,7 @@ export function TableView({ block }: { block: TableBlock }) {
         <strong>{block.title}</strong>
         <span className="genui-muted">{block.rows.length} satır</span>
       </header>
-      {/* Tablo kendi kapsayıcısında yatay kayar. Sayfa taşmaz. */}
+      {/* The table scrolls horizontally in its own container. The page does not overflow. */}
       <div className="genui-table-scroll">
         <Table<Record<string, TableCell>>
           size="small"

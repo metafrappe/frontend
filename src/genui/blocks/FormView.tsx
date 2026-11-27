@@ -22,7 +22,7 @@ function initialValues(fields: FormField[]): FormValues {
   return values;
 }
 
-/** Değeri ekranda okunur metne çevirir. Seçeneklerde etiketi gösterir. */
+/** Turns a value into readable on-screen text. For options it shows the label. */
 function display(field: FormField, value: string | string[] | undefined): string {
   const list = Array.isArray(value) ? value : value ? [value] : [];
   const labels = list.map((v) => field.options?.find((o) => o.value === v)?.label ?? v);
@@ -38,8 +38,8 @@ function diff(fields: FormField[], before: FormValues, after: FormValues): Field
 }
 
 /**
- * Form.Item kimliği, değeri ve değişim işlevini alt öğeye verir.
- * Bu yüzden gelen bütün özellikler denetime aktarılır.
+ * Form.Item passes the ID, value and change handler to its child.
+ * So all incoming props are forwarded to the control.
  */
 function FieldControl({
   field,
@@ -62,9 +62,9 @@ function FieldControl({
 }
 
 /**
- * Form bloğu (U4, AX-6).
- * "Kaydet" önce farkı gösterir. Değerler yalnız "Onayla ve gönder" ile gider.
- * Kaydı arka uç yapar. Arayüz kaydın sonucunu kendisi uydurmaz.
+ * Form block (U4, AX-6).
+ * The Save button shows the diff first. Values are sent only with "Approve and send".
+ * The backend does the save. The UI never invents the save result itself.
  */
 export function FormView({
   block,

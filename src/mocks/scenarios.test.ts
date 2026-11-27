@@ -187,7 +187,8 @@ describe('sahte sunucu: dört panel rolü (AJA-831, AJA-834)', () => {
 
   it('bayi müşteri listesini okur, kiracının iş verisini okuyamaz', async () => {
     applyMockScenario('rol-reseller-admin');
-    // Gerçek sunucu gibi: tanım ucu bağ türüne bayiye de 403 verir (AJA-945).
+    // Like the real server: the definition endpoint returns 403 for the link type, also to
+    // resellers (AJA-945).
     expect(await metaStatus('Reseller Customer Link')).toBe(403);
     expect((await fetch(`${RESELLER}list_customers`)).status).toBe(200);
     expect(await metaStatus('Leave Application')).toBe(403);

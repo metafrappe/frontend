@@ -1,8 +1,8 @@
-// Tarayıcı testlerinin seçtiği sahte sunucu senaryoları.
-// Sahte sunucu tarayıcıda çalışır. Playwright'ın `page.route` yöntemi bu istekleri görmez.
-// Bu yüzden test, sayfa açılmadan önce `sessionStorage` içine bir senaryo adı yazar. Örnek:
+// Mock server scenarios chosen by browser tests.
+// The mock server runs in the browser. Playwright's `page.route` does not see these requests.
+// So the test writes a scenario name to `sessionStorage` before the page opens. Example:
 //   await page.addInitScript(() => sessionStorage.setItem('atonota.mock-senaryo', 'cikis-hatasi'));
-// Sahte sunucu açılırken bu adı okur. Bu dosya yalnız sahte sunucuyla pakete girer.
+// The mock server reads this name on start. This file is bundled only with the mock server.
 import { PANEL_ROLE_PROFILES, sampleSecondOpenLeave } from './fixtures';
 import { type LogoutOutcome, mockState } from './handlers';
 
@@ -11,41 +11,41 @@ export const MOCK_SCENARIO_KEY = 'atonota.mock-senaryo';
 const SCENARIOS: Record<string, () => void> = {
   'cikis-hatasi': () => setLogout('failure'),
   'cikis-yabanci-adres': () => setLogout('foreign_url'),
-  // Oturum kapalı başlar. Giriş ekranı, "AtonotA Login" düğmesi ve açık platformlar görünür.
+  // Starts signed out. The sign-in screen, the "AtonotA Login" button and enabled platforms show.
   'oturum-kapali': () => {
     mockState.signedIn = false;
   },
-  /** Sağlayıcı kaydetme ve deneme uçları hız sınırı (429 `gateway_busy`) verir. */
+  /** The provider save and check endpoints return a rate limit (429 `gateway_busy`). */
   'saglayici-mesgul': () => {
     mockState.providerBusy = true;
   },
-  // Oturum kapalıdır ve açık platform yoktur. Yalnız AtonotA Login düğmesi görünür.
+  // Signed out with no enabled platform. Only the AtonotA Login button shows.
   'platform-yok': () => {
     mockState.signedIn = false;
     mockState.loginProviders = [];
   },
-  // Dört panel rolü (AJA-831). Senaryo açılış verisindeki rolleri ve okunabilen türleri değiştirir.
+  // Four panel roles (AJA-831). The scenario changes the boot data roles and the readable types.
   'rol-tenant-admin': () => setRole('Tenant Admin'),
   'rol-tenant-admin-assistant': () => setRole('Tenant Admin Assistant'),
   'rol-reseller-admin': () => setRole('Reseller Admin'),
   'rol-reseller-assistant': () => setRole('Reseller Assistant'),
-  // Ana sayfada iki bekleyen izin talebi vardır.
+  // The home page has two pending leave requests.
   'ana-sayfa-iki-bekleyen': () => {
     mockState.leaves.set(sampleSecondOpenLeave.name, { ...sampleSecondOpenLeave });
   },
-  // Ana sayfada bekleyen izin talebi yoktur. Açık başvurular listeden çıkar.
+  // The home page has no pending leave requests. Open applications are removed from the list.
   'ana-sayfa-bos': () => {
     for (const leave of [...mockState.leaves.values()]) {
       if (leave.status === 'Open') mockState.leaves.delete(leave.name);
     }
   },
-  /** Ana sayfa özet ucu sunucu hatası (500) verir. */
+  /** The home page summary endpoint returns a server error (500). */
   'ana-sayfa-hata': () => {
     mockState.home.failure = true;
   },
   /**
-   * Özet bekleyen taleplere eski bir sürüm yazar. Kayıt bu arada değişmiş gibidir.
-   * Bu sürümle gelen onay ya da ret isteği çakışma (417 `TimestampMismatchError`) alır.
+   * The summary gives pending requests an old version, as if the record changed meanwhile.
+   * An approve or reject request with this version gets a conflict (417 `TimestampMismatchError`).
    */
   'ana-sayfa-eski-surum': () => {
     mockState.home.staleVersions = true;
@@ -63,7 +63,10 @@ function setLogout(outcome: LogoutOutcome): void {
   mockState.logoutOutcome = outcome;
 }
 
-/** Oturum deposundaki senaryo adını okur. Depo yoksa ya da erişilemezse `null` döner. */
+/**
+ * Reads the scenario name from session storage. Returns `null` if storage is missing or
+ * unavailable.
+ */
 export function readMockScenario(): string | null {
   try {
     return globalThis.sessionStorage?.getItem(MOCK_SCENARIO_KEY) ?? null;
@@ -72,7 +75,7 @@ export function readMockScenario(): string | null {
   }
 }
 
-/** Senaryoyu uygular. Ad tanınırsa `true` döner. Bilinmeyen ad yok sayılır. */
+/** Applies the scenario. Returns `true` if the name is known. Unknown names are ignored. */
 export function applyMockScenario(name: string | null): boolean {
   const apply = name ? SCENARIOS[name] : undefined;
   if (!apply) return false;

@@ -21,7 +21,7 @@ function feed(state: FlowState, ...events: string[]): FlowState {
   return events.reduce(receiveServerEvent, state);
 }
 
-/** "İşlem yap" kipinde akışı onay adımına kadar götürür. */
+/** Drives the flow up to the approval step in `act` mode. */
 function atApproval(): FlowState {
   return feed(setFlowMode(createFlow(), 'act'), step('plan'), step('preview'), step('approval'));
 }

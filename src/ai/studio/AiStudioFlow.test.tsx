@@ -16,8 +16,8 @@ import { AiStudio } from './AiStudio';
 import { createFlowDemoTransport } from './flowDemo';
 
 /*
- * Akışı ekrana bağlama testleri (AJA-1159).
- * Kip seçici, adım yüzeyleri, sunucu araç olayı, R3 onayı ve kaldırılan öğeler.
+ * Tests that bind the flow to the screen (AJA-1159).
+ * Mode picker, step surfaces, server tool event, R3 approval and removed items.
  */
 
 const defaultAsyncTimeout = getConfig().asyncUtilTimeout;
@@ -48,14 +48,14 @@ async function send(user: ReturnType<typeof setupUser>, text: string) {
   await user.click(screen.getByRole('button', { name: 'Mesajı gönder' }));
 }
 
-/** Kip etiketine tıklar. antd radyo girişi görünmezdir; kullanıcı etikete basar. */
+/** Clicks the mode label. The antd radio input is invisible, so the user clicks the label. */
 async function pickMode(user: ReturnType<typeof setupUser>, name: string) {
   const label = screen.getByRole('radio', { name }).closest('label');
   if (!label) throw new Error(`${name} etiketi yok`);
   await user.click(label);
 }
 
-/** Sahte akış: test bitince durur. */
+/** Mock stream that stops when the test ends. */
 function demo(): AgentTransport {
   const base = createFlowDemoTransport({ delayMs: 1 });
   return (request, signal) => {
@@ -65,7 +65,7 @@ function demo(): AgentTransport {
   };
 }
 
-/** Olayları elle gönderen taşıyıcı. Test her satırı ne zaman göndereceğine kendisi karar verir. */
+/** Transport that sends events by hand. The test decides when to send each line. */
 function manual() {
   const requests: AgentRequest[] = [];
   let push: (event: unknown) => void = () => undefined;
@@ -145,7 +145,7 @@ describe('Yardımcı akışı ekranda', { timeout: 30_000 }, () => {
 
     await send(user, 'Siparişleri tara');
     await waitFor(() => expect(m.requests).toHaveLength(1));
-    // Sunucu adım göndermeden ekran niyet adımında kalır.
+    // Until the server sends a step, the screen stays at the intent step.
     expect(within(flow).getByText('Niyet').closest('li')).toHaveAttribute('aria-current', 'step');
 
     m.push({ type: 'step', step: 'plan' });
@@ -197,7 +197,7 @@ describe('Yardımcı akışı ekranda', { timeout: 30_000 }, () => {
     await waitFor(() => expect(log.querySelector('[data-genui="result"]')).not.toBeNull());
     const apply = within(log).getByRole('region', { name: 'Uygulama' });
     expect(apply.querySelector('[data-genui="result"]')).not.toBeNull();
-    // Onaydan sonraki araç olayı plan başlığına değil, uygulama adımına aittir.
+    // A tool event after approval belongs to the apply step, not to the plan heading.
     expect(apply.querySelector('[data-genui="events"]')).not.toBeNull();
     expect(within(log).getAllByRole('region', { name: 'Plan' })).toHaveLength(1);
     const flow = screen.getByRole('list', { name: 'Akış adımları' });

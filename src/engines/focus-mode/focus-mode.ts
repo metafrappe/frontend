@@ -1,8 +1,8 @@
 /**
- * Görünür odak modu. Kural: mod kapalı başlar. Yalnız Tab ve Shift+Tab açar.
- * Ok tuşları, Escape, yazma ve caret modu açmaz. `pointerdown` ve `touchstart` yalnız
- * görsel modu kapatır. Gösterge CSS'te `html[data-focus-mode="keyboard"]` ile açılır.
- * Odak yönetimi değişmez; yalnız sunum değişir.
+ * Visible focus mode. Rule: the mode starts off. Only Tab and Shift+Tab turn it on.
+ * Arrow keys, Escape, typing and caret mode do not turn it on. `pointerdown` and `touchstart`
+ * only turn off the visual mode. CSS shows the indicator via `html[data-focus-mode="keyboard"]`.
+ * Focus management does not change; only the presentation changes.
  */
 export const FOCUS_MODE_ATTR = 'data-focus-mode';
 export const FOCUS_MODE_KEYBOARD = 'keyboard';
@@ -36,7 +36,7 @@ function onPointer(): void {
   setKeyboardFocusMode(false);
 }
 
-/** Motoru başlatır. Dönen işlev motoru durdurur. Birden çok çağrı tek dinleyici seti kullanır. */
+/** Starts the engine. The returned function stops it. Multiple calls share one listener set. */
 export function startFocusMode(doc: Document = document): () => void {
   refCount += 1;
   if (!detach) {

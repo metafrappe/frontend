@@ -6,14 +6,14 @@ import { useMemo } from 'react';
 import { aiCssVars } from '@/ai/tokens';
 
 /**
- * AI alanının CSS değişkenleri.
+ * CSS variables of the AI area.
  *
- * Ortak değerler kopyalanmaz. Stiller onları doğrudan foundation
- * değişkenlerinden okur: `--font-ui`, `--font-code`, `--font-default`,
+ * Shared values are not copied. Styles read them straight from the foundation
+ * variables: `--font-ui`, `--font-code`, `--font-default`,
  * `--font-min`, `--radius`, `--card-radius`, `--color-primary`, `--btn-h-sm`,
- * `--motion-easing-standard` ve `--motion-duration-focus-dim`.
+ * `--motion-easing-standard` and `--motion-duration-focus-dim`.
  *
- * Renkler ve boşluklar çalışan antd temasından okunur. Temayı foundation kurar.
+ * Colours and spacing are read from the running antd theme. The foundation sets up the theme.
  */
 export function useGenuiVars(): CSSProperties {
   const { token } = theme.useToken();
@@ -54,12 +54,12 @@ export function useGenuiVars(): CSSProperties {
 }
 
 /**
- * GenUI içindeki giriş alanı ve açılır listenin odak teması.
+ * Focus theme for inputs and selects inside GenUI.
  *
- * Genel kural: çevreleyen odak yasak. antd odakta dört kenarı vurgu rengine
- * boyar ve halka gölgesi çizer. Bu tema odak kenar rengini dinlenme rengine
- * eşitler ve halkayı kapatır. Değerler çalışan temanın tokenlarından gelir.
- * Klavye göstergesi (alt kenarda tek çizgi) `genui.css` dosyasındadır.
+ * General rule: surrounding focus is forbidden. On focus antd paints all four edges
+ * in the accent colour and draws a ring shadow. This theme sets the focus border colour
+ * to the resting colour and turns the ring off. Values come from the running theme's tokens.
+ * The keyboard indicator (a single line on the bottom edge) is in `genui.css`.
  */
 export function useGenuiFocusTheme(): ThemeConfig {
   const { token } = theme.useToken();

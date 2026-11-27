@@ -2,8 +2,8 @@ import { parseAgentEvent } from './events';
 import type { AgentStep } from './types';
 
 /**
- * Altı adımlı akış (AJA-880 taslağı, 3. sürüm).
- * Adımlar yalnız ileri gider. Ekran bu durumu okur, kendisi adım üretmez.
+ * Six-step flow (AJA-880 draft, version 3).
+ * Steps only move forward. The screen reads this state. It does not create steps itself.
  */
 export const FLOW_STEPS = ['intent', 'plan', 'preview', 'approval', 'apply', 'undo'] as const;
 export type FlowStep = (typeof FLOW_STEPS)[number];
@@ -17,7 +17,7 @@ export const STEP_LABELS: Record<FlowStep, string> = {
   undo: 'Geri alma önerisi',
 };
 
-/** Kipler. Yalnız `act` ("İşlem yap") kipi değişiklik yapabilir. */
+/** Modes. Only the `act` mode can make changes. */
 export const AGENT_MODES = ['ask', 'search', 'draft', 'act'] as const;
 export type AgentMode = (typeof AGENT_MODES)[number];
 
@@ -31,17 +31,17 @@ export const MODE_LABELS: Record<AgentMode, string> = {
 export interface FlowState {
   mode: AgentMode;
   step: FlowStep;
-  /** Yalnız sunucu olaylarından kurulur. Aynı anahtar bir kez yer alır. */
+  /** Built only from server events. Each key appears once. */
   tools: AgentStep[];
-  /** Kullanıcı onayı. Yalnız `approval` adımında verilir. */
+  /** User approval. Given only at the `approval` step. */
   approved: boolean;
-  /** Arka ucun bildirdiği geri alma ucu. Yoksa geri alma adımı açılmaz. */
+  /** Undo endpoint reported by the backend. Without it the undo step does not open. */
   undoEndpoint?: string;
 }
 
 /**
- * Akışı ilgilendiren sunucu olayları.
- * Nesneler izinli alanlardan yeniden kurulur. Güven yüzdesi ve iç düşünce taşınmaz.
+ * Server events that concern the flow.
+ * Objects are rebuilt from allowed fields. Confidence percentages and inner thoughts are not carried.
  */
 export type FlowEvent =
   | {
@@ -64,7 +64,7 @@ function isFlowStep(value: unknown): value is FlowStep {
   return typeof value === 'string' && (FLOW_STEPS as readonly string[]).includes(value);
 }
 
-/** Geri alma ucu kendi arka ucumuzdaki göreli yoldur. Başka siteye giden adres kabul edilmez. */
+/** The undo endpoint is a relative path on our own backend. An address to another site is rejected. */
 function isUndoEndpoint(value: unknown): value is string {
   return (
     typeof value === 'string' &&
@@ -76,8 +76,8 @@ function isUndoEndpoint(value: unknown): value is string {
 }
 
 /**
- * Tek bir SSE `data` satırını doğrular.
- * Yalnız metin satırı okunur. Geçersiz ya da tanınmayan olay `null` döner.
+ * Validates a single SSE `data` line.
+ * Only text lines are read. An invalid or unrecognised event returns `null`.
  */
 export function parseFlowEvent(data: unknown): FlowEvent | null {
   if (typeof data !== 'string') return null;
@@ -113,14 +113,14 @@ export function createFlow(mode: AgentMode = 'ask'): FlowState {
   return { mode, step: 'intent', tools: [], approved: false };
 }
 
-/** Kip yalnız niyet adımında değişir. */
+/** The mode changes only at the intent step. */
 export function setFlowMode(state: FlowState, mode: AgentMode): FlowState {
   if (state.step !== 'intent' || state.mode === mode) return state;
   if (!(AGENT_MODES as readonly string[]).includes(mode)) return state;
   return { ...state, mode };
 }
 
-/** Kullanıcı onayı. Yalnız "İşlem yap" kipinde ve onay adımında geçerlidir. */
+/** User approval. Valid only in `act` mode and at the approval step. */
 export function approveFlow(state: FlowState): FlowState {
   if (state.mode !== 'act' || state.step !== 'approval' || state.approved) return state;
   return { ...state, approved: true };
@@ -129,10 +129,10 @@ export function approveFlow(state: FlowState): FlowState {
 function canEnter(state: FlowState, target: FlowStep): boolean {
   if (FLOW_STEPS.indexOf(target) <= FLOW_STEPS.indexOf(state.step)) return false;
   if (ACT_ONLY.has(target) && state.mode !== 'act') return false;
-  // Onay adımı önizlemesiz açılmaz. Uygulama onaysız açılmaz.
+  // The approval step does not open without a preview. Apply does not open without approval.
   if (target === 'approval') return state.step === 'preview';
   if (target === 'apply') return state.step === 'approval' && state.approved;
-  // Geri alma adımını yalnız `undo` olayı açar. Uç bilinmeden açılmaz.
+  // Only the `undo` event opens the undo step. It does not open without a known endpoint.
   if (target === 'undo') return false;
   return true;
 }
@@ -153,8 +153,8 @@ function upsertTool(tools: AgentStep[], event: Extract<FlowEvent, { type: 'tool'
 }
 
 /**
- * Sunucudan gelen tek bir satırı akışa uygular.
- * Araç olayı listeye yalnız buradan girer. İstemci araç olayı üretmez.
+ * Applies a single line from the server to the flow.
+ * Tool events enter the list only here. The client does not create tool events.
  */
 export function receiveServerEvent(state: FlowState, data: string): FlowState {
   const event = parseFlowEvent(data);

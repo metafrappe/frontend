@@ -9,11 +9,11 @@ export const EXPIRED_NOTE = 'Bu öneri artık onaylanamaz. Asistandan yeni öner
 export const USED_NOTE = 'Bu onay daha önce gönderildi. İşlem yeniden yapılmadı.';
 
 /**
- * Onay ve form bloklarının karar durumu.
+ * Decision state of confirm and form blocks.
  *
- * Karar iki yerden gelir. Birincisi sohbet geçmişidir (`decided`). Blok yeniden
- * çizilse de karar kaybolmaz. İkincisi bu çizimde verilen karardır.
- * Sohbet kararı almazsa neden ekranda yazar.
+ * A decision comes from two places. The first is chat history (`decided`), so the
+ * decision survives a redraw. The second is a decision made in this render.
+ * If the chat does not take the decision, the reason is shown on screen.
  */
 export function useDecision(decided: GenUIDecision | undefined) {
   const [local, setLocal] = useState<GenUIDecision | null>(null);
@@ -32,7 +32,7 @@ export function useDecision(decided: GenUIDecision | undefined) {
   return {
     decision,
     notice,
-    /** Karar verildiyse ya da onay daha önce kullanıldıysa blok kilitlidir. */
+    /** The block is locked if a decision was made or the approval was already used. */
     locked: decision !== null || notice === 'used',
     apply,
   };

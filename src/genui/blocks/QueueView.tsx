@@ -3,7 +3,7 @@ import { useId } from 'react';
 import type { QueueBlock } from '../types';
 import { RISK_LABEL, RISK_TONE } from './SurfaceLabels';
 
-/** Karar kuyruğu: kullanıcının kararını bekleyen işler. Salt okunurdur. */
+/** Decision queue: items waiting for the user's decision. Read-only. */
 export function QueueView({ block }: { block: QueueBlock }) {
   const id = useId();
   const count = block.items.length;

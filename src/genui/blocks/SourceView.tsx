@@ -4,7 +4,7 @@ import { useId } from 'react';
 import type { SourceBlock } from '../types';
 import { SourceList } from './SourceList';
 
-/** Kaynak kartı: kaynağın adı ve bağlantısı. */
+/** Source card: the source's name and link. */
 export function SourceView({ block }: { block: SourceBlock }) {
   const id = useId();
   return (

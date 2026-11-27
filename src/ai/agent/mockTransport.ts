@@ -1,17 +1,17 @@
 /**
- * Sahte ajan sunucusu. `src/mocks/` hazır olunca oradaki sunucu kullanılacak.
+ * Mock agent server. Once `src/mocks/` is ready, the server there will be used.
  *
- * Gerçek sunucuyla aynı SSE olaylarını üretir. Arayüz bu yanıtı açıkça
- * "Sahte sunucu" diye etiketler (AX-7). Hiçbir gerçek işlem yapmaz.
+ * It produces the same SSE events as the real server. The UI clearly labels this
+ * reply as "Sahte sunucu" (mock server) (AX-7). It performs no real operations.
  */
 import { encodeAgentEvent } from './events';
 import type { AllowedTool } from './tools';
 import type { AgentEvent, AgentRequest, AgentSource, AgentTransport } from './types';
 
-/** Sahte sunucunun ekrandaki adı (AX-7). */
+/** On-screen name of the mock server (AX-7). */
 export const MOCK_SOURCE: AgentSource = { label: 'Sahte sunucu', simulated: true };
 
-/** Araç kimliği ve ekranda görünen başlık. */
+/** Tool ID and the title shown on screen. */
 type PlannedTool = [AllowedTool, string];
 
 interface Plan {
@@ -210,8 +210,8 @@ function planFor(
       ],
     };
   }
-  // Yeniden üretme isteği tanınan bir soru değilse son yanıt yeniden yazılır.
-  // Sahte sunucu geçmişteki onaya bakmaz. Sözleşme gereği onay yalnız message.action alanındadır.
+  // If a regenerate request is not a recognised question, the last reply is rewritten.
+  // The mock server ignores approvals in history. By contract, approval is only in message.action.
   const previous = request.intent === 'regenerate' ? lastAssistantText(request.history) : undefined;
   if (previous) {
     return {
@@ -236,8 +236,8 @@ function planFor(
 }
 
 /**
- * Her yeni işlem için yeni onay kimliği üretir. Sözleşme gereği gerçek sunucu da
- * aynı soru yeniden sorulsa bile yeni kimlik verir.
+ * Creates a new approval ID for each new operation. By contract, the real server also
+ * gives a new ID even when the same question is asked again.
  */
 export function createIdFactory(): (prefix: string) => string {
   let next = 0;
@@ -247,7 +247,7 @@ export function createIdFactory(): (prefix: string) => string {
   };
 }
 
-/** Planı olay sırasına çevirir: araç olayları, metin parçaları, bloklar, bitiş. */
+/** Turns the plan into an event sequence: tool events, text chunks, blocks, end. */
 export function planEvents(
   request: AgentRequest,
   received: ReadonlySet<string> = new Set(),
@@ -268,9 +268,9 @@ export function planEvents(
 }
 
 export interface MockTransportOptions {
-  /** İki olay arasındaki bekleme, ms. */
+  /** Wait between two events, ms. */
   delayMs?: number;
-  /** Testler için olay listesini değiştirir. */
+  /** Replaces the event list for tests. */
   events?: (
     request: AgentRequest,
     received: ReadonlySet<string>,
@@ -279,9 +279,9 @@ export interface MockTransportOptions {
 }
 
 /**
- * Onay tek kullanımlıktır. Sahte sunucu aldığı onay kimliklerini tutar.
- * Aynı kimlikle ikinci onay gelirse işlemi yapmaz ve hata döner.
- * Gerçek sunucu da aynı kuralı uygulamalıdır.
+ * Approval is single-use. The mock server keeps the approval IDs it receives.
+ * If a second approval arrives with the same ID, it does not run the operation and returns an error.
+ * The real server must apply the same rule.
  */
 function admit(request: AgentRequest, received: Set<string>): AgentEvent[] | null {
   const action = request.message.action;

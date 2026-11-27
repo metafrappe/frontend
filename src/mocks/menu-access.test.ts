@@ -29,10 +29,11 @@ afterAll(() => mockServer.close());
 describe('sahte sunucu: menü yetkisi (G-94)', () => {
   it('örnek kullanıcı modül sayfalarının okuduğu türleri okuyabilir', async () => {
     expect(requiredDocTypes.length).toBeGreaterThan(0);
-    // Menü modül türlerini tanım ucuna sorar. Bayi bağ türü sorulmaz (AJA-945).
+    // The menu asks the definition endpoint about module types. The reseller link type is not asked
+    // (AJA-945).
     expect([...MENU_READABLE_DOCTYPES].sort()).toEqual([...requiredDocTypes].sort());
     expect(RESELLER_READABLE_DOCTYPES).toEqual([]);
-    // Gerçek sunucu gibi tanım ucu bağ türüne 403 verir.
+    // Like the real server, the definition endpoint returns 403 for the link type.
     expect((await fetch(metaUrl('Reseller Customer Link'))).status).toBe(403);
     for (const doctype of MENU_READABLE_DOCTYPES) {
       const response = await fetch(metaUrl(doctype));

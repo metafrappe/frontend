@@ -1,4 +1,4 @@
-// G-98: the sample user management endpoints of the "Yönetim" page.
+// G-98: the sample user management endpoints of the admin page.
 // Shapes follow `platform_core.api.identity.invite_user`, `set_user_role_profiles` and the
 // Frappe record reads (`/api/v2/document`, `/api/resource`). The names are sample labels.
 import { http, HttpResponse, type JsonBodyType } from 'msw';

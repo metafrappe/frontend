@@ -1,6 +1,6 @@
 /**
- * Semantik tasarım tokenları. Her değer kaynak dosyadan türetilir.
- * Burada yeni görsel değer icat edilmez; yalnız kaynaktaki kararlar adlandırılır.
+ * Semantic design tokens. Every value is derived from the source file.
+ * No new visual value is invented here; only the source decisions are named.
  */
 import { theme as antdThemeApi } from 'antd';
 
@@ -19,32 +19,32 @@ const s = designSource;
 export const SIZE_KEYS: readonly SizeKey[] = ['sm', 'md', 'lg'];
 
 export const fontFamily = {
-  /** Outfit kalıcı karardır. Değişken font dosyası "Outfit Variable" adıyla gelir. */
+  /** Outfit is a standing decision. The variable font file comes with the name "Outfit Variable". */
   ui: "'Outfit Variable', Outfit, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
   code: "'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
 } as const;
 
 /**
- * Yazı boyutları. En küçük metin 14 px, gövde 16 px (AJA-997, model 6. bölüm).
- * 12, 10 ve 9 px istisnaları kaldırıldı. Başlıklar kaynaktaki `typography.headings` değeridir.
+ * Font sizes. Smallest text 14 px, body 16 px (AJA-997, model section 6).
+ * The 12, 10 and 9 px exceptions were removed. Headings use the source `typography.headings` value.
  */
 export const typography = {
   min: s.typography.min,
   default: s.typography.default,
   headings: s.typography.headings,
-  /** Satır kutusu = metin + 8 px. */
+  /** Line box = text + 8 px. */
   lineBoxFor: (fontSize: number): number => fontSize + 8,
-  /** antd oran ister: satır kutusu / metin. */
+  /** antd wants a ratio: line box / text. */
   lineHeightRatioFor: (fontSize: number): number => (fontSize + 8) / fontSize,
 } as const;
 
 /**
- * Koyu temada birincil düğme zemini saydam değildir (türetilmiş karar 1).
- * Kaynak karar zemini #00aacc %14 (hover %22, basılı %28) olarak yarı saydam verir. Yarı saydam
- * zeminde kontrast alttaki yüzeye bağlı kalır; antd pencere ve çekmeceyi yükseltilmiş zeminde
- * (#2A2A30) çizer ve orada 4.5:1 sağlanmaz. WCAG 2.2 AA önce gelir. Bu yüzden kaynaktaki ton,
- * yerleşim zemini (#17171A) üzerine bindirilir ve düz renk olarak kullanılır. Böylece kontrast
- * yerleşim, panel ve yükseltilmiş zeminde aynıdır.
+ * In the dark theme the primary button background is not transparent (derived decision 1).
+ * The source decision gives a semi-transparent background: #00aacc at 14% (hover 22%, pressed 28%).
+ * On a semi-transparent background the contrast depends on the surface below; antd draws modals and
+ * drawers on the elevated background (#2A2A30), where 4.5:1 is not met. WCAG 2.2 AA comes first.
+ * So the source tint is laid over the layout background (#17171A) and used as a solid colour.
+ * This keeps the contrast the same on the layout, panel and elevated backgrounds.
  */
 const DARK_PRIMARY_BG = blendOver(s.primary.color, s.primary.dark.background, s.darkPalette.layout);
 const DARK_PRIMARY_BG_HOVER = blendOver(
@@ -53,7 +53,7 @@ const DARK_PRIMARY_BG_HOVER = blendOver(
   s.darkPalette.layout,
 );
 
-/** Dinlenme metni: düz zemin üzerinde 4.5:1 veren en küçük opaklık (kaynak %85'ten başlar). */
+/** Resting text: the lowest opacity giving 4.5:1 on the solid background (the source starts at 85%). */
 const DARK_TEXT_OPACITY = minAlphaForContrast({
   text: s.primary.dark.text,
   startAlpha: s.primary.dark.opacity,
@@ -63,9 +63,10 @@ const DARK_TEXT_OPACITY = minAlphaForContrast({
 });
 
 /**
- * Basılı durum zemini (türetilmiş karar 6). Kaynak %28 der; %100 metinle bile 4.09:1 kalır.
- * Yerleşim zeminine bindirilmiş tonun %100 metinle 4.5:1 verdiği en büyük opaklığa (≤ kaynak) iner.
- * Basılı durumda metin fare ve klavyede %100 olur; CSS basılı kuralı rengi de verir.
+ * Pressed state background (derived decision 6). The source says 28%; even with 100% text that gives
+ * only 4.09:1. It drops to the highest opacity (≤ source) at which the tint over the layout background
+ * gives 4.5:1 with 100% text. In the pressed state text is 100% for mouse and keyboard; the CSS
+ * pressed rule also sets the colour.
  */
 function maxBackgroundAlphaForContrast(startAlpha: number, surface: string): number {
   let alpha = Math.round(startAlpha * 100);
@@ -83,15 +84,15 @@ export const primary = {
   color: s.primary.color,
   hover: s.primary.hover,
   active: s.primary.active,
-  /** Açık tema: zemin birincil renk, metin siyah %85, hover %100. */
+  /** Light theme: primary colour background, text 85% black, hover 100%. */
   light: {
     text: hexToRgba(s.primary.light.text, s.primary.light.opacity),
     textHover: hexToRgba(s.primary.light.text, s.primary.light.hoverOpacity),
   },
   /**
-   * Koyu tema: zemin kaynaktaki tonun (%14, hover %22, basılı ≤ %28) yerleşim zeminine bindirilmiş
-   * düz rengidir. Dinlenme metni kaynakta %85'tir; AA (4.5:1) için gereken en küçük değere çıkar.
-   * Hover ve basılı metin %100'dür (klavyeyle basılı durum dahil).
+   * Dark theme: the background is the solid colour of the source tint (14%, hover 22%, pressed ≤ 28%)
+   * laid over the layout background. Resting text is 85% in the source; it rises to the lowest value
+   * needed for AA (4.5:1). Hover and pressed text is 100% (including pressed via keyboard).
    */
   dark: {
     textOpacity: DARK_TEXT_OPACITY,
@@ -105,15 +106,15 @@ export const primary = {
   },
 } as const;
 
-/** Kontrol kenarlık kalınlığı. antd varsayılanı 1 px; kaynaktaki padding hesabı bunu düşer. */
+/** Control border width. antd default is 1 px; the source padding calculation subtracts it. */
 export const border = {
   width: 1,
 } as const;
 
 /**
- * Açık ve koyu tema zeminleri, metin, çizgi ve durum renkleri. İki tema aynı adları taşır.
- * Açık zeminler `lightPalette`, koyu zeminler `darkPalette`, metin ve durum renkleri `textPalette` kaynağındandır.
- * `panelAlt` ikinci yüzeydir; koyu temada yükseltilmiş zemindir. `ink` vurgu ve bağlantı metnidir.
+ * Light and dark theme backgrounds, text, line and status colours. Both themes use the same names.
+ * Light backgrounds come from `lightPalette`, dark ones from `darkPalette`, text and status colours from `textPalette`.
+ * `panelAlt` is the second surface; in the dark theme it is the elevated background. `ink` is accent and link text.
  */
 function paletteFor(mode: ThemeMode) {
   const dark = mode === 'dark';
@@ -130,8 +131,8 @@ function paletteFor(mode: ThemeMode) {
       }
     : { ...s.lightPalette };
   const tint = hexToRgba(s.primary.color, text.tintAlpha);
-  // Vurgu metni sayfa, panel, ikinci yüzey ve vurgu zemini (tint) üstünde en az 4.5:1 verir.
-  // Kaynak değer başlangıçtır; gerekirse açık temada koyulaşır, koyu temada açılır.
+  // Accent text gives at least 4.5:1 on the page, panel, second surface and accent background (tint).
+  // The source value is the start; if needed it darkens in the light theme and lightens in the dark theme.
   const inkSurfaces = [surfaces.layout, surfaces.panel, surfaces.panelAlt, surfaces.elevated];
   const allSurfaces = [...inkSurfaces, ...inkSurfaces.map((bg) => blendOver(s.primary.color, text.tintAlpha, bg))];
   const adjust = dark ? lightenToContrast : darkenToContrast;
@@ -143,7 +144,7 @@ function paletteFor(mode: ThemeMode) {
     line: text.line,
     ink,
     tint,
-    /** Vurgu metninin denendiği zeminler; test aynı listeyi kullanır. */
+    /** Backgrounds the accent text is checked on; the test uses the same list. */
     inkSurfaces: allSurfaces,
     ok: text.ok,
     warn: text.warn,
@@ -157,19 +158,19 @@ export const palette = {
   dark: paletteFor('dark'),
 } as const;
 
-/** Açık tema sayfa zemini kaynaktaki açık paletten gelir. Kontrast bu zemine göre hesaplanır. */
+/** The light theme page background comes from the source light palette. Contrast is measured on it. */
 const LIGHT_SURFACES: string[] = palette.light.inkSurfaces;
 const darkenOnLight = (c: string) => LIGHT_SURFACES.reduce((acc, bg) => darkenToContrast(acc, bg), c);
 
 /**
- * Metin bağlantısı renkleri. Koyu temada birincil renk yeterli kontrast verir.
- * Açık temada birincil renk beyaz üzerinde 2.76:1 kalır; WCAG 2.2 AA 4.5:1 ister.
- * Bu yüzden açık tema bağlantı rengi birincil renkten koyulaştırılarak türetilir.
- * Butonlar ve zeminler birincil rengi aynen kullanır.
+ * Text link colours. In the dark theme the primary colour gives enough contrast.
+ * In the light theme the primary colour gives only 2.76:1 on white; WCAG 2.2 AA needs 4.5:1.
+ * So the light theme link colour is derived by darkening the primary colour.
+ * Buttons and backgrounds use the primary colour as is.
  */
 export const link = {
   light: {
-    /** Açık temada #00aacc yazı rengi olmaz. Bağlantı kaynaktaki koyu mavi vurgu rengidir (AJA-997). */
+    /** No #00aacc text colour in the light theme. Links use the source dark blue accent colour (AJA-997). */
     color: palette.light.ink,
     hover: darkenOnLight(s.primary.hover),
     active: darkenOnLight(s.primary.active),
@@ -180,25 +181,27 @@ export const link = {
 const WHITE = '#ffffff';
 
 /**
- * Tehlike düğmesi kontrast basamakları: normal, üzerine gelme ve basılı durum en az bu oranı verir.
- * Düz düğmede ölçü beyaz metinle zemindir; diğer türlerde yazı rengiyle en kötü zemindir.
+ * Danger button contrast steps: normal, hover and pressed states give at least this ratio.
+ * For the solid button it is measured as white text on the background; for other variants as the
+ * text colour on the worst background.
  */
 export const DANGER_CONTRAST = { normal: 4.5, hover: 5.2, active: 6 } as const;
 
 /**
- * Tehlike (danger) rengi. Kaynak dosyada tehlike rengi yoktur; antd'nin tema hata rengi kullanılır.
- * antd kırmızısı beyaz metinle açık temada 3.27:1, koyu temada 4.24:1 verir; WCAG 2.2 AA 4.5:1 ister.
+ * Danger colour. The source file has no danger colour; antd's theme error colour is used.
+ * antd red with white text gives 3.27:1 in the light theme and 4.24:1 in the dark theme; WCAG 2.2 AA needs 4.5:1.
  *
- * İki ayrı türetme vardır, çünkü antd aynı `colorError` tokenını iki işte kullanır:
- * - Düz (solid) düğme zemini: antd rengi beyaz metinle 4.5:1 verene kadar koyulaştırılır (ton korunur).
- *   Üzerine gelme ve basılı zemin aynı tonun daha koyu basamaklarıdır (5.2:1 ve 6:1). Metin beyazdır.
- *   Bu değerler CSS değişkenleriyle (`--danger-bg*`) yalnız düz düğmeye uygulanır.
- * - Yazı rengi (kenarlıklı, kesikli, metin, bağlantı, dolgulu ve hayalet tür): aynı antd rengi, yazının
- *   durabileceği her zeminde 4.5:1 verene kadar açık temada koyulaştırılır, koyu temada açılır.
- *   Zeminler yerleşim, panel, yükseltilmiş zemin ve antd'nin kırmızımsı durum zeminleridir
- *   (`colorErrorBg*`, metin ve dolgulu türün üzerine gelme ve basılı zemini). Üzerine gelme ve basılı
- *   yazı aynı yönde 5.2:1 ve 6:1 basamağıdır. Bu değerler antd Button `colorError*` tokenlarına gider.
- * Tehlikeli birincil düğme birincil düğme kurallarının dışındadır (`src/design/css-variables.ts`).
+ * There are two separate derivations, because antd uses the same `colorError` token for two jobs:
+ * - Solid button background: the antd colour is darkened until it gives 4.5:1 with white text (hue kept).
+ *   Hover and pressed backgrounds are darker steps of the same hue (5.2:1 and 6:1). Text is white.
+ *   These values apply only to the solid button, via CSS variables (`--danger-bg*`).
+ * - Text colour (outlined, dashed, text, link, filled and ghost variants): the same antd colour is
+ *   darkened in the light theme and lightened in the dark theme until it gives 4.5:1 on every
+ *   background the text can sit on. These are the layout, panel, elevated background and antd's
+ *   reddish status backgrounds (`colorErrorBg*`, the hover and pressed backgrounds of the text and
+ *   filled variants). Hover and pressed text are the 5.2:1 and 6:1 steps in the same direction.
+ *   These values go to the antd Button `colorError*` tokens.
+ * The dangerous primary button is outside the primary button rules (`src/design/css-variables.ts`).
  */
 function dangerFor(mode: ThemeMode) {
   const t = antdThemeApi.getDesignToken({
@@ -212,20 +215,20 @@ function dangerFor(mode: ThemeMode) {
       : [s.lightPalette.panel, s.lightPalette.layout, s.lightPalette.panelAlt];
   surfaces.push(t.colorErrorBg, t.colorErrorBgHover, t.colorErrorBgActive, t.colorErrorBgFilledHover);
   const adjust = mode === 'dark' ? lightenToContrast : darkenToContrast;
-  // Her zemin için sırayla ayarlanır; yön tek olduğundan son renk bütün zeminlerde sınırı sağlar.
+  // Adjusted for each background in turn; since the direction is one-way, the last colour meets the limit on all of them.
   const ink = (minRatio: number) => surfaces.reduce((c, bg) => adjust(c, bg, minRatio), seed);
   return {
-    /** Düz düğme metni. */
+    /** Solid button text. */
     solidText: WHITE,
-    /** Düz düğme zemini: normal, üzerine gelme, basılı. */
+    /** Solid button background: normal, hover, pressed. */
     background,
     backgroundHover: darkenToContrast(background, WHITE, DANGER_CONTRAST.hover),
     backgroundActive: darkenToContrast(background, WHITE, DANGER_CONTRAST.active),
-    /** Yazı rengi (düz olmayan türler): normal, üzerine gelme, basılı. */
+    /** Text colour (non-solid variants): normal, hover, pressed. */
     color: ink(DANGER_CONTRAST.normal),
     colorHover: ink(DANGER_CONTRAST.hover),
     colorActive: ink(DANGER_CONTRAST.active),
-    /** Yazı renginin denendiği zeminler; test aynı listeyi kullanır. */
+    /** Backgrounds the text colour is checked on; the test uses the same list. */
     surfaces,
   };
 }
@@ -236,9 +239,9 @@ export const danger = {
 } as const;
 
 /**
- * Yer tutucu metni. antd varsayılanı siyah %25 ve beyaz %25'tir; AA (4.5:1) sınırının altındadır.
- * Opaklık, giriş zemininde 4.5:1 veren en küçük değere programatik çıkar.
- * Açık temada zemin kaynaktaki açık giriş zeminidir; koyu temada kaynak giriş zemini.
+ * Placeholder text. The antd default is 25% black and 25% white; both are below the AA (4.5:1) limit.
+ * The opacity is raised in code to the lowest value giving 4.5:1 on the input background.
+ * In the light theme the background is the source light input background; in the dark theme the source input background.
  */
 export const placeholder = {
   light: hexToRgba(
@@ -264,11 +267,12 @@ export const placeholder = {
 } as const;
 
 /**
- * Açıklama metni (antd `colorTextDescription`). antd `Result` alt metni ve benzer yardımcı metinler
- * bu rengi kullanır. antd varsayılanı açık temada siyah %45 (yerleşim zemininde 3.29:1), koyu temada
- * beyaz %45'tir (4.47:1); WCAG 2.2 AA 4.5:1 ister. Opaklık, metnin durabileceği her zeminde 4.5:1
- * veren en küçük değere programatik çıkar. Zeminler: açık temada yerleşim, kapsayıcı ve yükseltilmiş
- * zemin (kaynaktaki açık palet); koyu temada kaynak yerleşim, panel ve yükseltilmiş zemini.
+ * Description text (antd `colorTextDescription`). The antd `Result` subtitle and similar helper text
+ * use this colour. The antd default is 45% black in the light theme (3.29:1 on the layout background)
+ * and 45% white in the dark theme (4.47:1); WCAG 2.2 AA needs 4.5:1. The opacity is raised in code to
+ * the lowest value giving 4.5:1 on every background the text can sit on. Backgrounds: in the light
+ * theme the layout, container and elevated backgrounds (source light palette); in the dark theme the
+ * source layout, panel and elevated backgrounds.
  */
 function textDescriptionFor(mode: ThemeMode) {
   const dark = mode === 'dark';
@@ -279,9 +283,9 @@ function textDescriptionFor(mode: ThemeMode) {
   const surfaces: string[] = dark
     ? [s.darkPalette.layout, s.darkPalette.panel, s.darkPalette.elevated]
     : [s.lightPalette.layout, s.lightPalette.panel, s.lightPalette.panelAlt, s.lightPalette.elevated];
-  // antd varsayılan opaklığı (rgba(..., 0.45)) başlangıçtır.
+  // The antd default opacity (rgba(..., 0.45)) is the start.
   const startAlpha = Number(/,\s*([\d.]+)\)$/.exec(t.colorTextDescription)?.[1] ?? 0.45);
-  // Zemin saydamlığı 0: metin doğrudan her zeminin üstündedir.
+  // Background opacity 0: the text sits directly on each background.
   const opacity = minAlphaForContrast({
     text,
     startAlpha,
@@ -353,8 +357,8 @@ export const darkPalette = {
 } as const;
 
 /**
- * Dokunma alanı tokenı. Görünen kontrol boyutundan (`sizes`) ayrıdır.
- * İnce işaretçide en az `fine`, dokunmatik ekranda (`any-pointer: coarse`) en az `coarse` px.
+ * Touch area token. Separate from the visible control size (`sizes`).
+ * At least `fine` px with a fine pointer, at least `coarse` px on touch screens (`any-pointer: coarse`).
  */
 export const hitTarget = {
   fine: s.hitArea.target.fine,
@@ -381,9 +385,9 @@ export const focusDim = {
 } as const;
 
 /**
- * Klavye odak göstergesi. Çevreleyen halka yasaktır; gösterge alt kenarda tek çizgidir.
- * Renk vurgu rengidir: açık temada koyu mavi, koyu temada birincil renk (AJA-997).
- * Kalınlık proje kararıdır (kaynakta tanımlı değil): 2 px.
+ * Keyboard focus indicator. A surrounding ring is forbidden; the indicator is a single line on the bottom edge.
+ * The colour is the accent colour: dark blue in the light theme, the primary colour in the dark theme (AJA-997).
+ * The thickness is a project decision (not defined in the source): 2 px.
  */
 export const focusIndicator = {
   light: { color: palette.light.ink },
@@ -414,11 +418,11 @@ export const dropdown = {
   attachedButton: s.dropdown.attachedButton.value,
 } as const;
 
-/** antd varsayılan takma tokenları: boşluk, katman sırası ve ekran eşikleri. Algoritmadan bağımsızdır. */
+/** antd default alias tokens: spacing, layer order and screen breakpoints. Independent of the algorithm. */
 const antdDefaults = antdThemeApi.getDesignToken();
 
 /**
- * Boşluk ölçeği. antd takma tokenlarından türetilir; bileşenler sayı yazmaz.
+ * Spacing scale. Derived from antd alias tokens; components do not write numbers.
  * xxs 4, xs 8, sm 12, md 16, lg 24, xl 32, xxl 48 px.
  */
 export const space = {
@@ -431,14 +435,14 @@ export const space = {
   xxl: antdDefaults.paddingXL + antdDefaults.padding,
 } as const;
 
-/** Katman sırası. Perde antd açılır katmanının hemen altında, açan öğe antd katmanında. */
+/** Layer order. The dim layer sits just below the antd popup layer; the opening element is on the antd layer. */
 export const layer = {
   popupBase: antdDefaults.zIndexPopupBase,
   dimOverlay: antdDefaults.zIndexPopupBase - 1,
   dimSource: antdDefaults.zIndexPopupBase,
 } as const;
 
-/** Okuma genişliği ve içerik eşikleri (antd ekran eşikleri). */
+/** Reading width and content breakpoints (antd screen breakpoints). */
 export const layout = {
   contentMaxWidth: antdDefaults.screenLG,
   screenSM: antdDefaults.screenSM,
@@ -448,24 +452,24 @@ export const layout = {
   sidebarWidth: s.sidebar.widthExpanded,
   sidebarRailWidth: s.sidebar.widthCollapsed,
   cardPadding: s.cards.padding,
-  /** Kabuk ölçüleri (onaylı taslak): menü, yardımcı paneli, telefon alt çubuğu, dar menü ve simge. */
+  /** Shell sizes (approved draft): menu, assistant panel, phone bottom bar, narrow menu and icon. */
   menuWidth: s.layoutTokens.menuWidth,
   assistWidth: s.layoutTokens.assistWidth,
   barHeight: s.layoutTokens.barHeight,
   railWidth: s.layoutTokens.railWidth,
   iconSize: s.layoutTokens.iconSize,
-  /** Dar form sütunu (giriş, parola, kısa ayar). Kaynak ölçeğinden türetilir: 10 orta buton yüksekliği = 420 px. */
+  /** Narrow form column (login, password, short settings). Derived from the source scale: 10 mid button heights = 420 px. */
   formMaxWidth: sizes.button.md.height * 10,
   /**
-   * Telefon kabuğunun yapışkan üst çubuğu: orta buton ve üstte, altta en küçük boşluk (42 + 2 × 4 px).
-   * Sayfanın kaydırma payı (`scroll-padding-top`) bu değerdir; odaklanan öğe çubuğun altında kalmaz.
+   * Sticky top bar of the phone shell: a mid button plus the smallest gap above and below (42 + 2 × 4 px).
+   * The page scroll padding (`scroll-padding-top`) is this value, so a focused element is not hidden under the bar.
    */
   topbarHeight: sizes.button.md.height + 2 * space.xxs,
 } as const;
 
 /**
- * Tablo sütunu en küçük genişlikleri (içerik türüne göre). Sütunlar sıkışmaz; tablo kendi
- * kapsayıcısında yatay kayar. Değerler buton ölçeğinden türetilir: md yükseklik 42 px.
+ * Minimum table column widths (by content type). Columns do not squeeze; the table scrolls
+ * horizontally in its own container. Values are derived from the button scale: md height 42 px.
  */
 export const table = {
   columnMinWidth: {

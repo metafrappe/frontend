@@ -1,7 +1,7 @@
 /**
- * Altı yüzeyin örnek blokları. Deneme sayfası ve testler bu verileri kullanır.
- * Veriler sunucudan gelmiş gibi ham nesnedir. Ekran onları şemadan geçirerek çizer.
- * Adlar ve kayıtlar örnektir.
+ * Sample blocks for the six surfaces. The demo page and tests use this data.
+ * The data are raw objects, as if from the server. The screen runs them through the schema.
+ * Names and records are samples.
  */
 export type RawBlock = { type: string } & Record<string, unknown>;
 
@@ -80,7 +80,7 @@ export const SURFACE_SAMPLES: RawBlock[] = [
   },
 ];
 
-/** Ek durumlar: yüksek riskli inceleme, boş kaynak, boş kuyruk ve başarısız sonuç. */
+/** Extra states: high-risk review, empty source, empty queue and failed result. */
 export const SURFACE_STATES: RawBlock[] = [
   {
     type: 'review',

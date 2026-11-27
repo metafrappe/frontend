@@ -1,4 +1,4 @@
-// Testlerde kullanılan sahte sunucu. İşlenmeyen istek hata sayılır ve ağa gitmez.
+// Mock server used in tests. An unhandled request is an error and does not reach the network.
 import { setupServer } from 'msw/node';
 
 import { handlers } from './handlers';

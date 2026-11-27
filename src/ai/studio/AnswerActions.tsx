@@ -6,12 +6,12 @@ import { useLayoutEffect, useRef } from 'react';
 type Item = ActionsProps['items'][number] & { label: string; pressed?: boolean };
 
 /**
- * Ant Design X `Actions` bileşeninin erişilebilir sarmalayıcısı (U6).
+ * Accessible wrapper for the Ant Design X `Actions` component (U6).
  *
- * `@ant-design/x` 1.6.1 sürümünde öğeler yalnız tıklanan `div` olarak çizilir.
- * Rolleri, adları ve sekme sırası yoktur. Klavyeyle çalışmazlar.
- * Bu sarmalayıcı her öğeye düğme rolü, ad ve sekme sırası verir.
- * Enter ve Space tuşları da öğeyi çalıştırır.
+ * In `@ant-design/x` 1.6.1 the items render only as clickable `div` elements.
+ * They have no roles, names or tab order. They do not work with the keyboard.
+ * This wrapper gives each item a button role, a name and a tab order.
+ * The Enter and Space keys also activate the item.
  */
 export function AnswerActions({
   items,
