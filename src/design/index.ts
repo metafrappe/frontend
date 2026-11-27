@@ -19,3 +19,4 @@ export {
 } from './motion';
 export { designSource, type DesignSource, type SizeKey, type ThemeMode } from './source';
 export * from './tokens';
+export { R, outerRadius, innerRadius, leafRadius, isValidRadius } from './radius';

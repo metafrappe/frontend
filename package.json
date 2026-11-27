@@ -15,7 +15,7 @@
     "build:e2e": "vite build --mode e2e",
     "preview": "vite preview --port 4173 --strictPort",
     "perf:initial-load": "node scripts/initial-load.mjs",
-    "lint": "eslint . && prettier --check . && npm run check:motion",
+    "lint": "eslint . && prettier --check . && npm run check:motion && npm run check:radius",
     "check:motion": "node scripts/motion-gate.mjs",
     "format": "prettier --write .",
     "typecheck": "npm run api:types:check && tsc -p tsconfig.json --noEmit && tsc -p tsconfig.node.json --noEmit",
@@ -24,7 +24,8 @@
     "contracts:sync": "node contracts/sync.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "check:radius": "node scripts/radius-gate.mjs"
   },
   "dependencies": {
     "@ant-design/x": "1.6.1",

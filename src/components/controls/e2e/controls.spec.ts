@@ -204,7 +204,7 @@ test('controls match the locked height and font size', async ({ page, hasTouch }
     await expect(page.getByTestId(`link-${size}`)).toHaveCSS('font-size', `${fontSize}px`);
   }
 
-  await expect(page.getByTestId('card')).toHaveCSS('border-radius', '10px');
+  await expect(page.getByTestId('card')).toHaveCSS('border-radius', '21px');
 });
 
 test('choice controls match the locked height and font size', async ({ page, hasTouch }) => {

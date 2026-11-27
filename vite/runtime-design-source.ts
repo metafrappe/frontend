@@ -16,7 +16,7 @@ export const runtimeDesignSource = {
   lightPalette,
   textPalette: { light: source.textPalette.light, dark: source.textPalette.dark },
   layoutTokens,
-  radius: { default: source.radius.default },
+  radius: { default: source.radius.default, tokens: source.radius.tokens },
   sizes: { sm: source.sizes.sm, md: source.sizes.md, lg: source.sizes.lg },
   fontWeight: {
     sm: source.fontWeight.sm,

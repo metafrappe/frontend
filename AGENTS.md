@@ -79,6 +79,25 @@ Her iş yalnız kendi klasörünü değiştirir. Ortak dosya gerekiyorsa raporda
 - Bileşen içinde sabit renk, ölçü, gölge ya da süre yazılmaz. Değerler tokenlardan gelir.
 - Açık ve koyu tema aynı tokenlardan üretilir.
 
+## Köşe kuralları
+
+Köşeler [radius.md yönergesine](https://github.com/karacaismail/frappesetup/blob/4b885f64f85a191f1a0800c8ddb30d419a00afe6/docs/standartlar/radius.md) uyar.
+Bu karar önceki kart köşesi kararının yerine geçer.
+Token, adı olan tasarım değeridir. Köşe tokenları kaynak JSON dosyasında tanımlıdır.
+Kartlar ve GenUI kartları 21 px olur. Açılır paneller 9 px olur.
+Kontroller her boyutta 5 px olur. Küçük öğeler 3 px olur.
+Kenara dayalı kabuk 0 px olur. Yüzen kabuk en çok 29 px olur.
+Bileşenler `--r-*` tokenlarını kullanır. `--r-ring` odak için kullanılmaz.
+Çevreleyen odak halkası yasaktır. Mevcut klavye göstergesi korunur.
+
+`outerRadius()` ve `innerRadius()` hesabı yönergenin 7.2 bölümünü uygular.
+`npm run check:radius` yazılan köşe değerlerini denetler.
+Kapı CSS dosyalarını, kaynak kodunu ve `control-size-config.json` dosyasını tarar.
+İzinli basamaklar 0, 3, 5, 7, 9, 13, 17, 21, 25 ve 29 px olur.
+Kapı hesaplanan değerleri denetlemez. Tokenlar ve kapsül yüzdeleri geçerlidir.
+`npm test` ve `npm run lint` bu kapıyı çalıştırır.
+Yeni bileşen bu kapıdan geçmelidir. Görsel referansları bağımsız QA inceler.
+
 ## Ortak kurallarla ilişki
 
 Proje sahibinin genel kuralları bu depoda da geçerlidir. Orkestratör 26 Kasım 2026 Perşembe günü iki kararı değiştirdi (AJA-997). Kaynak model belgesinin 6. bölümüdür.

@@ -3,6 +3,7 @@
  * Kaynaktaki `derived.css` başlangıç noktasıdır; burada aynı adlar korunur ve
  * açık/koyu değerler doğru bloklara ayrılır.
  */
+import { R } from './radius';
 import { readCspNonce } from './csp-nonce';
 import { dropdownAnimation, duration, easing, instantMs } from './motion';
 import type { ThemeMode } from './source';
@@ -122,6 +123,15 @@ export function rootVariables(): Record<string, string> {
     '--danger-bg': danger.light.background,
     '--danger-bg-hover': danger.light.backgroundHover,
     '--danger-bg-active': danger.light.backgroundActive,
+    ...Object.fromEntries(
+      Object.entries(radius)
+        .filter(([name]) => name !== 'card')
+        .map(([name, value]) => [`--r-${name}`, px(value)]),
+    ),
+    '--r-anchor': px(R.anchor),
+    '--r-bind': px(R.bind),
+    '--r-max': px(R.max),
+    '--r-floor': px(R.floor),
     '--radius': px(radius.control),
     '--card-radius': px(radius.card),
     '--hit-expand': String(hitArea.expand),
@@ -245,7 +255,8 @@ function controlFixCss(): string {
  */
 function primaryButtonCss(): string {
   const primary = '.ant-btn-primary:not(.ant-btn-dangerous):not(:disabled):not(.ant-btn-disabled)';
-  const dangerSolid = '.ant-btn-dangerous.ant-btn-variant-solid:not(:disabled):not(.ant-btn-disabled)';
+  const dangerSolid =
+    '.ant-btn-dangerous.ant-btn-variant-solid:not(:disabled):not(.ant-btn-disabled)';
   return [
     `${primary} { color: var(--primary-text); }`,
     `${primary}:hover { color: var(--primary-text-hover); }`,
@@ -306,7 +317,9 @@ function focusCss(): string {
  * Eğri varsayılan eğridir, süre kısa dropdown süresidir (AJA-997). Eğilme yoktur.
  */
 function dropdownMotionCss(): string {
-  const frames = Object.entries(dropdownAnimation.keyframes).map(([at, rule]) => `  ${at} { ${rule}; }`);
+  const frames = Object.entries(dropdownAnimation.keyframes).map(
+    ([at, rule]) => `  ${at} { ${rule}; }`,
+  );
   return [`@keyframes atonota-dropdown-in {`, ...frames, `}`].join('\n');
 }
 
@@ -343,7 +356,7 @@ function baseCss(): string {
     '*, *::before, *::after { box-sizing: border-box; }',
     'img, svg, video { max-width: 100%; height: auto; }',
     '/* Metin bağlantıları altı çizilidir: renk tek ayırt edici olmaz (WCAG 1.4.1). */',
-    '/* Özgüllük (0,3,1) antd\'nin `a { text-decoration: none }` kuralını geçer; `:where()` ile sıfırlanırsa antd kazanır. */',
+    "/* Özgüllük (0,3,1) antd'nin `a { text-decoration: none }` kuralını geçer; `:where()` ile sıfırlanırsa antd kazanır. */",
     `${TEXT_LINK} { text-decoration: underline; text-underline-offset: 0.15em; }`,
   ].join('\n');
 }
@@ -357,6 +370,10 @@ export function buildDesignCss(): string {
     block('[data-theme="dark"]', darkVariables()),
     baseCss(),
     controlFixCss(),
+    // antd 5.29.3 shares borderRadiusLG between large controls and popup surfaces.
+    // Remove this adapter when antd exposes separate popup radius tokens.
+    // Attached controls retain their existing flush-corner rules in controls.css.
+    ':root .ant-select-dropdown:not(.atonota-control-popup), :root .ant-mentions-dropdown, :root .ant-picker-dropdown .ant-picker-panel-container { border-radius: var(--r-menu); }',
     primaryButtonCss(),
     focusCss(),
     hitArea.css,

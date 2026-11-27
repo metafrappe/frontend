@@ -28,6 +28,12 @@ export interface BuildThemeOptions {
   reducedMotion?: boolean;
 }
 
+const anchorAllSizes = {
+  borderRadius: radius.control,
+  borderRadiusSM: radius.control,
+  borderRadiusLG: radius.control,
+};
+
 const derivedButton = designSource.derived.antdTheme.components.Button;
 
 function round2(n: number): number {
@@ -72,8 +78,10 @@ export function buildAntdTheme(mode: ThemeMode, options: BuildThemeOptions = {})
     controlHeightSM: button.sm.height,
     controlHeightLG: button.lg.height,
     borderRadius: radius.control,
-    borderRadiusSM: Math.max(radius.control - 1, 2),
-    borderRadiusLG: radius.control + 2,
+    borderRadiusXS: radius.micro,
+    borderRadiusSM: radius.control,
+    borderRadiusLG: radius.menu,
+    borderRadiusOuter: radius.control,
     boxShadowSecondary: shadow.dropdown,
     lineWidth: border.width,
     // Odak: çevreleyen halka ve çerçeve yasak. Gösterge CSS'te alt çizgi olarak verilir.
@@ -117,6 +125,7 @@ export function buildAntdTheme(mode: ThemeMode, options: BuildThemeOptions = {})
 
   const components: NonNullable<ThemeConfig['components']> = {
     Button: {
+      ...anchorAllSizes,
       controlHeight: button.md.height,
       controlHeightSM: button.sm.height,
       controlHeightLG: button.lg.height,
@@ -157,6 +166,7 @@ export function buildAntdTheme(mode: ThemeMode, options: BuildThemeOptions = {})
           }),
     },
     Input: {
+      ...anchorAllSizes,
       controlHeight: input.md.height,
       controlHeightSM: input.sm.height,
       controlHeightLG: input.lg.height,
@@ -166,12 +176,26 @@ export function buildAntdTheme(mode: ThemeMode, options: BuildThemeOptions = {})
       paddingBlock: input.md.paddingBlock,
       paddingBlockSM: input.sm.paddingBlock,
       paddingBlockLG: input.lg.paddingBlock,
-      ...(dark ? { colorBgContainer: darkPalette.input, activeBg: darkPalette.input, hoverBg: darkPalette.input } : {}),
+      ...(dark
+        ? {
+            colorBgContainer: darkPalette.input,
+            activeBg: darkPalette.input,
+            hoverBg: darkPalette.input,
+          }
+        : {}),
     },
-    InputNumber: dark
-      ? { colorBgContainer: darkPalette.input, activeBg: darkPalette.input, hoverBg: darkPalette.input }
-      : {},
+    InputNumber: {
+      ...anchorAllSizes,
+      ...(dark
+        ? {
+            colorBgContainer: darkPalette.input,
+            activeBg: darkPalette.input,
+            hoverBg: darkPalette.input,
+          }
+        : {}),
+    },
     Select: {
+      ...anchorAllSizes,
       controlHeight: input.md.height,
       controlHeightSM: input.sm.height,
       controlHeightLG: input.lg.height,
@@ -183,7 +207,21 @@ export function buildAntdTheme(mode: ThemeMode, options: BuildThemeOptions = {})
     Dropdown: { fontSize: typography.default },
     /** Tablo metni en küçük metindir: 14 px (model 4. bölüm). Gövde 16 px kalır. */
     Table: { fontSize: typography.min },
-    Card: { borderRadiusLG: radius.card },
+    DatePicker: anchorAllSizes,
+    Cascader: anchorAllSizes,
+    Mentions: anchorAllSizes,
+    Tag: { borderRadiusSM: radius.micro },
+    Checkbox: { borderRadiusSM: radius.micro },
+    Segmented: {
+      borderRadius: radius.ring,
+      borderRadiusSM: radius.control,
+      borderRadiusLG: radius.ring,
+    },
+    Popover: { borderRadiusLG: radius['surface-lg'] },
+    Card: { borderRadiusLG: radius.panel, borderRadiusSM: radius['surface-lg'] },
+    Modal: { borderRadiusLG: radius.panel },
+    Notification: { borderRadiusLG: radius['surface-lg'] },
+    Message: { borderRadiusLG: radius['surface-lg'] },
   };
 
   return {
