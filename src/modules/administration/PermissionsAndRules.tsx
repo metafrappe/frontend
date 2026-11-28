@@ -1,16 +1,7 @@
-import {
-  Alert,
-  Button,
-  Checkbox,
-  ConfigProvider,
-  Input,
-  Modal,
-  Select,
-  Switch,
-  Tabs,
-  theme,
-} from 'antd';
+import { Alert, Button, Checkbox, ConfigProvider, Input, Select, Switch, Tabs, theme } from 'antd';
 import { useCallback, useId, useState, type ReactNode } from 'react';
+
+import { ActionDialog } from '@/components/dialog';
 import { useModule } from '../context';
 import { useMutation, useRead } from '../data';
 import { useCopy } from '../messages';
@@ -209,10 +200,9 @@ function UserPermissions({ admin }: { admin: AdminClient }) {
           )
         }
       </AdminResource>
-      <Modal
+      <ActionDialog
         open={adding}
         title={copy.addPermission}
-        footer={null}
         destroyOnHidden
         onCancel={() => setAdding(false)}
       >
@@ -224,19 +214,15 @@ function UserPermissions({ admin }: { admin: AdminClient }) {
             read.refresh();
           }}
         />
-      </Modal>
-      <Modal
+      </ActionDialog>
+      <ActionDialog
         open={removing !== undefined}
         title={copy.removePermission}
         onCancel={() => setRemoving(undefined)}
-        footer={[
-          <Button key="cancel" onClick={() => setRemoving(undefined)}>
-            {copy.formCancel}
-          </Button>,
-          <Button key="remove" danger type="primary" onClick={() => void remove()}>
-            {copy.removePermission}
-          </Button>,
-        ]}
+        cancelLabel={copy.formCancel}
+        confirmLabel={copy.removePermission}
+        danger
+        onConfirm={() => void remove()}
       >
         {removing && (
           <p>
@@ -248,7 +234,7 @@ function UserPermissions({ admin }: { admin: AdminClient }) {
           </p>
         )}
         {removeError && <Alert role="alert" type="error" message={copy.uncertain} />}
-      </Modal>
+      </ActionDialog>
     </div>
   );
 }
@@ -438,10 +424,9 @@ function AccessRules({ admin }: { admin: AdminClient }) {
           )
         }
       </AdminResource>
-      <Modal
+      <ActionDialog
         open={adding}
         title={copy.addRule}
-        footer={null}
         destroyOnHidden
         onCancel={() => setAdding(false)}
       >
@@ -453,7 +438,7 @@ function AccessRules({ admin }: { admin: AdminClient }) {
             read.refresh();
           }}
         />
-      </Modal>
+      </ActionDialog>
     </div>
   );
 }

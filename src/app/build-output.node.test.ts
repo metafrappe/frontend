@@ -19,7 +19,7 @@ const MSW_MARKERS = ['setupWorker', '[MSW]', 'mockServiceWorker'];
 const DEMO_ROUTE = /\/_demo\/[\w-]+/;
 
 /** Deneme sayfalarının parça adları. Üretim çıktısında bu adlarla dosya bulunmamalıdır. */
-const DEMO_CHUNK = /^(DemoPage|ControlsDemoPage)-/;
+const DEMO_CHUNK = /^(DemoPage|ControlsDemoPage|DialogDemoPage)-/;
 
 /**
  * Örnek alan adları (`*.example.test`). Sahte sunucu ve e2e değerleri bunları kullanır.
