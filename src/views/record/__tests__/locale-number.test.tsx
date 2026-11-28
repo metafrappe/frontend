@@ -237,4 +237,150 @@ describe('locale number entry in the record form (AJA-1765)', () => {
     await waitFor(() => expect(adapter.saveRecord).toHaveBeenCalledTimes(2));
     expect(vi.mocked(adapter.saveRecord).mock.calls[1]![0].data['amount']).toBe(1234.56);
   });
+
+  it('de-DE float without precision: unambiguous 1234 stays valid after blur', async () => {
+    const user = userEvent.setup();
+    const floatMeta: DocTypeMeta = {
+      ...META,
+      schema: {
+        ...META.schema,
+        fields: [
+          {
+            fieldname: 'quantity',
+            fieldtype: 'Float',
+            label: 'Quantity',
+            component: 'float',
+            read_only: false,
+            sensitivity: 'standard',
+          },
+        ],
+      },
+    };
+    const adapter: RecordDataAdapter = {
+      getDocTypeMeta: vi.fn(async () => floatMeta),
+      getRecord: vi.fn(async () => ({
+        name: 'EXP-0002',
+        modified: '2026-11-27 10:00:00',
+        quantity: 1234,
+      })),
+      saveRecord: vi.fn(async (params) => ({
+        name: 'EXP-0002',
+        modified: '2026-11-27 10:01:00',
+        ...params.data,
+      })),
+      searchLink: vi.fn(async () => []),
+    };
+
+    const view = render(
+      <RecordView
+        doctype="Expense Claim"
+        createMode
+        adapter={adapter}
+        locale="en"
+        formatting={GERMANY}
+      />,
+    );
+    const input = await screen.findByRole('textbox', { name: /Quantity/ });
+    await user.type(input, '1234');
+    await user.tab();
+
+    expect(input).toHaveValue('1.234');
+    expect(input).not.toHaveAttribute('aria-invalid', 'true');
+    expect(screen.queryByRole('group', { name: /which number/i })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(adapter.saveRecord).toHaveBeenCalledTimes(1));
+    expect(vi.mocked(adapter.saveRecord).mock.calls[0]![0].data['quantity']).toBe(1234);
+    view.unmount();
+
+    // Reopening an integer-valued record and blurring without edits stays valid.
+    render(
+      <RecordView
+        doctype="Expense Claim"
+        name="EXP-0002"
+        adapter={adapter}
+        locale="en"
+        formatting={GERMANY}
+      />,
+    );
+    const reopened = await screen.findByRole('textbox', { name: /Quantity/ });
+    await waitFor(() => expect(reopened).toHaveValue('1.234'));
+    await user.click(reopened);
+    await user.tab();
+    expect(reopened).not.toHaveAttribute('aria-invalid', 'true');
+    expect(screen.queryByRole('group', { name: /which number/i })).not.toBeInTheDocument();
+  });
+
+  it('rejects ambiguous or invalid numbers in child-table rows before saving', async () => {
+    const user = userEvent.setup();
+    const tableMeta: DocTypeMeta = {
+      ...META,
+      schema: {
+        ...META.schema,
+        fields: [
+          {
+            fieldname: 'items',
+            fieldtype: 'Table',
+            label: 'Items',
+            component: 'table',
+            options: 'Expense Claim Detail',
+            read_only: false,
+            sensitivity: 'standard',
+          },
+        ],
+      },
+      child_tables: {
+        'Expense Claim Detail': {
+          name: 'Expense Claim Detail',
+          module: 'HRMS TR',
+          sensitivity: 'standard',
+          title_field: null,
+          search_fields: '',
+          sort_field: null,
+          fields: [
+            {
+              fieldname: 'amount',
+              fieldtype: 'Currency',
+              label: 'Amount',
+              component: 'currency',
+              read_only: false,
+              sensitivity: 'standard',
+              options: 'EUR',
+              precision: '2',
+            },
+          ],
+        },
+      },
+    };
+    const adapter: RecordDataAdapter = {
+      getDocTypeMeta: vi.fn(async () => tableMeta),
+      getRecord: vi.fn(async () => ({
+        name: 'EXP-0003',
+        modified: '2026-11-27 10:00:00',
+        items: [{ name: 'row-1', amount: null }],
+      })),
+      saveRecord: vi.fn(async (params) => ({
+        name: 'EXP-0003',
+        modified: '2026-11-27 10:01:00',
+        ...params.data,
+      })),
+      searchLink: vi.fn(async () => []),
+    };
+
+    render(
+      <RecordView
+        doctype="Expense Claim"
+        name="EXP-0003"
+        adapter={adapter}
+        locale="en"
+        formatting={GERMANY}
+      />,
+    );
+    const cellInput = await screen.findByRole('textbox', { name: /Amount/ });
+    await user.type(cellInput, '1.234');
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(adapter.saveRecord).not.toHaveBeenCalled();
+    expect(await screen.findByText(/Row 1: Amount is unclear/i)).toBeVisible();
+  });
 });
