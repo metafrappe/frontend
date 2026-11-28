@@ -28,6 +28,18 @@ import {
 } from './model';
 import './data-transfer.css';
 
+/**
+ * Düğmenin yükleme simgesi yalnız uzun işte açılır.
+ * Kısa işte simge açılmadan kapanırsa Ant Design simgeyi kapanışta takılı bırakır.
+ * Takılan simge görünmez ama sonsuza dek döner (AJA-2493, masaüstü CI hatası).
+ * Düğme yazısı yine hemen değişir. Böylece kullanıcı işin sürdüğünü görür.
+ */
+const SPIN_DELAY_MS = 300;
+
+function spinner(on: boolean): boolean | { delay: number } {
+  return on ? { delay: SPIN_DELAY_MS } : false;
+}
+
 /** Sayfa istemcisini tembel yükler. İstemci yoksa (örnek kip dışı) `null` döner. */
 function useClient(): (() => Promise<DataTransferClient>) | null {
   return useModule()?.client?.dataTransfer ?? null;
@@ -180,7 +192,7 @@ function ImportSection() {
                 <p>{t.templateNote}</p>
                 <div className="module-actions">
                   <Button
-                    loading={busy === 'template'}
+                    loading={spinner(busy === 'template')}
                     onClick={() => void downloadTemplate(doctype)}
                   >
                     {busy === 'template' ? t.reading : t.template}
@@ -207,7 +219,7 @@ function ImportSection() {
                   <Button
                     type="primary"
                     disabled={!file}
-                    loading={busy === 'upload'}
+                    loading={spinner(busy === 'upload')}
                     onClick={() => file && void upload(doctype, file)}
                   >
                     {busy === 'upload' ? t.uploading : t.upload}
@@ -230,7 +242,7 @@ function ImportSection() {
               <div className="module-actions">
                 <Button
                   type="primary"
-                  loading={busy === 'start'}
+                  loading={spinner(busy === 'start')}
                   onClick={() => void start(prepared.name)}
                 >
                   {busy === 'start' ? t.starting : t.start}
@@ -244,7 +256,7 @@ function ImportSection() {
                 </div>
                 <div className="module-actions">
                   <Button
-                    loading={busy === 'result'}
+                    loading={spinner(busy === 'result')}
                     onClick={() => prepared && void showResult(prepared.name)}
                   >
                     {busy === 'result' ? t.reading : t.result}
@@ -386,7 +398,7 @@ function ExportSection() {
             />
             {doctype && (
               <div className="module-actions">
-                <Button type="primary" loading={busy} onClick={() => void run()}>
+                <Button type="primary" loading={spinner(busy)} onClick={() => void run()}>
                   {busy ? t.exporting : t.exportButton}
                 </Button>
               </div>
@@ -425,7 +437,7 @@ function PersonalDataSection() {
         <Button
           type="primary"
           disabled={done}
-          loading={pending}
+          loading={spinner(pending)}
           onClick={() =>
             void run(async (signal) => (await client()).requestPersonalData(env.user, { signal }))
           }
