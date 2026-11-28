@@ -58,20 +58,21 @@ export function useTextRules<E extends HTMLInputElement | HTMLTextAreaElement>(
   const announce = Boolean(showCount || count?.show) && max !== undefined;
 
   const countConfig = useMemo<CountConfig | undefined>(() => {
-    if (max === undefined && !count) return undefined;
+    if (max === undefined && !count && !showCount) return undefined;
     const strategy = count?.strategy ?? ((text: string) => countGraphemes(text, bundle.intl));
     const userShow = count?.show ?? showCount;
-    const show: CountConfig['show'] =
-      !userShow || max === undefined
-        ? Boolean(userShow)
+    const formatter =
+      typeof userShow === 'function'
+        ? userShow
+        : userShow && typeof userShow === 'object'
+          ? userShow.formatter
+          : undefined;
+    const show: CountConfig['show'] = !userShow
+      ? false
+      : max === undefined
+        ? (formatter ?? true)
         : ({ value, count: used, maxLength: limit }): ReactNode => {
             const limitValue = limit ?? max;
-            const formatter =
-              typeof userShow === 'function'
-                ? userShow
-                : typeof userShow === 'object'
-                  ? userShow.formatter
-                  : undefined;
             const base = formatter
               ? formatter({ value, count: used, maxLength: limitValue })
               : `${used} / ${limitValue}`;
