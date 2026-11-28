@@ -9,8 +9,9 @@ import '@fontsource/jetbrains-mono/400.css';
 
 import { StrictMode, useState } from 'react';
 
-import { resolveLanguage } from '@/app/locale';
+import { FALLBACK_LANGUAGE, resolveLanguage } from '@/app/locale';
 import { sampleBootstrap } from '@/mocks/fixtures';
+import { SAMPLE_REGIONS } from '@/mocks/regions';
 
 import { createRoot } from 'react-dom/client';
 import { EMPTY_LEAVE_CONTEXT, LEAVE_CONTEXT, LEAVE_META } from './leaveFixture';
@@ -244,6 +245,75 @@ const HARNESS_RECORD: RecordDocument = {
   ],
 };
 
+/** Amount form for locale number entry (AJA-1765). The region comes from a fake boot data value. */
+const NUMBER_META: DocTypeMeta = {
+  schema: {
+    name: 'Expense Claim',
+    module: 'HRMS TR',
+    sensitivity: 'standard',
+    title_field: 'name',
+    search_fields: 'name',
+    sort_field: 'modified',
+    fields: [
+      {
+        fieldname: 'amount',
+        fieldtype: 'Currency',
+        label: 'Amount',
+        options: 'EUR',
+        precision: '2',
+        read_only: false,
+        component: 'currency',
+        sensitivity: 'standard',
+      },
+    ],
+  },
+  child_tables: {},
+  catalog_version: 2,
+  meta_hash: 'number',
+  perm_version: 'number',
+  mobile_cache_allowed: false,
+};
+
+/** The saved record stays in the tab. A reload with `open=1` reads it back like a server. */
+const NUMBER_STORE = 'atonota-harness-number';
+
+function NumberHarness({ params }: { params: URLSearchParams }) {
+  const region = params.get('region') ?? SAMPLE_REGIONS.france;
+  const reopen = params.get('open') === '1';
+  const adapter: RecordDataAdapter = {
+    getDocTypeMeta: async () => NUMBER_META,
+    getRecord: async () =>
+      JSON.parse(window.sessionStorage.getItem(NUMBER_STORE) ?? 'null') as RecordDocument,
+    saveRecord: async (saveParams) => {
+      if (params.get('fail') === '1') {
+        throw new RecordApiError({ code: 'network', message: 'Server could not be reached' });
+      }
+      const saved = { name: 'EXP-0001', modified: '2026-11-27 10:00:00', ...saveParams.data };
+      window.sessionStorage.setItem(NUMBER_STORE, JSON.stringify(saved));
+      return saved;
+    },
+    searchLink: async () => [],
+  };
+  return (
+    <main>
+      <RecordView
+        doctype="Expense Claim"
+        {...(reopen ? { name: 'EXP-0001' } : { createMode: true })}
+        adapter={adapter}
+        locale={FALLBACK_LANGUAGE}
+        breadcrumbs={[]}
+        formatting={{
+          time_zone: 'Europe/Paris',
+          currency: 'EUR',
+          number_format: '#,###.##',
+          rounding_method: "Banker's Rounding",
+          format_locale: region,
+        }}
+      />
+    </main>
+  );
+}
+
 export function HarnessApp() {
   const params = new URLSearchParams(window.location.search);
   const themeMode = params.get('theme') === 'dark' ? 'dark' : 'light';
@@ -334,6 +404,8 @@ export function HarnessApp() {
       return txt ? all.filter((item) => item.label.toLowerCase().includes(txt.toLowerCase())) : all;
     },
   };
+
+  if (scenario === 'number') return <NumberHarness params={params} />;
 
   return (
     <main data-assist-calls={assistCalls}>

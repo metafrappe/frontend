@@ -1,3 +1,5 @@
+import { isUnresolvedNumber } from '@/app/locale';
+
 import { evaluateFieldState, isFrappeTruthy } from './conditions';
 import { isLayoutBreakFieldType } from './layout';
 import { formatRecordMessage } from './messages';
@@ -149,6 +151,15 @@ export function validateRecordDraft(
       field.fieldtype === 'Currency' ||
       field.fieldtype === 'Percent'
     ) {
+      // Unclear or broken typed text is never saved silently (AJA-1765).
+      if (isUnresolvedNumber(rawValue)) {
+        errors[field.fieldname] = formatRecordMessage(
+          locale,
+          rawValue.reason === 'ambiguous' ? 'validationNumberAmbiguous' : 'validationNumber',
+          { label },
+        );
+        continue;
+      }
       const num = parseNumericDraftValue(rawValue);
       if (!Number.isFinite(num)) {
         errors[field.fieldname] = formatRecordMessage(locale, 'validationNumber', { label });
@@ -202,18 +213,34 @@ export function validateRecordDraft(
               doc: rowRecord,
               parent: draftValues,
             });
-            if (childState.visible && !childState.readOnly && childState.required) {
-              if (!isFrappeTruthy(rowRecord[childField.fieldname])) {
-                errors[field.fieldname] = formatRecordMessage(
-                  locale,
-                  'validationChildRowRequired',
-                  {
-                    row: rowIndex + 1,
-                    label: childField.label ?? childField.fieldname,
-                  },
-                );
-                break;
-              }
+            if (!childState.visible || childState.readOnly) {
+              continue;
+            }
+            const childValue = rowRecord[childField.fieldname];
+            if (childState.required && !isFrappeTruthy(childValue)) {
+              errors[field.fieldname] = formatRecordMessage(locale, 'validationChildRowRequired', {
+                row: rowIndex + 1,
+                label: childField.label ?? childField.fieldname,
+              });
+              break;
+            }
+            if (
+              (childField.fieldtype === 'Float' ||
+                childField.fieldtype === 'Currency' ||
+                childField.fieldtype === 'Percent') &&
+              isUnresolvedNumber(childValue)
+            ) {
+              errors[field.fieldname] = formatRecordMessage(
+                locale,
+                childValue.reason === 'ambiguous'
+                  ? 'validationChildRowNumberAmbiguous'
+                  : 'validationChildRowNumber',
+                {
+                  row: rowIndex + 1,
+                  label: childField.label ?? childField.fieldname,
+                },
+              );
+              break;
             }
           }
           if (errors[field.fieldname]) {

@@ -50,7 +50,11 @@ export function LanguageProvider({
   const setFormatting = useCallback<LanguageState['setFormatting']>(
     (next) =>
       setFormattingState((prev) =>
-        prev.time_zone === next.time_zone && prev.currency === next.currency ? prev : next,
+        prev.time_zone === next.time_zone &&
+        prev.currency === next.currency &&
+        prev.format_locale === next.format_locale
+          ? prev
+          : next,
       ),
     [],
   );
