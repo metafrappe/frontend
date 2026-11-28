@@ -84,6 +84,36 @@ describe('grapheme counter', () => {
     );
     expect(screen.getByRole('status')).toHaveTextContent('3 karakter kaldı');
   });
+
+  it('keeps the grapheme counter and custom formatter when showCount is set without maxLength', () => {
+    const { unmount } = render(
+      <LanguageProvider initialLanguage="tr">
+        <Input aria-label="No limit" showCount defaultValue={`${HINDI}${FAMILY}`} />
+      </LanguageProvider>,
+    );
+    expect(document.querySelector('.ant-input-show-count-suffix')).toHaveTextContent('2');
+    expect(document.querySelector('.hit-sfx')).toBeNull();
+    unmount();
+
+    const { unmount: unmountArea } = render(
+      <LanguageProvider initialLanguage="tr">
+        <Input.TextArea
+          aria-label="Note no limit"
+          showCount={{ formatter: ({ count }) => `${count} harf` }}
+          defaultValue={`${HINDI}${FAMILY}${ACCENT}`}
+        />
+      </LanguageProvider>,
+    );
+    expect(screen.getByText('3 harf')).toBeInTheDocument();
+    unmountArea();
+
+    render(
+      <LanguageProvider initialLanguage="tr">
+        <PlainInput aria-label="Plain no limit" showCount defaultValue={`${HINDI}${FAMILY}`} />
+      </LanguageProvider>,
+    );
+    expect(document.querySelector('.ant-input-show-count-suffix')).toHaveTextContent('2');
+  });
 });
 
 describe('Enter during candidate selection (IME)', () => {
