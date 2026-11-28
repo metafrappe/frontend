@@ -29,6 +29,7 @@ export const BROWSER_CONTRACTS = [
   'hrms_tr',
   'platform_core-mobile',
   'platform_core-reseller',
+  'platform_core-help',
 ];
 
 const HEADER =
