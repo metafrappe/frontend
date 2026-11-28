@@ -2,7 +2,11 @@
  * G-139 tur motoru, deneme sayfası `/_demo/tour`. Sayfa yalnız e2e derlemesinde vardır.
  * Deneme sayfası ilerlemeyi tarayıcı deposunda tutar. Sayfayı yenilemek "sonraki ziyaret" olur.
  * Denenenler: ilk ziyaret, devam, yeniden başlatma, girdi koruması, kipsiz panel, klavye,
- * duyuru, 320 px taşma ve axe.
+ * duyuru, 320 px taşma, kısa yatay ekran ve axe.
+ *
+ * Her test boş bir tarayıcı bağlamıyla başlar. Depo zaten boştur. Bu yüzden testten önce
+ * sayfa açıp depo silinmez. Öyle yapınca ikinci açılış ilk açılışı yarıda keser.
+ * WebKit'te sahte sunucunun kaydı yarıda kalır ve sayfa boş açılabilir (CI, iPhone 13).
  */
 import AxeBuilder from '@axe-core/playwright';
 import type { Page } from '@playwright/test';
@@ -25,11 +29,6 @@ async function overflowX(page: Page) {
 }
 
 test.describe('tur motoru', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto(DEMO);
-    await page.evaluate(() => localStorage.clear());
-  });
-
   test('ilk ziyarette kipsiz tur açılır ve adımı duyurur', async ({ page }) => {
     await open(page);
     const dialog = panel(page);
@@ -99,5 +98,26 @@ test.describe('tur motoru', () => {
       .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
       .analyze();
     expect(results.violations).toEqual([]);
+  });
+
+  test('kısa yatay telefonda panel düğmeleri ekranda kalır', async ({ page }) => {
+    // Yatay telefonda kabuğun çubuğu sol kenara geçer. Çubuğun boyu alt pay sayılmaz.
+    await page.setViewportSize({ width: 844, height: 390 });
+    await open(page);
+    const dialog = panel(page);
+    await expect(dialog).toBeVisible();
+    expect(await overflowX(page)).toBeLessThanOrEqual(0);
+    for (const name of ['Geri', 'İleri', 'Ertele', 'Turu atla']) {
+      await expect(dialog.getByRole('button', { name })).toBeInViewport({ ratio: 1 });
+    }
+    const box = await dialog.boundingBox();
+    if (!box) throw new Error('Tur paneli ölçülemedi.');
+    expect(box.y).toBeGreaterThanOrEqual(0);
+    expect(box.y + box.height).toBeLessThanOrEqual(390);
+    // Panel sol çubuğun üstüne binmez.
+    const rail = await page.locator('.shell-bar').boundingBox();
+    if (rail) expect(box.x).toBeGreaterThanOrEqual(rail.x + rail.width);
+    await dialog.getByRole('button', { name: 'İleri' }).click();
+    await expect(dialog.getByRole('heading', { name: 'Gerekçe' })).toBeVisible();
   });
 });
