@@ -928,6 +928,8 @@ function RecordViewBody(props: RecordViewBodyProps) {
   return (
     <form
       ref={formRef}
+      // G-139: tur adımı alanı belge türü ve alan adıyla bulur.
+      data-doctype={doctype}
       noValidate
       onSubmit={(event) => {
         event.preventDefault();

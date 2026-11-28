@@ -3,9 +3,10 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type { DocumentRequest, DocumentResponse } from './client';
 import { ApiError } from './errors';
+import type { TourProgress } from '@/shell/tour/model';
 import { createTourClient } from './tour-client';
 
-const stored = {
+const stored: TourProgress = {
   tour_id: 'leave-application',
   version: 2,
   status: 'snoozed',
@@ -14,20 +15,13 @@ const stored = {
 };
 
 function fakeApi(body: unknown, ok = true) {
-  const frappeDocument = vi.fn((request: DocumentRequest): Promise<DocumentResponse> =>
-    Promise.resolve(
-      ok
-        ? { ok: true, status: 200, etag: undefined, body }
-        : {
-            ok: false,
-            error: new ApiError({ kind: 'forbidden', status: 403 }),
-            body,
-          },
-    ).then((value) => {
-      void request;
-      return value;
-    }),
-  );
+  const response: DocumentResponse = ok
+    ? { ok: true, status: 200, etag: undefined, body }
+    : { ok: false, error: new ApiError({ kind: 'forbidden', status: 403 }), body };
+  const frappeDocument = vi.fn((request: DocumentRequest): Promise<DocumentResponse> => {
+    void request;
+    return Promise.resolve(response);
+  });
   return { frappeDocument };
 }
 
