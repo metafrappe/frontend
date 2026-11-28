@@ -49,21 +49,13 @@ async function motionDone(page: Page) {
 
 /**
  * Sayfayı aşağı kaydırır.
- * Dokunmatik Chromium profilinde gerçek parmak kaydırması kullanılır.
- * Playwright WebKit'te parmak kaydırması üretemez. iPhone 13 profilinde sayfa betikle kayar.
+ * Dokunmatik profillerde fare tekerleği kullanılmaz; sayfa betikle kayar.
+ * Başsız Linux Chromium'da CDP parmak hareketi (`Input.synthesizeScrollGesture`)
+ * `window.scrollY` üretmediği için dokunmatik Chromium ve WebKit aynı yolu kullanır.
  * Masaüstünde fare tekerleği kullanılır.
  */
-async function scrollDown(page: Page, browserName: string, hasTouch: boolean, by: number) {
-  if (hasTouch && browserName === 'chromium') {
-    const cdp = await page.context().newCDPSession(page);
-    const v = page.viewportSize();
-    await cdp.send('Input.synthesizeScrollGesture', {
-      x: Math.round((v?.width ?? 0) / 2),
-      y: Math.round((v?.height ?? 0) / 2),
-      yDistance: -by,
-      gestureSourceType: 'touch',
-    });
-  } else if (hasTouch) {
+async function scrollDown(page: Page, hasTouch: boolean, by: number) {
+  if (hasTouch) {
     await page.evaluate((y) => window.scrollBy(0, y), by);
   } else {
     await page.mouse.wheel(0, by);
@@ -103,12 +95,8 @@ test.describe('yardım kulakçığı', () => {
   });
 
   // Beklenen: kulakçık sağ kenara değer. Sayfa kayınca ekrandaki yeri değişmez.
-  // Profil dokunmatikse kaydırma parmakla yapılır. Fare tekerleği kullanılmaz.
-  test('kulakçık sağ kenara yapışıktır ve kaydırmada yerinde kalır', async ({
-    page,
-    browserName,
-    hasTouch,
-  }) => {
+  // Profil dokunmatikse fare tekerleği kullanılmaz; sayfa betikle kaydırılır.
+  test('kulakçık sağ kenara yapışıktır ve kaydırmada yerinde kalır', async ({ page, hasTouch }) => {
     await openRecord(page);
     // Kaydırma denemesi anlamlı olsun diye sayfa ekrandan uzun yapılır.
     await page.locator('#main').evaluate((el) => {
@@ -121,7 +109,7 @@ test.describe('yardım kulakçığı', () => {
     const before = await tab(page).boundingBox();
     expect(before).not.toBeNull();
     expect(Math.round((before?.x ?? 0) + (before?.width ?? 0))).toBeGreaterThanOrEqual(vw - 1);
-    await scrollDown(page, browserName, hasTouch, 400);
+    await scrollDown(page, hasTouch, 400);
     await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
     const after = await tab(page).boundingBox();
     expect(Math.abs((after?.y ?? 0) - (before?.y ?? 0))).toBeLessThanOrEqual(1);
