@@ -1,8 +1,12 @@
 /* G-139 tur paneli. Değerler tasarım tokenlarından gelir. Panelin hareketi yoktur.
    Panel kipsizdir: arka perde yoktur, sayfa tıklanır ve yazılır.
-   Telefonda panel alt çubuğun üstünde durur. Geniş ekranda sağ altta durur. */
+   Telefonda panel alt çubuğun üstünde durur. Geniş ekranda sağ altta durur.
+   Yatay telefonda çubuk sol kenardadır. Panel sağ altta durur ve çubuğa binmez.
+   Ekran kısaysa yalnız metin kayar. Başlık ve düğmeler her zaman görünür kalır. */
 .tour-panel {
   position: fixed;
+  display: flex;
+  flex-direction: column;
   z-index: var(--z-popup-base);
   inset-inline: var(--space-sm);
   bottom: calc(var(--shell-bar-block, 0px) + var(--space-sm) + env(safe-area-inset-bottom));
@@ -25,6 +29,26 @@
   }
 }
 
+/* Yatay telefon. Kaynak: kabuğun `LANDSCAPE_PHONE_QUERY` sorgusu ve `.shell-bar` kuralı.
+   Bu ekranda `--shell-bar-block` sol çubuğun boyudur, alt pay değildir. */
+@media (orientation: landscape) and (max-height: 499px) {
+  .tour-panel {
+    inset-inline: auto var(--space-sm);
+    bottom: calc(var(--space-sm) + env(safe-area-inset-bottom));
+    width: min(
+      var(--form-max-width),
+      calc(100vw - var(--shell-bar-inline, 0px) - 2 * var(--space-sm))
+    );
+    max-height: calc(100dvh - var(--topbar-height) - 2 * var(--space-sm));
+  }
+}
+
+.tour-progress,
+.tour-title,
+.tour-actions {
+  flex: none;
+}
+
 .tour-progress {
   margin: 0 0 var(--space-xxs);
   color: var(--color-text-quiet);
@@ -38,7 +62,10 @@
 }
 
 .tour-body {
+  flex: 0 1 auto;
+  min-height: 0;
   margin: 0 0 var(--space-md);
+  overflow-y: auto;
 }
 
 .tour-actions {
