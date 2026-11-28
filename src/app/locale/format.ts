@@ -3,7 +3,7 @@
  * Biçim dili dil bağlamından gelir. Saat dilimi ve para birimi açılış verisinden gelir.
  * Bileşen `Intl` nesnesini sabit dille kurmaz; `useFormat()` kancasını kullanır.
  */
-import type { AppLanguage } from './language';
+import type { AppLanguage, LocaleTag } from './language';
 import { localeBundle } from './locale-map';
 
 /** Açılış verisinin biçim alanlarından arayüzün kullandıkları. */
@@ -16,6 +16,8 @@ export interface SiteFormatting {
 
 export interface FormatSettings {
   language: AppLanguage;
+  /** Full locale tag. If absent, the language's default locale is used. Example: `de-DE`. */
+  locale?: LocaleTag | undefined;
   timeZone?: string | null | undefined;
   currency?: string | null | undefined;
 }
@@ -168,7 +170,7 @@ export function parseFrappeDatetime(
 
 /** Dil, saat dilimi ve para birimiyle biçimleyici kurar. */
 export function createFormatter(settings: FormatSettings): Formatter {
-  const intl = localeBundle(settings.language).intl;
+  const intl = localeBundle(settings.locale ?? settings.language).intl;
   // Bozuk açılış verisi ekranı düşürmez. Tanınmayan saat dilimi ve para kodu yok sayılır.
   const timeZone = validTimeZone(settings.timeZone);
   const currencyCode = validCurrency(settings.currency);

@@ -1,14 +1,36 @@
 import dayjs from 'dayjs';
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react';
 
 import { createFormatter, type Formatter, type SiteFormatting } from './format';
-import { FALLBACK_LANGUAGE, resolveLanguage, type AppLanguage } from './language';
+import {
+  FALLBACK_LOCALE,
+  catalogLanguage,
+  resolveLocale,
+  type AppLanguage,
+  type LocaleTag,
+} from './language';
 import { localeBundle, type LocaleBundle } from './locale-map';
 
 interface LanguageState {
+  /** Full locale tag. Example: `de-DE`. Formats, Ant Design and `<html lang>` use it. */
+  locale: LocaleTag;
+  /** Text catalogue language of the locale. */
   language: AppLanguage;
-  /** Açılış verisindeki ham dili alır. Boş dil yedek dile düşer. */
-  setLanguage: (raw: string | null | undefined) => void;
+  /**
+   * Açılış verisindeki ham profil dilini ve biliniyorsa kiracı ayarını alır.
+   * Sıra şöyledir: profil, kiracı, yedek `en-GB`. Tarayıcı dili kullanılmaz.
+   */
+  setLanguage: (raw: string | null | undefined, tenant?: string | null | undefined) => void;
+  /** Kullanıcının seçtiği dili uygular. Çağıran seçimi önce profile kaydeder. */
+  applyLocale: (locale: LocaleTag) => void;
   /** Açılış verisindeki saat dilimi ve para birimi (IC-13). */
   formatting: SiteFormatting;
   /** Açılış verisi gelince saat dilimini ve para birimini kaydeder. */
@@ -20,8 +42,10 @@ interface LanguageState {
  * Bu durumda dil değiştirilemez.
  */
 const LanguageContext = createContext<LanguageState>({
-  language: FALLBACK_LANGUAGE,
+  locale: FALLBACK_LOCALE,
+  language: catalogLanguage(FALLBACK_LOCALE),
   setLanguage: () => undefined,
+  applyLocale: () => undefined,
   formatting: {},
   setFormatting: () => undefined,
 });
@@ -40,13 +64,15 @@ export function LanguageProvider({
   initialFormatting?: SiteFormatting | undefined;
   children: ReactNode;
 }) {
-  const [language, setResolved] = useState<AppLanguage>(() => resolveLanguage(initialLanguage));
+  const [locale, setLocale] = useState<LocaleTag>(() => resolveLocale(initialLanguage));
+  const language = catalogLanguage(locale);
   const [formatting, setFormattingState] = useState<SiteFormatting>(() => initialFormatting ?? {});
   // İşlevler sabit kalır. Dil değişince açılış verisi yeniden istenmez.
   const setLanguage = useCallback<LanguageState['setLanguage']>(
-    (raw) => setResolved(resolveLanguage(raw)),
+    (raw, tenant) => setLocale(resolveLocale(raw, tenant)),
     [],
   );
+  const applyLocale = useCallback<LanguageState['applyLocale']>((next) => setLocale(next), []);
   const setFormatting = useCallback<LanguageState['setFormatting']>(
     (next) =>
       setFormattingState((prev) =>
@@ -55,17 +81,33 @@ export function LanguageProvider({
     [],
   );
   const value = useMemo<LanguageState>(
-    () => ({ language, setLanguage, formatting, setFormatting }),
-    [language, setLanguage, formatting, setFormatting],
+    () => ({ locale, language, setLanguage, applyLocale, formatting, setFormatting }),
+    [locale, language, setLanguage, applyLocale, formatting, setFormatting],
   );
+  // IC-14: sayfa dili seçili dili izler. Sunulan bütün diller soldan sağa yazılır.
+  // Durum değişimi sayfayı yeniden yüklemez ve ağacı yeniden kurmaz. Formlar ve taslaklar kalır.
+  useEffect(() => {
+    document.documentElement.lang = locale;
+    document.documentElement.dir = 'ltr';
+  }, [locale]);
   // Day.js dili genel bir ayardır. Çocuklar çizilmeden önce kurulur; tarih seçici ilk çizimde doğru dili alır.
   // Çağrı aynı dille tekrarlansa da sonuç değişmez.
-  dayjs.locale(localeBundle(language).dayjs);
+  dayjs.locale(localeBundle(locale).dayjs);
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
 }
 
 function useLanguageState(): LanguageState {
   return useContext(LanguageContext);
+}
+
+/** Geçerli tam dil etiketi. Örnek: `de-DE`. */
+export function useLocale(): LocaleTag {
+  return useLanguageState().locale;
+}
+
+/** Kullanıcının seçtiği dili uygulayan işlev. */
+export function useApplyLocale(): LanguageState['applyLocale'] {
+  return useLanguageState().applyLocale;
 }
 
 /** Arayüzün geçerli dili. */
@@ -88,15 +130,15 @@ export function useSetFormatting(): LanguageState['setFormatting'] {
  * Örnek: `useFormat().date('2026-11-27')`.
  */
 export function useFormat(): Formatter {
-  const { language, formatting } = useLanguageState();
+  const { locale, language, formatting } = useLanguageState();
   const { time_zone: timeZone, currency } = formatting;
   return useMemo(
-    () => createFormatter({ language, timeZone, currency }),
-    [language, timeZone, currency],
+    () => createFormatter({ language, locale, timeZone, currency }),
+    [language, locale, timeZone, currency],
   );
 }
 
 /** Geçerli dilin antd, Ant Design X ve Day.js nesneleri. */
 export function useLocaleBundle(): LocaleBundle {
-  return localeBundle(useLanguage());
+  return localeBundle(useLocale());
 }

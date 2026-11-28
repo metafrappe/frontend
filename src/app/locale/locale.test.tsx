@@ -76,7 +76,7 @@ describe('AppProviders: Ant Design ve Day.js aynı dili kullanır', () => {
 
   it.each([
     ['boşsa', ''],
-    ['desteklenmiyorsa', 'de'],
+    ['desteklenmiyorsa', 'fr'],
   ])('dil %s yedek dil en-GB olur', (_case, raw) => {
     render(
       <AppProviders engines={false} initialLanguage={raw}>

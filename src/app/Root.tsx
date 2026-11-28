@@ -7,12 +7,14 @@ import type { ModuleEnvironment } from '@/modules';
 import { AppContent } from './App';
 import { appPathname } from './base-path';
 import { AppProviders } from './AppProviders';
-import { useLanguage, useSetFormatting, useSetLanguage } from './locale';
+import { useLanguage, useSetFormatting, useSetLanguage, type LocaleTag } from './locale';
+import { usableModuleEnvironment, type ModuleEnvironmentKey } from './module-environment';
 import type { ThemeModeChoice } from './theme-mode';
 import {
   createShellViewData,
   loadShellAccount,
   loadUserLocale,
+  saveUserLanguage,
   workspaceFromSite,
 } from './view-data';
 
@@ -92,25 +94,13 @@ function SignedIn({
     });
     return () => ctrl.abort();
   }, [session, user]);
-  // Ortam kurulduğu oturum, kullanıcı, kip ve dille saklanır. Biri değişince eski ortam kullanılmaz.
+  // Ortam kurulduğu oturum, kullanıcı, kip ve dille saklanır.
+  // Oturum, kullanıcı ya da kip değişince eski ortam kullanılmaz. Yalnız dil değişirse eski ortam
+  // yenisi gelene kadar kalır. Böylece açık modül sayfası formunu korur (AJA-1772).
   const [loaded, setLoaded] = useState<
-    | {
-        session: PlatformSession;
-        user: string;
-        dataMode: string;
-        locale: string;
-        env: ModuleEnvironment;
-      }
-    | undefined
+    (ModuleEnvironmentKey & { session: PlatformSession; env: ModuleEnvironment }) | undefined
   >(undefined);
-  const modules =
-    loaded &&
-    loaded.session === session &&
-    loaded.user === user &&
-    loaded.dataMode === dataMode &&
-    loaded.locale === locale
-      ? loaded.env
-      : undefined;
+  const modules = usableModuleEnvironment(loaded, { session, user, dataMode, locale });
   useEffect(() => {
     let active = true;
     void loadModuleEnvironment().then(({ createShellModuleEnvironment }) => {
@@ -140,6 +130,8 @@ function SignedIn({
       ...(modules ? { modules } : {}),
       account: { user, ...(fullName ? { fullName } : {}) },
       signOut: () => session.auth.signOut(),
+      saveLanguage: (locale: LocaleTag, signal: AbortSignal) =>
+        saveUserLanguage(session.api, user, locale, signal),
     }),
     [base, modules, user, fullName, session],
   );

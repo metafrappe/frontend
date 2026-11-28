@@ -15,6 +15,10 @@ const SCENARIOS: Record<string, () => void> = {
   'oturum-kapali': () => {
     mockState.signedIn = false;
   },
+  /** Profil dilinin kaydı reddedilir (403 `PermissionError`, AJA-1772). */
+  'dil-kaydi-red': () => {
+    mockState.languageSaveRejected = true;
+  },
   /** Sağlayıcı kaydetme ve deneme uçları hız sınırı (429 `gateway_busy`) verir. */
   'saglayici-mesgul': () => {
     mockState.providerBusy = true;

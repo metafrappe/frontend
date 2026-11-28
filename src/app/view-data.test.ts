@@ -13,7 +13,13 @@ vi.mock('./RecordRoute', () => ({
 
 const recordApi = { listDocuments: vi.fn(), getDocType: vi.fn(), frappeDocument: vi.fn() };
 
-import { createShellViewData, doctypeFromSlug, loadShellAccount, moduleSlug } from './view-data';
+import {
+  createShellViewData,
+  doctypeFromSlug,
+  loadShellAccount,
+  moduleSlug,
+  saveUserLanguage,
+} from './view-data';
 
 describe('doctypeFromSlug', () => {
   it('adres parçasını DocType adına çevirir', () => {
@@ -261,6 +267,36 @@ describe('bayi hesabını tanıma (AJA-945, G-169, G-170)', () => {
   it('ağ hatası da karar vermez', async () => {
     const frappeDocument = vi.fn().mockRejectedValue(new Error('ağ'));
     await expect(kindWith(frappeDocument)).rejects.toThrow('ağ');
+  });
+});
+
+describe('saveUserLanguage: dil seçimi profile yazılır (AJA-1772)', () => {
+  it('seçilen dil kullanıcı kaydına hedef durum olarak yazılır', async () => {
+    const frappeDocument = vi
+      .fn()
+      .mockResolvedValue({ ok: true, status: 200, etag: undefined, body: { data: {} } });
+    const signal = new AbortController().signal;
+    await saveUserLanguage({ frappeDocument }, 'kisi@example.test', 'de-DE', signal);
+    expect(frappeDocument).toHaveBeenCalledTimes(1);
+    expect(frappeDocument).toHaveBeenCalledWith({
+      method: 'PUT',
+      path: '/api/v2/document/User/kisi%40example.test',
+      body: { language: 'de-DE' },
+      signal,
+    });
+  });
+
+  it('sunucu reddederse hata iletilir', async () => {
+    const error = new ApiError({ kind: 'forbidden', status: 403 });
+    const frappeDocument = vi.fn().mockResolvedValue({ ok: false, error, body: undefined });
+    await expect(
+      saveUserLanguage(
+        { frappeDocument },
+        'kisi@example.test',
+        'de-DE',
+        new AbortController().signal,
+      ),
+    ).rejects.toBe(error);
   });
 });
 

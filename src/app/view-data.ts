@@ -1,6 +1,7 @@
 import { createElement, lazy } from 'react';
 
 import type { ApiClient } from '@/api';
+import type { LocaleTag } from './locale';
 import type {
   RecordAddress,
   ShellAccount,
@@ -156,6 +157,27 @@ export async function loadShellAccount(
     /* Ad okunamazsa kart kimliği gösterir. */
   }
   return { user };
+}
+
+/**
+ * Seçilen dili oturumdaki kullanıcının profiline yazar (AJA-1772).
+ * İstek hedef durumdur: aynı dili iki kez göndermek aynı profili verir.
+ * Frappe'nin standart kayıt ucu kullanılır. Yetkiyi sunucu denetler.
+ * Sunucu reddederse ortak hata fırlatılır. Ekran eski dilde kalır.
+ */
+export async function saveUserLanguage(
+  api: Pick<ApiClient, 'frappeDocument'>,
+  user: string,
+  locale: LocaleTag,
+  signal: AbortSignal,
+): Promise<void> {
+  const response = await api.frappeDocument({
+    method: 'PUT',
+    path: `/api/v2/document/User/${encodeURIComponent(user)}`,
+    body: { language: locale },
+    signal,
+  });
+  if (!response.ok) throw response.error;
 }
 
 /** Açılış verisindeki kullanıcı dili, saat dilimi ve para birimi. */
