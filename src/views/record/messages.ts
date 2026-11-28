@@ -63,6 +63,9 @@ export const RECORD_MESSAGES = {
     validationEmail: '{label} must be a valid email address.',
     validationUrl: '{label} must be a valid URL.',
     validationChildRowRequired: 'Row {row}: {label} is required.',
+    validationChildRowNumber: 'Row {row}: {label} must be a valid number.',
+    validationChildRowNumberAmbiguous:
+      'Row {row}: {label} is unclear. Choose which number you meant.',
     linkSearchPlaceholder: 'Search {doctype}...',
     linkSelectTargetFirst: 'Select linked document type first',
     linkSearching: 'Searching on server...',
@@ -176,6 +179,9 @@ export const RECORD_MESSAGES = {
     validationEmail: '{label} alanı geçerli bir e-posta adresi olmalıdır.',
     validationUrl: '{label} alanı geçerli bir bağlantı adresi olmalıdır.',
     validationChildRowRequired: 'Satır {row}: {label} alanı zorunludur.',
+    validationChildRowNumber: 'Satır {row}: {label} alanı geçerli bir sayı olmalıdır.',
+    validationChildRowNumberAmbiguous:
+      'Satır {row}: {label} alanındaki sayı belirsiz. Hangi sayıyı yazdığınızı seçin.',
     linkSearchPlaceholder: '{doctype} ara...',
     linkSelectTargetFirst: 'Önce bağlı belge türünü seçin',
     linkSearching: 'Sunucuda aranıyor...',

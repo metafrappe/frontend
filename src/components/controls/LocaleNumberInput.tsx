@@ -43,6 +43,17 @@ function round(value: number, precision: number | undefined): number {
   return precision === undefined ? value : Number(value.toFixed(precision));
 }
 
+function isResolvedValue(value: unknown): boolean {
+  if (isUnresolvedNumber(value)) return false;
+  if (value === null || value === undefined || value === '') return true;
+  if (typeof value === 'number') return Number.isFinite(value);
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    return trimmed === '' || Number.isFinite(Number(trimmed));
+  }
+  return false;
+}
+
 function textFor(value: unknown, locale: string, precision: number | undefined): string {
   if (isUnresolvedNumber(value)) return value.text;
   if (typeof value === 'number' && Number.isFinite(value)) {
@@ -75,6 +86,8 @@ export function LocaleNumberInput({
 }: LocaleNumberInputProps) {
   const [text, setText] = useState(() => textFor(value, locale, precision));
   const [touched, setTouched] = useState(false);
+  // True when text was produced from an already-resolved value (initial value, choose, or blur format).
+  const [formatted, setFormatted] = useState(() => isResolvedValue(value));
   // The last value the field sent. A new value from outside replaces the text. Example: a reopened record.
   const sent = useRef<unknown>(value);
   const shown = useRef({ locale, precision });
@@ -86,6 +99,7 @@ export function LocaleNumberInput({
     if (Object.is(value, sent.current) && !formatChanged) return;
     sent.current = value;
     setText(textFor(value, locale, precision));
+    setFormatted(isResolvedValue(value));
     setTouched(false);
   }, [value, locale, precision]);
 
@@ -98,6 +112,7 @@ export function LocaleNumberInput({
 
   function handleChange(nextText: string) {
     setText(nextText);
+    setFormatted(false);
     const next = parseLocaleNumber(nextText, locale);
     if (next.kind === 'empty') send(null);
     else if (next.kind === 'valid') send(round(next.value, precision));
@@ -107,11 +122,13 @@ export function LocaleNumberInput({
   function choose(option: number) {
     const next = round(option, precision);
     setText(formatNumberInput(next, locale, precision));
+    setFormatted(true);
     setTouched(false);
     send(next);
   }
 
-  const showProblem = touched && (entry.kind === 'ambiguous' || entry.kind === 'invalid');
+  const showProblem =
+    touched && !formatted && (entry.kind === 'ambiguous' || entry.kind === 'invalid');
   const describedByIds = [describedBy, showProblem ? messageId : undefined]
     .filter(Boolean)
     .join(' ');
@@ -131,8 +148,9 @@ export function LocaleNumberInput({
         onChange={(event) => handleChange(event.target.value)}
         onBlur={(event) => {
           setTouched(true);
-          if (entry.kind === 'valid') {
+          if (!formatted && entry.kind === 'valid') {
             setText(formatNumberInput(round(entry.value, precision), locale, precision));
+            setFormatted(true);
           }
           onBlur?.(event);
         }}

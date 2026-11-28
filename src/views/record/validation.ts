@@ -213,18 +213,34 @@ export function validateRecordDraft(
               doc: rowRecord,
               parent: draftValues,
             });
-            if (childState.visible && !childState.readOnly && childState.required) {
-              if (!isFrappeTruthy(rowRecord[childField.fieldname])) {
-                errors[field.fieldname] = formatRecordMessage(
-                  locale,
-                  'validationChildRowRequired',
-                  {
-                    row: rowIndex + 1,
-                    label: childField.label ?? childField.fieldname,
-                  },
-                );
-                break;
-              }
+            if (!childState.visible || childState.readOnly) {
+              continue;
+            }
+            const childValue = rowRecord[childField.fieldname];
+            if (childState.required && !isFrappeTruthy(childValue)) {
+              errors[field.fieldname] = formatRecordMessage(locale, 'validationChildRowRequired', {
+                row: rowIndex + 1,
+                label: childField.label ?? childField.fieldname,
+              });
+              break;
+            }
+            if (
+              (childField.fieldtype === 'Float' ||
+                childField.fieldtype === 'Currency' ||
+                childField.fieldtype === 'Percent') &&
+              isUnresolvedNumber(childValue)
+            ) {
+              errors[field.fieldname] = formatRecordMessage(
+                locale,
+                childValue.reason === 'ambiguous'
+                  ? 'validationChildRowNumberAmbiguous'
+                  : 'validationChildRowNumber',
+                {
+                  row: rowIndex + 1,
+                  label: childField.label ?? childField.fieldname,
+                },
+              );
+              break;
             }
           }
           if (errors[field.fieldname]) {
