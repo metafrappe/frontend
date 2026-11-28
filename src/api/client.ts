@@ -14,6 +14,7 @@ import type { paths as HrmsPaths } from './generated/hrms_tr';
 import type { paths as AccessPaths } from './generated/platform_core-access';
 import type { paths as AiPaths } from './generated/platform_core-ai';
 import type { paths as CollectionPaths } from './generated/platform_core-collection';
+import type { paths as HelpPaths } from './generated/platform_core-help';
 import {
   GROUP_SUMMARY_PATH,
   isRawGroupSummary,
@@ -44,6 +45,10 @@ import {
   isLeaveName,
   isPermissionExplanation,
   type ApprovalOutcome,
+  type ComponentHelp,
+  type FieldHelp,
+  isComponentHelpOrNull,
+  isFieldHelp,
   type Bootstrap,
   type CompletionRequest,
   type CompletionResult,
@@ -192,6 +197,13 @@ export interface PermissionLogQuery {
   page_length?: number;
 }
 
+/** Alan yardımı sorgusu. Dil verilmezse isteğin dili kullanılır. */
+export interface FieldHelpQuery {
+  doctype: string;
+  fieldname: string;
+  language?: string;
+}
+
 export interface ExplainPermissionQuery {
   doctype: string;
   name: string;
@@ -321,6 +333,7 @@ export function createApiClient({ config, csrf, onSessionExpired }: ApiClientDep
   const access = make<AccessPaths>(methodRoot);
   const mobile = make<MobilePaths>(methodRoot);
   const collection = make<CollectionPaths>(methodRoot);
+  const help = make<HelpPaths>(methodRoot);
   const frappeV2 = make<FrappeV2Paths>(config.siteUrl);
   // PWA uçlarının zorunlu başlıkları. Tarayıcı `Origin` başlığını kendisi koyar ve bu değeri yok sayar.
   // Panel ve kiracı sitesi aynı köktedir. Bu yüzden değer site köküdür.
@@ -670,6 +683,38 @@ export function createApiClient({ config, csrf, onSessionExpired }: ApiClientDep
           params: { query },
         }),
         isPermissionExplanation,
+        options,
+      );
+    },
+
+    /**
+     * Bir alanın yardımını okur (G-138). Kullanıcının okuyamadığı alan `unavailable` döner.
+     * Tur, belge ve destek bağlantısı yoksa ilgili alan `null` gelir.
+     */
+    getFieldHelp(query: FieldHelpQuery, options: RequestOptions = {}): Promise<FieldHelp> {
+      return unwrap(
+        help.GET('/platform_core.api.help.get_field_help', {
+          ...signalOf(options),
+          params: { query },
+        }),
+        isFieldHelp,
+        options,
+      );
+    },
+
+    /** Bir bileşenin yardımını okur (G-138). Bileşen için yardım yoksa `null` döner. */
+    getComponentHelp(
+      componentId: string,
+      options: RequestOptions & { language?: string } = {},
+    ): Promise<ComponentHelp | null> {
+      const query: { component_id: string; language?: string } = { component_id: componentId };
+      if (options.language) query.language = options.language;
+      return unwrap(
+        help.GET('/platform_core.api.help.get_component_help', {
+          ...signalOf(options),
+          params: { query },
+        }),
+        isComponentHelpOrNull,
         options,
       );
     },

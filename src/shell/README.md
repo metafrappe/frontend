@@ -356,3 +356,38 @@ Kimlik denemesi `identity/harness/` klasöründedir.
 Bu deneme gerçek sunucuya bağlanmaz.
 Üretim derlemesi bu deneme girişini içermez.
 Görsel referans dosyaları bu işte değiştirilmez.
+
+## Yardım kulakçığı (G-137)
+
+Sayfanın sağ kenarında "Yardım" kulakçığı durur. Kulakçık bir düğmedir ve `aria-expanded` taşır.
+
+- Panel sayfa yardımını, sık görevleri ve "Kendi kendine destek modu" anahtarını gösterir.
+- Anahtar `role=switch` taşır. Tercih tarayıcıda `atonota.shell.selfHelp` anahtarıyla saklanır.
+- Mod açıkken alan ve sayfa yardım işaretleri görünür. Mod kapalıyken işaret çizilmez.
+- Alan işareti ekran okuyucuya alan adıyla duyurulur. Örnek: "Başlık alanının yardımı".
+- Panel AI panelinin sağ yuvasını kullanır. Genişlik kaynaktaki `aiStudio.layout.right` değeridir.
+- Panel yan yana sığmazsa tam ekran çekmece olur. Eşik sidebar, panel ve 600 px okunur içerik toplamıdır.
+- Escape paneli kapatır. Odak paneli açan öğeye döner: kulakçık ya da alan işareti.
+- Panel kodu ilk yüke girmez. Kulakçık ilk kez açılınca panel parçası iner.
+- Fare ya da odak kulakçığa gelince indirme önceden başlar.
+- Panel inene kadar boş ve gizli bir yer tutucu durur. Böylece `aria-controls` her zaman var olan bir öğeyi gösterir.
+- Panel bir kez inince kapalıyken de DOM'da kalır. Böylece yön değişince açık panel, anahtar ve odak korunur.
+- Panel `Switch` bileşenini `@/components/controls/Switch` dosyasından alır. Toplu dosya `InputNumber` ve `Radio` parçalarını da pakete sokar.
+- Giriş ekranının indirdiği antd modülleri `antd-initial` parçasında toplanır (`vite.config.ts`). Böylece tembel panel giriş parçalarını bölmez.
+
+Bileşen yardımı ve bağlantılar da yapıldı (G-137, G-138).
+
+- Mod açıkken bileşen yardım işareti görünür. Örnek: kayıt formunun başlığındaki işaret.
+- Bileşen işareti ekran okuyucuya bileşen adıyla duyurulur. Örnek: "Kayıt formu bileşeninin yardımı".
+- Bileşen kimliği yardım kaydındaki `component_id` değeridir. Kayıt formu için değer `record-form` olur.
+- Panel bileşen yardımını `getComponentHelp` ucundan okur.
+- Alan işareti belge türünü `HelpDoctype` bağlamından alır. Kayıt görünümü bu bağlamı verir.
+- Belge türü varsa panel alan yardımını `getFieldHelp` ucundan okur.
+- Sunucu yardımı yoksa alan yardımı Frappe alan açıklamasından gelir.
+- Panel "Tur", "Belge" ve "Destek talebi" bağlantılarını gösterir.
+- Adresler sunucudaki yardım kaydından gelir. Kodda adres yoktur.
+- Sunucu bir bağlantıyı vermezse o bağlantı çizilmez. İstek başarısız olursa da bağlantı çizilmez.
+- Panel adresi ayrıca denetler (`links.ts`). Yalnız `https` adresi ya da site içi yol kabul edilir.
+- Örneğin `javascript:` ile başlayan adres çizilmez.
+- Sunucu sözleşmesi `contracts/openapi/platform_core-help.openapi.yaml` dosyasıdır. Sürüm `0.2.0` olur.
+- Uygulama girişi bağlantıyı `src/app/view-data.ts` içinde kurar. Kabuk API istemcisi kurmaz.

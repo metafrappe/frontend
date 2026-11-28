@@ -20,7 +20,9 @@ export type {
   Bootstrap,
   CompletionRequest,
   CompletionResult,
+  ComponentHelp,
   DocTypeMeta,
+  FieldHelp,
   LoginUrl,
   LogoutUrl,
   Proposal,
@@ -38,6 +40,7 @@ export type {
 export type { McpResult } from './client';
 export type {
   ExplainPermissionQuery,
+  FieldHelpQuery,
   LeaveListQuery,
   PermissionLogQuery,
   RolePermissionChange,

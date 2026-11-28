@@ -1,5 +1,7 @@
 import { type ReactNode, useId } from 'react';
 
+import { HelpMarker } from '@/shell/help';
+
 import { formatRecordMessage } from '../messages';
 import type { DocField, RecordLocale } from '../types';
 
@@ -69,6 +71,14 @@ export function FieldShell(props: FieldShellProps) {
               </span>
             ) : null}
           </label>
+          <HelpMarker
+            target={{
+              kind: 'field',
+              label: displayLabel,
+              fieldname: field.fieldname,
+              description: field.description,
+            }}
+          />
           {field.sensitivity === 'restricted' ? (
             <span className="rv-pill rv-pill--warning">
               {formatRecordMessage(locale, 'restrictedBadge')}

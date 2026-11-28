@@ -3,6 +3,7 @@
 import type { components as HrmsComponents } from './generated/hrms_tr';
 import type { components as AccessComponents } from './generated/platform_core-access';
 import type { components as AiComponents } from './generated/platform_core-ai';
+import type { components as HelpComponents } from './generated/platform_core-help';
 import type { components as MobileComponents } from './generated/platform_core-mobile';
 import type { components as IdentityComponents } from './generated/platform_core-identity';
 import type { components as GatewayComponents } from './generated/platform_core-model-gateway';
@@ -17,6 +18,8 @@ export type ApprovalOutcome = AiComponents['schemas']['ApprovalOutcome'];
 export type CompletionRequest = GatewayComponents['schemas']['Completion'];
 export type CompletionResult = GatewayComponents['schemas']['Result'];
 export type JsonRpcResponse = AiComponents['schemas']['JsonRpcResponse'];
+export type FieldHelp = HelpComponents['schemas']['FieldHelp'];
+export type ComponentHelp = HelpComponents['schemas']['ComponentHelp'];
 
 export type Guard<T> = (value: unknown) => value is T;
 
@@ -536,3 +539,46 @@ export const PROVIDER_ALIAS_PATTERN = /^[a-z0-9][a-z0-9_-]{0,63}$/;
 export function isProviderAlias(value: unknown): value is string {
   return typeof value === 'string' && PROVIDER_ALIAS_PATTERN.test(value);
 }
+
+// Yardım içeriği (platform_core-help sözleşmesi, G-138).
+// Üç bağlantı alanı her yanıtta bulunur. Boş bağlantı `null` gelir.
+const HELP_LINKS = ['tour_url', 'doc_url', 'support_url'] as const;
+const FIELD_HELP_SOURCES: readonly string[] = [
+  'tenant',
+  'app',
+  'description',
+  'none',
+  'unavailable',
+];
+
+function hasHelpText(value: Record<string, unknown>): boolean {
+  return (
+    isNullableString(value.title) &&
+    isNullableString(value.content) &&
+    isNullableString(value.message) &&
+    isStringArray(value.actions) &&
+    HELP_LINKS.every((key) => isNullableString(value[key]))
+  );
+}
+
+export const isFieldHelp: Guard<FieldHelp> = (value): value is FieldHelp =>
+  isRecord(value) &&
+  isString(value.doctype) &&
+  isString(value.fieldname) &&
+  isString(value.source) &&
+  FIELD_HELP_SOURCES.includes(value.source) &&
+  isNullableString(value.topic) &&
+  hasHelpText(value);
+
+/** Bileşen yardımı ya da `null`. Bileşen için yardım yoksa sunucu `null` döner. */
+export const isComponentHelpOrNull: Guard<ComponentHelp | null> = (
+  value,
+): value is ComponentHelp | null =>
+  value === null ||
+  (isRecord(value) &&
+    isString(value.component_id) &&
+    (value.source === 'tenant' || value.source === 'app') &&
+    isString(value.topic) &&
+    isString(value.title) &&
+    isString(value.content) &&
+    hasHelpText(value));

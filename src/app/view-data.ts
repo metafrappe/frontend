@@ -4,6 +4,7 @@ import type { ApiClient } from '@/api';
 import type {
   RecordAddress,
   ShellAccount,
+  ShellHelpAnswer,
   ShellSidebar,
   ShellViewData,
   ShellWorkspaceData,
@@ -70,8 +71,27 @@ const RecordRoute = lazy(() => import('./RecordRoute'));
  * Kabuğun liste ve kayıt rotalarını ortak API istemcisine bağlar. Kabuk kendi istemcisini kurmaz.
  * Kayıt rotası da aynı istemciyi kullanır: site kökü, CSRF deposu ve oturum süresi işi ortaktır.
  */
+/** Sunucu yardımından panelin kullandığı alanları alır. */
+function toHelpAnswer(reply: ShellHelpAnswer): ShellHelpAnswer {
+  return {
+    title: reply.title,
+    content: reply.content,
+    tour_url: reply.tour_url,
+    doc_url: reply.doc_url,
+    support_url: reply.support_url,
+  };
+}
+
 export function createShellViewData(
-  api: Pick<ApiClient, 'getDocType' | 'listDocuments' | 'frappeDocument' | 'getBootstrap'>,
+  api: Pick<
+    ApiClient,
+    | 'getDocType'
+    | 'listDocuments'
+    | 'frappeDocument'
+    | 'getBootstrap'
+    | 'getFieldHelp'
+    | 'getComponentHelp'
+  >,
 ): ShellViewData {
   function Record(address: RecordAddress) {
     return createElement(RecordRoute, { ...address, api });
@@ -136,6 +156,20 @@ export function createShellViewData(
       },
     },
     record: { Component: Record },
+    // Yardım içeriği (G-138). `none` yardım yok, `unavailable` alan okunamaz demektir.
+    // İki durumda da panel alan açıklamasına düşer ve bağlantı çizmez.
+    help: {
+      async loadField(query, signal) {
+        const reply = await api.getFieldHelp(query, { signal });
+        return reply.source === 'none' || reply.source === 'unavailable'
+          ? null
+          : toHelpAnswer(reply);
+      },
+      async loadComponent(componentId, signal) {
+        const reply = await api.getComponentHelp(componentId, { signal });
+        return reply ? toHelpAnswer(reply) : null;
+      },
+    },
   };
 }
 

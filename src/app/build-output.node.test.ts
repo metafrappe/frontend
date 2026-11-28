@@ -41,6 +41,8 @@ const LAZY_CHUNKS = [
   { name: 'yönlendirici', test: /^router-/ },
   { name: 'ikonlar', test: /^icons-/ },
   { name: 'Ant Design X', test: /^antd-x-/ },
+  // G-137 yardım paneli kulakçık ilk kez açılınca iner.
+  { name: 'yardım paneli', test: /^HelpPanel-/ },
 ];
 
 let outDir = '';
@@ -183,5 +185,15 @@ describe('üretim derlemesi (vite build)', () => {
     const total = js.reduce((sum, name) => sum + statSync(join(outDir, 'assets', name)).size, 0);
     const initialBytes = initial.reduce((sum, p) => sum + statSync(join(outDir, p)).size, 0);
     expect(initialBytes).toBeLessThan(total);
+  });
+
+  it('giriş ekranı tablo kodunu indirmez (antd-initial parçası yalnız giriş modüllerini taşır)', () => {
+    // rc-table iç kancasının adı küçültmeden sonra da kalır. Tablo yalnız tembel sayfalarda gerekir.
+    for (const name of initialAssets(outDir).filter((file) => file.endsWith('.js'))) {
+      const text = readFileSync(join(outDir, name), 'utf8');
+      expect(text.includes('rc-table-internal-hook'), `${name}: ilk yükte tablo kodu`).toBe(false);
+    }
+    // Giriş ekranının antd modülleri tek parçadadır. Bkz. vite.config.ts `antd-initial`.
+    expect(initialAssets(outDir).some((p) => /^assets\/antd-initial-/.test(p))).toBe(true);
   });
 });

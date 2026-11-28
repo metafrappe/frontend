@@ -78,6 +78,22 @@ export default defineConfig(({ mode }) => {
                 includeDependenciesRecursively: false,
               },
               { name: 'icons', test: /node_modules\/@phosphor-icons\// },
+              // Giriş ekranının zaten indirdiği antd modülleri tek parçada durur ('$initial').
+              // Neden: tembel bir parça (örneğin yardım paneli) bu modüllerden birkaçını alınca
+              // paketleyici giriş parçalarını böler. Bölünen parçalar ayrı sıkıştırılır; ilk yük büyür.
+              // Yalnız tembel sayfaların kullandığı antd modülleri bu gruba girmez.
+              // E2e kipinde grup kapalıdır. O kipte deneme sayfaları da giriş noktasıdır ('$initial'
+              // onları da sayar); tablo kodu giriş parçasına girerdi. Üretim paketini
+              // src/app/build-output.node.test.ts denetler.
+              ...(mode === 'e2e'
+                ? []
+                : [
+                    {
+                      name: 'antd-initial',
+                      test: /node_modules\/(antd|@rc-component|rc-[\w-]+|@ant-design\/(cssinjs|cssinjs-utils|colors|fast-color|icons|react-slick))\//,
+                      tags: ['$initial' as const],
+                    },
+                  ]),
             ],
           },
         },
