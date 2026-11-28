@@ -1,4 +1,11 @@
 import type { ComponentType } from 'react';
+
+import {
+  HR_SETTINGS_DOCTYPE,
+  TENANT_BRANDING_DOCTYPE,
+  TENANT_SETTINGS_DOCTYPE,
+} from './settings/doctypes';
+
 export interface ModuleRegistration {
   id: string;
   path: string;
@@ -71,6 +78,34 @@ export const moduleRegistrations: readonly ModuleRegistration[] = [
     label: { en: 'AI operations', tr: 'Yapay zekâ işlemleri' },
     excludes: TENANT_ONLY,
     load: () => import('./ai-operations/Page'),
+  },
+  {
+    // Kiracı ayarları (G-97). Dil, saat dilimi, biçimler, oturum süresi ve e-posta bilgisi.
+    // Form türün şemasından çizilir. Sunucu yalnız güvenli alanları bu türe koyar.
+    id: 'settings',
+    path: '/settings',
+    label: { en: 'General settings', tr: 'Genel ayarlar' },
+    requires: [TENANT_SETTINGS_DOCTYPE],
+    excludes: TENANT_ONLY,
+    load: () => import('./settings/GeneralPage'),
+  },
+  {
+    // Kiracı markası (G-97): logo ve renk tokenları.
+    id: 'settings-branding',
+    path: '/settings/branding',
+    label: { en: 'Branding', tr: 'Marka' },
+    requires: [TENANT_BRANDING_DOCTYPE],
+    excludes: TENANT_ONLY,
+    load: () => import('./settings/BrandingPage'),
+  },
+  {
+    // Uygulama ayar türü (G-97). Örnek: İK uygulamasının ayarları.
+    id: 'settings-hr',
+    path: '/settings/hr',
+    label: { en: 'HR settings', tr: 'İK ayarları' },
+    requires: [HR_SETTINGS_DOCTYPE],
+    excludes: TENANT_ONLY,
+    load: () => import('./settings/HrSettingsPage'),
   },
   {
     // Bayinin bağlı müşterileri (G-169, G-170). Kiracı hesabı bağ kaydını okuyamaz.

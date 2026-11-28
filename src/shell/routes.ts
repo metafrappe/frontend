@@ -25,7 +25,9 @@ import {
   CalendarCheck,
   FileText,
   Flask,
+  GearSix,
   House,
+  PaintBrush,
   PlugsConnected,
   Robot,
   Rows,
@@ -94,6 +96,9 @@ const moduleIcons: Record<string, Icon> = {
   'site-plan': Buildings,
   'ai-operations': Robot,
   customers: UsersThree,
+  settings: GearSix,
+  'settings-branding': PaintBrush,
+  'settings-hr': GearSix,
 };
 
 /** `modules` işinin kayıtları (`src/modules/registry.ts`). Kabuk yalnız biçimi çevirir. */

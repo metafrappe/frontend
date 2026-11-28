@@ -3,6 +3,7 @@
 import { http, HttpResponse, matchRequestUrl, type JsonBodyType } from 'msw';
 
 import { TOOL_RESULT_PREFIX } from '@/api/ai-protocol';
+import { resetSettingsState, settingsHandlers } from './settings';
 import { resetUserAdminState, userAdminHandlers } from './user-admin';
 import { GROUP_SUMMARY_PATH } from '@/api/group-summary';
 import { adminHandlers } from './admin';
@@ -242,6 +243,7 @@ export function resetMockState(): void {
   mockState.readableDocTypes = new Set(MENU_READABLE_DOCTYPES);
   mockState.customerRequests = [];
   resetUserAdminState();
+  resetSettingsState();
   connectionSecrets.clear();
   gatewayCalls.save = [];
   gatewayCalls.check = [];
@@ -708,6 +710,14 @@ function sampleModel(body: CompletionBody) {
 export const handlers = [
   // G-98 kullanıcı yönetimi. Genel kayıt uçlarından önce gelir.
   ...userAdminHandlers(guard, message, frappeError, listRows),
+  // G-97 ayar sayfaları (`./settings.ts`). Genel şema ve kayıt uçlarından önce gelir.
+  ...settingsHandlers(
+    guard,
+    message,
+    frappeError,
+    (body) => HttpResponse.json(body),
+    () => mockState.readableDocTypes,
+  ),
   // "İletişim" listesi (AJA-812, G-63). Genel şema ucundan önce gelir; o uç başka türü reddeder.
   http.get('*/api/method/platform_core.api.meta.get_doctype', ({ request }) => {
     if (new URL(request.url).searchParams.get('doctype') !== COMMUNICATION_DOCTYPE)

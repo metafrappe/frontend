@@ -110,6 +110,8 @@ export function createModuleClient(api: ApiClient): ModuleClient {
     // Bağlı hesap istemcisi ayrı parçadadır. Yalnız hesap sayfası açılınca yüklenir.
     linkedAccounts: () => import('../api/login-client').then((m) => m.createLoginClient(api)),
     // Sağlayıcı istemcisi ayrı parçadadır. Yalnız sayfa açılınca yüklenir (ilk yük bütçesi).
+    // Ayar sayfalarının kayıt formu ortak istemciyi kullanır (G-97).
+    records: api,
     aiProviders: () => import('../api/provider-client').then((m) => m.createProviderClient(api)),
     // Bayi istemcisi ayrı parçadadır. Yalnız "Müşteriler" sayfası açılınca yüklenir.
     resellers: () => import('../api/reseller-client').then((m) => m.createResellerClient(api)),
