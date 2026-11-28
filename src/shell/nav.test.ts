@@ -206,6 +206,7 @@ describe('bayi menüsü ve "Müşteriler" sayfası (G-169, G-170)', () => {
       'İzin talepleri',
       'Site ve plan',
       'Yapay zekâ işlemleri',
+      'Veri aktarımı',
     ]);
   });
 

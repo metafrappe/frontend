@@ -73,6 +73,16 @@ export const moduleRegistrations: readonly ModuleRegistration[] = [
     load: () => import('./ai-operations/Page'),
   },
   {
+    // G-97 parça 3: içe aktarım, dışa aktarım ve KVKK kişisel veri talebi.
+    // Kayıt türü listesini sunucu yetkiye göre verir. KVKK talebi her kiracı kullanıcısına açıktır.
+    // Bayi hesabı kiracı verisini aktarmaz; sayfa bayi menüsünde görünmez.
+    id: 'data-transfer',
+    path: '/data-transfer',
+    label: { en: 'Data transfer', tr: 'Veri aktarımı' },
+    excludes: TENANT_ONLY,
+    load: () => import('./data-transfer/Page'),
+  },
+  {
     // Bayinin bağlı müşterileri (G-169, G-170). Kiracı hesabı bağ kaydını okuyamaz.
     id: 'customers',
     path: '/customers',

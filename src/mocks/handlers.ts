@@ -6,6 +6,7 @@ import { TOOL_RESULT_PREFIX } from '@/api/ai-protocol';
 import { resetUserAdminState, userAdminHandlers } from './user-admin';
 import { GROUP_SUMMARY_PATH } from '@/api/group-summary';
 import { adminHandlers } from './admin';
+import { dataTransferHandlers, resetDataTransferState } from './data-transfer';
 import type { components as CollectionComponents } from '@/api/generated/platform_core-collection';
 
 import {
@@ -242,6 +243,7 @@ export function resetMockState(): void {
   mockState.readableDocTypes = new Set(MENU_READABLE_DOCTYPES);
   mockState.customerRequests = [];
   resetUserAdminState();
+  resetDataTransferState();
   connectionSecrets.clear();
   gatewayCalls.save = [];
   gatewayCalls.check = [];
@@ -706,6 +708,8 @@ function sampleModel(body: CompletionBody) {
 }
 
 export const handlers = [
+  // G-97 parça 3 veri aktarımı (`./data-transfer.ts`). Genel kayıt uçlarından önce gelir.
+  ...dataTransferHandlers(guard, message, frappeError),
   // G-98 kullanıcı yönetimi. Genel kayıt uçlarından önce gelir.
   ...userAdminHandlers(guard, message, frappeError, listRows),
   // "İletişim" listesi (AJA-812, G-63). Genel şema ucundan önce gelir; o uç başka türü reddeder.

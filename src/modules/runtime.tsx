@@ -11,7 +11,9 @@ import type {
   ProviderCatalog,
   SavedConnection,
 } from '../api';
+import type { DocTypeMeta } from '../api';
 import { ModuleContext } from './context';
+import type { ImportFailure, ImportPreview, ImportStatus } from './data-transfer/model';
 
 export interface RequestOptions {
   signal?: AbortSignal;
@@ -69,6 +71,44 @@ export interface ModuleClient {
    * İstemci kodu ilk yüke girmez; yalnız "Yönetim" sayfası çağırınca iner.
    */
   userAdmin?: () => Promise<UserAdminClient>;
+  /**
+   * Veri aktarımı istemcisini yükler (G-97 parça 3): içe aktarım, dışa aktarım ve KVKK talebi.
+   * İstemci kodu ilk yüke girmez; yalnız "Veri aktarımı" sayfası çağırınca iner.
+   */
+  dataTransfer?: () => Promise<DataTransferClient>;
+}
+/**
+ * Veri aktarımı uçları (G-97 parça 3). Yetkiyi her istekte sunucu denetler.
+ * İçe aktarım Frappe'nin `Data Import` belgesiyle yapılır.
+ */
+export interface DataTransferClient {
+  /** İçe ya da dışa aktarılabilecek kayıt türleri. Liste yetkisi yoksa sunucu 403 döner. */
+  listDoctypes: (purpose: 'import' | 'export', options: RequestOptions) => Promise<string[]>;
+  /** Sunucunun kullanıcıya göre süzdüğü tanım. Yalnız okunabilir alanlar gelir. */
+  getMeta: (doctype: string, options: RequestOptions) => Promise<DocTypeMeta>;
+  listRows: (
+    doctype: string,
+    fields: string[],
+    options: RequestOptions,
+  ) => Promise<{ rows: Record<string, unknown>[]; truncated: boolean }>;
+  /** Aktarım kaydını açar, dosyayı ekler ve Frappe önizlemesini döner. */
+  prepareImport: (
+    doctype: string,
+    file: File,
+    options: RequestOptions,
+  ) => Promise<{ name: string; preview: ImportPreview }>;
+  /** Eşlemeyi kaydeder ve aktarımı başlatır. Sütun sırası anahtardır; `null` "aktarma" demektir. */
+  startImport: (
+    name: string,
+    map: Record<number, string | null>,
+    options: RequestOptions,
+  ) => Promise<void>;
+  importResult: (
+    name: string,
+    options: RequestOptions,
+  ) => Promise<{ status: ImportStatus; failures: ImportFailure[] }>;
+  /** Oturumdaki kullanıcı için KVKK kişisel veri indirme talebi açar. */
+  requestPersonalData: (user: string, options: RequestOptions) => Promise<{ name: string }>;
 }
 /** Bayi uçları. Ortak istemci yanıtları sözleşmeyle denetler. Yetkiyi sunucu denetler. */
 export interface ResellerClient {

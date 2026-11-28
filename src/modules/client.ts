@@ -116,5 +116,8 @@ export function createModuleClient(api: ApiClient): ModuleClient {
     // Kullanıcı yönetimi istemcisi ayrı parçadadır. Yalnız "Yönetim" sayfası açılınca yüklenir.
     userAdmin: () =>
       import('./administration/users-client').then((m) => m.createUserAdminClient(api)),
+    // Veri aktarımı istemcisi ayrı parçadadır. Yalnız "Veri aktarımı" sayfası açılınca yüklenir.
+    dataTransfer: () =>
+      import('./data-transfer/client').then((m) => m.createDataTransferClient(api)),
   };
 }

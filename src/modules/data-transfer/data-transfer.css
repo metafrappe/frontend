@@ -1,0 +1,25 @@
+/* "Veri aktarımı" sayfası. Değerler ortak tokenlardan gelir. */
+.data-transfer-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  max-width: var(--form-max-width);
+  min-width: 0;
+}
+.data-transfer-field label {
+  overflow-wrap: break-word;
+}
+.module-page h3 {
+  margin: 0;
+  font-size: var(--module-font);
+}
+/* Yerel dosya seçici dar ekranda taşmaz. Dokunma alanı ortak tokendır. */
+.data-transfer-file {
+  max-width: 100%;
+  min-height: var(--hit-target);
+  font: inherit;
+  color: var(--module-text);
+}
+.data-transfer-report li {
+  overflow-wrap: break-word;
+}

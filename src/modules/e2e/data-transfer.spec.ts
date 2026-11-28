@@ -9,6 +9,7 @@ import { expect, test } from '../../../tests/setup/playwright-fixtures';
 
 const PATH = '/data-transfer';
 const DOCTYPE = 'Örnek Kayıt';
+const READABLE_HEADER = 'ID,Örnek başlık,Açıklama,İlgili kayıt,Kaynak kayıt,Gizli kayıt';
 
 async function expectReadableLayout(page: Page) {
   await page.waitForFunction(() =>
@@ -29,9 +30,16 @@ async function expectReadableLayout(page: Page) {
   expect((await new AxeBuilder({ page }).include('.module-page').analyze()).violations).toEqual([]);
 }
 
+/** antd Select'i klavyeyle seçer: odak, aşağı ok ve Enter. Liste tek seçenek taşır. */
 async function choose(page: Page, label: string, option: string) {
-  await page.getByLabel(label, { exact: true }).click();
-  await page.locator('.ant-select-item-option', { hasText: option }).last().click();
+  const input = page.getByLabel(label, { exact: true });
+  await input.focus();
+  await page.keyboard.press('ArrowDown');
+  await expect(page.locator('.ant-select-item-option', { hasText: option }).last()).toBeVisible();
+  await page.keyboard.press('Enter');
+  await expect(
+    page.locator('.ant-select-selection-item', { hasText: option }).first(),
+  ).toBeVisible();
 }
 
 test('kullanıcı şablonu indirir, dosyayı yükler, eşler ve hata raporunu görür', async ({
@@ -45,7 +53,7 @@ test('kullanıcı şablonu indirir, dosyayı yükler, eşler ve hata raporunu g�
   const templateDownload = page.waitForEvent('download');
   await section.getByRole('button', { name: 'Şablonu indir' }).click();
   const template = await templateDownload;
-  const header = (await readFile(await template.path(), 'utf8')).replace(/^﻿/, '');
+  const header = (await readFile(await template.path(), 'utf8')).replace(/^\uFEFF/, '');
   expect(header.split('\r\n')[0]).toContain('Örnek başlık');
 
   await section.getByLabel('Aktarım dosyası').setInputFiles({
@@ -71,11 +79,10 @@ test('dışa aktarım yalnız okunabilir alanları yazar', async ({ page }) => {
   const download = page.waitForEvent('download');
   await section.getByRole('button', { name: 'CSV indir' }).click();
   const file = await download;
-  const csv = (await readFile(await file.path(), 'utf8')).replace(/^﻿/, '');
-  const columns = csv.split('\r\n')[0]!.split(',');
-  expect(columns[0]).toBe('ID');
-  // Sahte sunucu bu alanı tanımda göstermez. Dosyada da olmamalıdır.
-  expect(csv).not.toContain('gizli_not');
+  const csv = (await readFile(await file.path(), 'utf8')).replace(/^\uFEFF/, '');
+  const [header = ''] = csv.split('\r\n');
+  // Sütunlar yalnız tanım ucunun verdiği okunabilir alanlardır. İlk sütun kayıt kimliğidir.
+  expect(header).toBe(READABLE_HEADER);
   await expect(section.getByText(/kayıt indirildi\./)).toBeVisible();
   await expectReadableLayout(page);
 });
