@@ -46,6 +46,10 @@ export const MENU_GROUPS = {
   'Site ve plan': '/site-plan',
   'Yapay zekâ işlemleri': '/ai-operations',
   Müşteriler: '/customers',
+  // Kiracı ayarları (G-97). Yalnız kiracı yöneticisi açar.
+  'Genel ayarlar': '/settings',
+  Marka: '/settings/branding',
+  'İK ayarları': '/settings/hr',
 } as const;
 
 export type MenuGroup = keyof typeof MENU_GROUPS;

@@ -16,7 +16,7 @@ describeRole({
   account: 'inceleme-yonetici-yardimci@example.test',
   menu: ['Hesap', 'Yönetim', 'İzin talepleri', 'Site ve plan', 'Yapay zekâ işlemleri'],
   pagesOpen: ['Hesap', 'Yönetim', 'İzin talepleri', 'Site ve plan', 'Yapay zekâ işlemleri'],
-  pagesClosed: ['Yapay zekâ sağlayıcıları', 'Müşteriler'],
+  pagesClosed: ['Yapay zekâ sağlayıcıları', 'Müşteriler', 'Genel ayarlar', 'Marka', 'İK ayarları'],
   readOnly: ['Site ve plan'],
   buttons: [
     {

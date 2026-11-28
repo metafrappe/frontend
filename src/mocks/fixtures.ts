@@ -383,6 +383,10 @@ export const MENU_READABLE_DOCTYPES: readonly string[] = [
   'PLT AI Account',
   'PLT AI Provider',
   'Leave Application',
+  // Ayar sayfaları (G-97). Yalnız kiracı yöneticisi okur.
+  'Tenant Settings',
+  'Tenant Branding',
+  'HR Settings',
 ];
 
 /**

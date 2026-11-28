@@ -15,7 +15,15 @@ describeRole({
   account: 'inceleme-bayi@example.test',
   menu: ['Hesap', 'Site ve plan', 'Müşteriler'],
   pagesOpen: ['Hesap', 'Site ve plan', 'Müşteriler'],
-  pagesClosed: ['Yönetim', 'Yapay zekâ sağlayıcıları', 'İzin talepleri', 'Yapay zekâ işlemleri'],
+  pagesClosed: [
+    'Yönetim',
+    'Yapay zekâ sağlayıcıları',
+    'İzin talepleri',
+    'Yapay zekâ işlemleri',
+    'Genel ayarlar',
+    'Marka',
+    'İK ayarları',
+  ],
   readOnly: [],
   buttons: [{ page: 'Müşteriler', shown: ['Yeni müşteri isteği'], hidden: [] }],
 });

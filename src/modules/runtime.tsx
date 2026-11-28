@@ -1,6 +1,7 @@
 import { Fragment, type ReactNode } from 'react';
 import type {
   AiConnectionListing,
+  ApiClient,
   ConnectionCheck,
   ConnectionInput,
   CustomerRequest,
@@ -59,6 +60,11 @@ export interface ModuleClient {
    * İstemci kodu ilk yüke girmez; yalnız "Yapay zekâ sağlayıcıları" sayfası çağırınca iner.
    */
   aiProviders?: () => Promise<AiProviderClient>;
+  /**
+   * Kayıt formunun istek yolu (G-97). Ayar sayfaları formu `RecordView` ile türün şemasından çizer.
+   * İstek oturumun ortak API istemcisinden geçer. Yetkiyi sunucu her istekte denetler.
+   */
+  records?: Pick<ApiClient, 'frappeDocument'>;
   /**
    * Bayi istemcisini yükler (G-169, G-170). İstemci kodu ilk yüke girmez;
    * yalnız "Müşteriler" sayfası çağırınca iner.
