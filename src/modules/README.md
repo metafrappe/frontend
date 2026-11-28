@@ -43,6 +43,26 @@ Sayfa `/administration/ai-providers` adresindedir. Sayfa Yönetim bölümünün 
 - Sağlayıcı uçları `src/api/provider-client.ts` dosyasındadır. Bu dosya ilk yüke girmez. Modül istemcisi onu `aiProviders()` çağrısında yükler.
 - Ekran metinleri `ai-providers/messages.ts` dosyasındadır.
 
+## Veri aktarımı
+
+Sayfa `/data-transfer` adresindedir. Sayfa G-97 kaleminin 3. parçasıdır (AJA-2493).
+
+- İçe aktarım Frappe'nin `Data Import` belgesiyle yapılır.
+- Kullanıcı önce kayıt türünü seçer. Sonra şablonu indirir.
+- Şablonda yalnız yazılabilir alanlar bulunur.
+- Kullanıcı dosyayı yükler. Sayfa önce `Data Import` kaydını açar. Sonra dosyayı `File` kaydı olarak ekler.
+- Frappe önizlemesi sütunları alanlarla eşler. Kullanıcı eşlemeyi değiştirebilir.
+- "Aktarımı başlat" eşlemeyi `template_options` alanına yazar. Sonra aktarımı başlatır.
+- Sonuç yalnız "Sonucu göster" düğmesiyle okunur. Sahte ilerleme yoktur.
+- Hatalı satırlar "Hata raporu" listesinde satır numarasıyla görünür.
+- Dışa aktarım yalnız tanım ucunun verdiği alanları yazar. Tanım ucu yalnız okunabilir alanları verir.
+- Sunucu satırda fazladan alan gönderse bile o alan dosyaya yazılmaz. Test `data-transfer/model.test.ts` içindedir.
+- Dışa aktarım en çok 5000 kayıt indirir. Fazlası varsa ekran bunu söyler.
+- Formül gibi başlayan hücreye başta tek tırnak eklenir. Örnek: `=TOPLA(A1)` değeri `'=TOPLA(A1)` olur.
+- "Kişisel verilerim" bölümü KVKK talebini açar. Talep `Personal Data Download Request` kaydıdır.
+- Talep yalnız oturumdaki kullanıcı için açılır. Dosya hazır olunca Frappe e-postayla bağlantı gönderir.
+- İstemci `data-transfer/client.ts` dosyasındadır. Bu dosya ilk yüke girmez.
+
 ## Eksik sözleşmeler
 
 Kaynak, `.pane/backend-ref/backend/contracts/` klasöründeki sözleşmelerdir.
