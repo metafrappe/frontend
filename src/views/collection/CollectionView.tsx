@@ -9,6 +9,7 @@ import {
   lazy,
   Suspense,
   useCallback,
+  useEffect,
   useSyncExternalStore,
   useId,
   useMemo,
@@ -16,6 +17,7 @@ import {
 } from 'react';
 import type { ErrorInfo, ReactNode } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { scopedKey } from '@/api/request-order';
 import { CollectionState } from './CollectionState';
 import { TableView } from './TableView';
 import { collectionVariables, collectionViewOptions } from './collection-tokens';
@@ -83,6 +85,11 @@ export interface CollectionViewProps {
    * Adres sözleşmesi kabuğundur; görünüm adres üretmez.
    */
   recordHref?: ((name: string) => string) | undefined;
+  /**
+   * Open organisation (workspace) ID. A change discards every pending request and cached page
+   * of the old organisation. A late response or error of the old organisation is not shown.
+   */
+  workspace?: string | undefined;
 }
 export function CollectionView({
   definition,
@@ -91,6 +98,7 @@ export function CollectionView({
   summarySource,
   enableExperimentalCollectionViews = false,
   recordHref,
+  workspace = '',
 }: CollectionViewProps) {
   const [params, setParams] = useSearchParams();
   const requestedQuery = useMemo(() => readQuery(params, definition), [params, definition]);
@@ -107,8 +115,12 @@ export function CollectionView({
   });
   const search = draft.base === query.search ? draft.search : query.search;
   const request = useMemo(() => toListRequest(definition, query), [definition, query]);
-  const key = JSON.stringify(request);
-  const cache = useMemo(() => createCollectionCache({ source, definition }), [source, definition]);
+  const key = scopedKey(workspace, JSON.stringify(request));
+  const cache = useMemo(
+    () => createCollectionCache({ source, definition, workspace }),
+    [source, definition, workspace],
+  );
+  useEffect(() => () => cache.dispose(), [cache]);
   const subscribe = useCallback(
     (listener: () => void) => cache.subscribe(key, request, listener),
     [cache, key, request],

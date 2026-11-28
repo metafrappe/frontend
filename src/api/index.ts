@@ -1,5 +1,7 @@
 // Bu klasörün sahibi `api-client` işidir.
 export { createApiClient } from './client';
+export { appendUnique, createLatestRequest, scopedKey } from './request-order';
+export type { LatestTicket } from './request-order';
 export type {
   ApiClient,
   ApiClientDeps,

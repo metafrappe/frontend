@@ -12,12 +12,15 @@ interface Entry {
 }
 /**
  * Temporary in-memory query adapter. Replace with the shared query cache when exported.
- * Each mounted collection owns its scope. Source or definition replacement creates a
+ * Each mounted collection owns its scope. Source, definition or workspace replacement creates a
  * fresh cache; nothing is shared across users, tenants or browser storage.
+ * Request order rules are in `@/api/request-order` (AJA-1773).
  */
 export function createCollectionCache(scope: {
   source: CollectionSource;
   definition: CollectionDefinition;
+  /** Organisation ID. Part of the scope: a new organisation always gets a new cache. */
+  workspace?: string;
 }) {
   const entries = new Map<string, Entry>();
   const maxPages = 20;
@@ -87,6 +90,15 @@ export function createCollectionCache(scope: {
           entry.controller = undefined;
         }
       };
+    },
+    /** Cancels every pending request and forgets every page. Used when the organisation changes. */
+    dispose() {
+      entries.forEach((entry) => {
+        entry.controller?.abort();
+        entry.controller = undefined;
+        entry.snapshot = undefined;
+      });
+      entries.clear();
     },
     retry(key: string) {
       const entry = entries.get(key);
